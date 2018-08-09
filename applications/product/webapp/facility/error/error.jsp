@@ -17,10 +17,10 @@ specific language governing permissions and limitations
 under the License.
 --%>
 
-<%@ page import="org.apache.ofbiz.base.util.*" %>
+<%@ page import="org.ofbiz.base.util.*" %>
 <html>
 <head>
-<title>OFBiz Message</title>
+<title>Open For Business Message</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 </head>
 

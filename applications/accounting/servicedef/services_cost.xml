@@ -24,28 +24,32 @@ under the License.
     <vendor>OFBiz</vendor>
     <version>1.0</version>
 
-    <service name="createCostComponentCalc" default-entity-name="CostComponentCalc" engine="entity-auto" invoke="create" auth="true">
+    <service name="createCostComponentCalc" default-entity-name="CostComponentCalc" engine="simple"
+                location="component://accounting/script/org/ofbiz/accounting/cost/CostServices.xml" invoke="createCostComponentCalc" auth="true">
         <description>Create a CostComponentCalc</description>
         <permission-service service-name="acctgCostPermissionCheck" main-action="CREATE"/>
         <auto-attributes include="nonpk" mode="IN" optional="true"/>
         <auto-attributes include="pk" mode="OUT" optional="true"/>
     </service>
 
-    <service name="updateCostComponentCalc" default-entity-name="CostComponentCalc" engine="entity-auto" invoke="update" auth="true">
+    <service name="updateCostComponentCalc" default-entity-name="CostComponentCalc" engine="simple"
+                location="component://accounting/script/org/ofbiz/accounting/cost/CostServices.xml" invoke="updateCostComponentCalc" auth="true">
         <description>Update a CostComponentCalc</description>
         <permission-service service-name="acctgCostPermissionCheck" main-action="UPDATE"/>
         <auto-attributes include="pk" mode="IN" optional="false"/>
         <auto-attributes include="nonpk" mode="IN" optional="true"/>
     </service>
 
-    <service name="removeCostComponentCalc" default-entity-name="CostComponentCalc" engine="entity-auto" invoke="delete" auth="true">
+    <service name="removeCostComponentCalc" default-entity-name="CostComponentCalc" engine="simple"
+                location="component://accounting/script/org/ofbiz/accounting/cost/CostServices.xml" invoke="removeCostComponentCalc" auth="true">
         <description>Remove a CostComponentCalc</description>
         <permission-service service-name="acctgCostPermissionCheck" main-action="DELETE"/>
         <auto-attributes include="pk" mode="IN" optional="false"/>
         <auto-attributes include="nonpk" mode="IN" optional="true"/>
     </service>
 
-    <service name="createWorkEffortCostCalc" default-entity-name="WorkEffortCostCalc" engine="entity-auto" invoke="create" auth="true">
+    <service name="createWorkEffortCostCalc" default-entity-name="WorkEffortCostCalc" engine="simple"
+        location="component://accounting/script/org/ofbiz/accounting/cost/CostServices.xml" invoke="createWorkEffortCostCalc" auth="true">
         <description>Create a WorkEffortCostCalc entry</description>
         <permission-service service-name="acctgCostPermissionCheck" main-action="CREATE"/>
         <auto-attributes include="pk" mode="IN" optional="false"/>
@@ -53,7 +57,8 @@ under the License.
         <override name="fromDate" optional="true"/>
     </service>
 
-    <service name="removeWorkEffortCostCalc" default-entity-name="WorkEffortCostCalc" engine="entity-auto" invoke="delete" auth="true">
+    <service name="removeWorkEffortCostCalc" default-entity-name="WorkEffortCostCalc" engine="simple"
+        location="component://accounting/script/org/ofbiz/accounting/cost/CostServices.xml" invoke="removeWorkEffortCostCalc" auth="true">
         <description>Remove a WorkEffortCostCalc entry</description>
         <permission-service service-name="acctgCostPermissionCheck" main-action="DELETE"/>
         <auto-attributes include="pk" mode="IN" optional="false"/>
@@ -82,7 +87,7 @@ under the License.
     </service>
 
     <service name="updateProductAverageCostOnReceiveInventory" default-entity-name="ProductAverageCost" engine="simple" 
-            location="component://product/minilang/product/cost/CostServices.xml" invoke="updateProductAverageCostOnReceiveInventory" auth="true">
+            location="component://product/script/org/ofbiz/product/cost/CostServices.xml" invoke="updateProductAverageCostOnReceiveInventory" auth="true">
         <description>Update a Product Average Cost record on receive inventory</description>
         <permission-service service-name="acctgCostPermissionCheck" main-action="UPDATE"/>
         <attribute name="facilityId" type="String" mode="IN" optional="false"/>
@@ -92,9 +97,9 @@ under the License.
     </service>
 
     <service name="getProductAverageCost" engine="simple" 
-            location="component://product/minilang/product/cost/CostServices.xml" invoke="getProductAverageCost" auth="true">
+            location="component://product/script/org/ofbiz/product/cost/CostServices.xml" invoke="getProductAverageCost" auth="true">
         <description>Get Average cost of a product</description>
-        <attribute name="inventoryItem" type="org.apache.ofbiz.entity.GenericValue" mode="IN" optional="true"/>
+        <attribute name="inventoryItem" type="org.ofbiz.entity.GenericValue" mode="IN" optional="true"/>
         <attribute name="unitCost" type="BigDecimal" mode="OUT" optional="false"/>
     </service>
 </services>

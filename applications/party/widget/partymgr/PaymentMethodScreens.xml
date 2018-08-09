@@ -19,13 +19,13 @@ under the License.
 -->
 
 <screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://ofbiz.apache.org/Widget-Screen" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
 
     <screen name="PaymentMethodDecorator">
         <section>
             <actions>
                 <set field="headerItem" value="find"/>
-                <script location="component://party/groovyScripts/HasPartyPermissions.groovy"/>
+                <script location="component://party/webapp/partymgr/WEB-INF/actions/HasPartyPermissions.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
@@ -62,14 +62,14 @@ under the License.
                 <set field="tabButtonItem" value="editcreditcard"/>
                 <set field="cardNumberMinDisplay" value="min"/>
                 <set field="showToolTip" value="true"/>
-                <script location="component://party/groovyScripts/HasPartyPermissions.groovy"/>
-                <script location="component://party/groovyScripts/party/EditPaymentMethod.groovy"/>
+                <script location="component://party/webapp/partymgr/WEB-INF/actions/HasPartyPermissions.groovy"/>
+                <script location="component://party/webapp/partymgr/WEB-INF/actions/party/EditPaymentMethod.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="PaymentMethodDecorator">
                     <decorator-section name="body">
                         <platform-specific>
-                            <html><html-template location="component://party/template/party/EditCreditCard.ftl"/></html>
+                            <html><html-template location="component://party/webapp/partymgr/party/editcreditcard.ftl"/></html>
                         </platform-specific>
                     </decorator-section>
                 </decorator-screen>
@@ -82,14 +82,14 @@ under the License.
                 <set field="titleProperty" value="PageTitleEditGiftCard"/>
                 <set field="tabButtonItem" value="editgiftcard"/>
 
-                <script location="component://party/groovyScripts/HasPartyPermissions.groovy"/>
-                <script location="component://party/groovyScripts/party/EditPaymentMethod.groovy"/>
+                <script location="component://party/webapp/partymgr/WEB-INF/actions/HasPartyPermissions.groovy"/>
+                <script location="component://party/webapp/partymgr/WEB-INF/actions/party/EditPaymentMethod.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="PaymentMethodDecorator">
                     <decorator-section name="body">
                         <platform-specific>
-                            <html><html-template location="component://party/template/party/EditGiftCard.ftl"/></html>
+                            <html><html-template location="component://party/webapp/partymgr/party/editgiftcard.ftl"/></html>
                         </platform-specific>
                     </decorator-section>
                 </decorator-screen>
@@ -102,34 +102,14 @@ under the License.
                 <set field="titleProperty" value="PageTitleEditEftAccount"/>
                 <set field="tabButtonItem" value="editeftaccount"/>
 
-                <script location="component://party/groovyScripts/HasPartyPermissions.groovy"/>
-                <script location="component://party/groovyScripts/party/EditPaymentMethod.groovy"/>
+                <script location="component://party/webapp/partymgr/WEB-INF/actions/HasPartyPermissions.groovy"/>
+                <script location="component://party/webapp/partymgr/WEB-INF/actions/party/EditPaymentMethod.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="PaymentMethodDecorator">
                     <decorator-section name="body">
                         <platform-specific>
-                            <html><html-template location="component://party/template/party/EditEftAccount.ftl"/></html>
-                        </platform-specific>
-                    </decorator-section>
-                </decorator-screen>
-            </widgets>
-        </section>
-    </screen>
-
-    <screen name="AddCheckAccount">
-        <section>
-            <actions>
-                <set field="titleProperty" value="AccountingAddCheckAccount"/>
-
-                <script location="component://party/groovyScripts/HasPartyPermissions.groovy"/>
-                <script location="component://party/groovyScripts/party/EditPaymentMethod.groovy"/>
-            </actions>
-            <widgets>
-                <decorator-screen name="PaymentMethodDecorator">
-                    <decorator-section name="body">
-                        <platform-specific>
-                            <html><html-template location="component://party/template/party/AddCheckForParty.ftl"/></html>
+                            <html><html-template location="component://party/webapp/partymgr/party/editeftaccount.ftl"/></html>
                         </platform-specific>
                     </decorator-section>
                 </decorator-screen>

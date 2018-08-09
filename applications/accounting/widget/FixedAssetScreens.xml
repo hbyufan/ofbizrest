@@ -19,7 +19,7 @@ under the License.
 -->
 
 <screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://ofbiz.apache.org/Widget-Screen" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
 
     <!-- list all assets in a tabular format -->
     <screen name="ListFixedAssets">
@@ -68,7 +68,7 @@ under the License.
                 <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
             </actions>
             <widgets>
-                <include-grid name="ListFixedAssets" location="component://accounting/widget/FixedAssetForms.xml"/>
+                <include-form name="ListFixedAssets" location="component://accounting/widget/FixedAssetForms.xml"/>
             </widgets>
         </section>
     </screen>
@@ -110,7 +110,6 @@ under the License.
                                         <label style="h1" text="${uiLabelMap[titleProperty]}"/>
                                     </fail-widgets>
                                 </section>
-                                    <container style="button-bar"><link target="EditFixedAsset" text="${uiLabelMap.AccountingNewFixedAsset}" style="buttontext create"/></container>
                                 <decorator-section-include name="body"/>
                             </widgets>
                             <fail-widgets>
@@ -139,6 +138,9 @@ under the License.
                             <condition>
                                 <if-service-permission service-name="fixedAssetPermissionCheck" main-action="CREATE"/>
                             </condition>
+                            <widgets>
+                                <container style="button-bar"><link target="EditFixedAsset" text="${uiLabelMap.AccountingNewFixedAsset}" style="buttontext create"/></container>
+                            </widgets>
                         </section>
                         <include-form name="EditFixedAsset" location="component://accounting/widget/FixedAssetForms.xml"/>
                     </decorator-section>
@@ -614,8 +616,8 @@ under the License.
                 <set field="titleProperty" value="PageTitleFixedAssetGeoLocation"/>
                 <set field="tabButtonItem" value="FixedAssetGeoLocation"/>
                 <set field="fixedAssetId" from-field="parameters.fixedAssetId"/>
-                <entity-one entity-name="FixedAsset" value-field="fixedAsset"/>
-                <script location="component://accounting/groovyScripts/fixedasset/FixedAssetGeoLocation.groovy"/>
+                <entity-one value-field="fixedAsset" entity-name="FixedAsset"/>
+                <script location="component://accounting/webapp/accounting/WEB-INF/actions/fixedasset/FixedAssetGeoLocation.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonFixedAssetDecorator" location="${parameters.fixedAssetDecoratorLocation}">

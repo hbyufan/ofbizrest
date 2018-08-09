@@ -18,8 +18,8 @@ specific language governing permissions and limitations
 under the License.
 -->
 <trees xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://ofbiz.apache.org/Widget-Tree" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Tree http://ofbiz.apache.org/dtds/widget-tree.xsd">
-    <tree name="CompDocTemplateTree" entity-name="Content" root-node-name="node-root"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-tree.xsd">
+    <tree name="CompDocTemplateTree" root-node-name="node-root"
         default-render-style="simple" default-wrap-style="treeWrapper">
         <node name="node-root" wrap-style="treeWrapper">
             <entity-one entity-name="Content" use-cache="false">
@@ -87,7 +87,7 @@ under the License.
         </node>
     </tree>
 
-    <tree name="CompDocInstanceTree" entity-name="Content" root-node-name="node-root"
+    <tree name="CompDocInstanceTree" root-node-name="node-root"
         default-render-style="simple" default-wrap-style="treeWrapper">
         <node name="node-root">
             <entity-one entity-name="Content" use-cache="false">

@@ -19,7 +19,7 @@ under the License.
 -->
 
 <screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns="http://ofbiz.apache.org/Widget-Screen" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
 
     <!-- Custom apps can use their own invoice decorator by specifying its
          location in parameters.invoiceDecoratorLocation -->
@@ -152,7 +152,7 @@ under the License.
                             </widgets>
                             <fail-widgets>
                                 <screenlet title="${uiLabelMap.PageTitleEditInvoice}">
-                                    <include-form name="InvoiceHeader" location="component://accounting/widget/InvoiceForms.xml"/>
+                                    <include-form name="invoiceHeader" location="component://accounting/widget/InvoiceForms.xml"/>
                                 </screenlet>
                             </fail-widgets>
                         </section>
@@ -172,30 +172,27 @@ under the License.
                 <set field="invoiceId" from-field="parameters.invoiceId"/>
                 <entity-one entity-name="Invoice" value-field="invoice"/>
                 <entity-and entity-name="InvoiceRole" list="invoiceRoles">
-                    <field-map field-name="invoiceId" from-field="parameters.invoiceId"/>
+                    <field-map from-field="parameters.invoiceId" field-name="invoiceId"/>
                     <order-by field-name="partyId"/>
                 </entity-and>
                 <entity-and entity-name="InvoiceStatus" list="invoiceStatus">
-                    <field-map field-name="invoiceId" from-field="parameters.invoiceId"/>
+                    <field-map from-field="parameters.invoiceId" field-name="invoiceId"/>
                     <order-by field-name="statusDate"/>
                 </entity-and>
                 <entity-and entity-name="InvoiceTerm" list="invoiceTerms">
-                    <field-map field-name="invoiceId" from-field="parameters.invoiceId"/>
+                    <field-map from-field="parameters.invoiceId" field-name="invoiceId"/>
                     <order-by field-name="invoiceTermId"/>
                 </entity-and>
                 <entity-and entity-name="TimeEntry" list="timeEntries">
-                    <field-map field-name="invoiceId" from-field="parameters.invoiceId"/>
+                    <field-map from-field="parameters.invoiceId" field-name="invoiceId"/>
                     <order-by field-name="invoiceItemSeqId"/>
                 </entity-and>
-                <script location="component://accounting/groovyScripts/invoice/CreateApplicationList.groovy"/>
-                <set field="invoiceAmount" value="${groovy:org.apache.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceTotal(invoice)}" type="BigDecimal"/>
-                <set field="notAppliedAmount" value="${groovy:org.apache.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceNotApplied(invoice)}" type="BigDecimal"/>
-                <set field="appliedAmount" value="${groovy:org.apache.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceApplied(invoice)}" type="BigDecimal"/>
-                <entity-condition entity-name="InvItemAndOrdItem" list="invItemAndOrdItems">
-                    <condition-expr field-name="invoiceId"  operator="equals" from-field="invoiceId"/>
-                    <order-by field-name="invoiceItemSeqId"/>
-                </entity-condition>
-                <entity-condition entity-name="AcctgTransAndEntries" list="acctgTransAndEntries">
+                <script location="component://accounting/webapp/accounting/WEB-INF/actions/invoice/CreateApplicationList.groovy"/>
+                <script location="component://accounting/webapp/accounting/WEB-INF/actions/invoice/OrderListInvoiceItem.groovy"/>
+                <set field="invoiceAmount" value="${bsh:org.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceTotal(invoice)}" type="BigDecimal"/>
+                <set field="notAppliedAmount" value="${bsh:org.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceNotApplied(invoice)}" type="BigDecimal"/>
+                <set field="appliedAmount" value="${bsh:org.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceApplied(invoice)}" type="BigDecimal"/>
+                <entity-condition entity-name="AcctgTransAndEntries" list="AcctgTransAndEntries">
                     <condition-expr field-name="invoiceId"  operator="equals" from-field="invoiceId"/>
                     <order-by field-name="acctgTransId"/>
                     <order-by field-name="acctgTransEntrySeqId"/>
@@ -218,7 +215,7 @@ under the License.
                                     <link target="editInvoice" text="${uiLabelMap.CommonUpdate}" style="buttontext">
                                         <parameter param-name="invoiceId"/>
                                     </link>
-                                    <include-form name="InvoiceHeader" location="component://accounting/widget/InvoiceForms.xml"/>
+                                    <include-form name="invoiceHeader" location="component://accounting/widget/InvoiceForms.xml"/>
                                 </screenlet>
                                 <container style="lefthalf">
                                     <screenlet title="${uiLabelMap.CommonStatus}" navigation-form-name="ListInvoiceStatus">
@@ -233,30 +230,25 @@ under the License.
                                     </screenlet>
                                 </container>
                                 <container style="righthalf">
-                                    <screenlet title="${uiLabelMap.AccountingInvoiceRoles}" navigation-form-name="InvoiceRoles">
+                                    <screenlet title="${uiLabelMap.AccountingInvoiceRoles}" navigation-form-name="invoiceRoles">
                                         <container>
                                             <link target="invoiceRoles" text="${uiLabelMap.CommonUpdate}" style="buttontext">
                                                 <parameter param-name="invoiceId"/>
                                             </link>
                                         </container>
-                                        <include-form name="InvoiceRoles" location="component://accounting/widget/InvoiceForms.xml"/>
+                                        <include-form name="invoiceRoles" location="component://accounting/widget/InvoiceForms.xml"/>
                                     </screenlet>
                                     <screenlet title="${uiLabelMap.PartyTerms}">
-                                        <container>
-                                            <link target="invoiceTerms" text="${uiLabelMap.CommonUpdate}" style="buttontext">
-                                                <parameter param-name="invoiceId"/>
-                                            </link>
-                                        </container>
                                         <include-form name="ListInvoiceTerms" location="component://accounting/widget/InvoiceForms.xml"/>
                                         <include-form name="ListInvoicePaymentInfo" location="component://accounting/widget/InvoiceForms.xml"/>
                                     </screenlet>
                                 </container>
                                 <container style="clear"/>
-                                <screenlet title="${uiLabelMap.AccountingInvoiceItems}" navigation-form-name="InvoiceItems">
+                                <screenlet title="${uiLabelMap.AccountingInvoiceItems}" navigation-form-name="invoiceItems">
                                     <link target="listInvoiceItems" text="${uiLabelMap.CommonUpdate}" style="buttontext">
                                         <parameter param-name="invoiceId"/>
                                     </link>
-                                    <include-form name="InvoiceItems" location="component://accounting/widget/InvoiceForms.xml"/>
+                                    <include-form name="invoiceItems" location="component://accounting/widget/InvoiceForms.xml"/>
                                 </screenlet>
                                 <section>
                                     <condition>
@@ -277,7 +269,7 @@ under the License.
                             </widgets>
                             <fail-widgets>
                                 <screenlet title="${uiLabelMap.AccountingInvoiceHeader}">
-                                    <include-form name="InvoiceHeader" location="component://accounting/widget/InvoiceForms.xml"/>
+                                    <include-form name="invoiceHeader" location="component://accounting/widget/InvoiceForms.xml"/>
                                 </screenlet>
                                 <container style="lefthalf">
                                     <screenlet title="${uiLabelMap.CommonStatus}" navigation-form-name="ListInvoiceStatus">
@@ -289,8 +281,8 @@ under the License.
                                     </screenlet>
                                 </container>
                                 <container style="righthalf">
-                                    <screenlet title="${uiLabelMap.AccountingInvoiceRoles}" navigation-form-name="InvoiceRoles">
-                                        <include-form name="InvoiceRoles" location="component://accounting/widget/InvoiceForms.xml"/>
+                                    <screenlet title="${uiLabelMap.AccountingInvoiceRoles}" navigation-form-name="invoiceRoles">
+                                        <include-form name="invoiceRoles" location="component://accounting/widget/InvoiceForms.xml"/>
                                     </screenlet>
                                     <screenlet title="${uiLabelMap.PartyTerms}">
                                         <include-form name="ListInvoiceTerms" location="component://accounting/widget/InvoiceForms.xml"/>
@@ -298,8 +290,8 @@ under the License.
                                     </screenlet>
                                 </container>
                                 <container style="clear"/>
-                                <screenlet title="${uiLabelMap.AccountingInvoiceItems}" navigation-form-name="InvoiceItems">
-                                    <include-form name="InvoiceItems" location="component://accounting/widget/InvoiceForms.xml"/>
+                                <screenlet title="${uiLabelMap.AccountingInvoiceItems}" navigation-form-name="invoiceItems">
+                                    <include-form name="invoiceItems" location="component://accounting/widget/InvoiceForms.xml"/>
                                 </screenlet>
                                 <section>
                                     <condition>
@@ -335,7 +327,7 @@ under the License.
                 <set field="invoiceId" from-field="parameters.invoiceId"/>
                 <entity-one entity-name="Invoice" value-field="invoice" auto-field-map="true"/>
                 <entity-and entity-name="InvoiceStatus" list="invoiceStatus">
-                    <field-map field-name="invoiceId" from-field="invoice.invoiceId"/>
+                    <field-map from-field="invoice.invoiceId" field-name="invoiceId"/>
                     <order-by field-name="statusDate"/>
                 </entity-and>
             </actions>
@@ -359,11 +351,11 @@ under the License.
 
                 <set field="invoiceId" from-field="parameters.invoiceId"/>
                 <entity-one entity-name="Invoice" value-field="invoice"/>
-                <script location="component://accounting/groovyScripts/invoice/CreateApplicationList.groovy"/>
-                <script location="component://accounting/groovyScripts/invoice/ListNotAppliedPayments.groovy"/>
-                <set field="invoiceAmount" value="${groovy:org.apache.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceTotal(invoice)}" type="BigDecimal"/>
-                <set field="notAppliedAmount" value="${groovy:org.apache.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceNotApplied(invoice)}" type="BigDecimal"/>
-                <set field="appliedAmount" value="${groovy:org.apache.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceApplied(invoice)}" type="BigDecimal"/>
+                <script location="component://accounting/webapp/accounting/WEB-INF/actions/invoice/CreateApplicationList.groovy"/>
+                <script location="component://accounting/webapp/accounting/WEB-INF/actions/invoice/ListNotAppliedPayments.groovy"/>
+                <set field="invoiceAmount" value="${bsh:org.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceTotal(invoice)}" type="BigDecimal"/>
+                <set field="notAppliedAmount" value="${bsh:org.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceNotApplied(invoice)}" type="BigDecimal"/>
+                <set field="appliedAmount" value="${bsh:org.ofbiz.accounting.invoice.InvoiceWorker.getInvoiceApplied(invoice)}" type="BigDecimal"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonInvoiceDecorator" location="${parameters.invoiceDecoratorLocation}">
@@ -453,15 +445,18 @@ under the License.
                     <field-map field-name="invoiceId" from-field="parameters.invoiceId"/>
                     <order-by field-name="invoiceItemSeqId"/>
                 </entity-and>
+                <script location="component://accounting/webapp/accounting/WEB-INF/actions/invoice/GetInvoiceItemTypes.groovy"/>
                 <entity-condition entity-name="InvoiceItemType" list="PayrolGroup">
                     <condition-expr field-name="parentTypeId" value="PAYROL"/>
                 </entity-condition>
-                <entity-condition entity-name="InvoiceItemType" list="PayrolList"/>
-                <script location="component://accounting/groovyScripts/invoice/GetAccountOrganizationAndClass.groovy"/>
+                <entity-condition entity-name="InvoiceItemType" list="PayrolList"></entity-condition>
             </actions>
             <widgets>
                 <decorator-screen name="CommonInvoiceDecorator" location="${parameters.invoiceDecoratorLocation}">
                     <decorator-section name="body">
+                        <screenlet title="${uiLabelMap.AccountingInvoiceItems}">
+                            <include-form name="EditInvoiceItems" location="component://accounting/widget/InvoiceForms.xml"/>
+                        </screenlet>
                         <screenlet title="${uiLabelMap.AccountingInvoiceItemAdd}">
                             <section>
                                 <condition>
@@ -471,12 +466,9 @@ under the License.
                                     <include-form name="EditInvoiceItem" location="component://accounting/widget/InvoiceForms.xml"/>
                                 </widgets>
                                 <fail-widgets>
-                                    <platform-specific><html><html-template location="component://accounting/template/invoice/InvoiceItemsPayrol.ftl"/></html></platform-specific>
+                                    <platform-specific><html><html-template location="component://accounting/webapp/accounting/invoice/InvoiceItemsPayrol.ftl"/></html></platform-specific>
                                 </fail-widgets>
                             </section>
-                        </screenlet>
-                        <screenlet title="${uiLabelMap.AccountingInvoiceItems}">
-                            <include-form name="EditInvoiceItems" location="component://accounting/widget/InvoiceForms.xml"/>
                         </screenlet>
                     </decorator-section>
                 </decorator-screen>
@@ -518,7 +510,7 @@ under the License.
                 <set field="invoiceId" from-field="parameters.invoiceId"/>
                 <entity-one entity-name="Invoice" value-field="invoice"/>
                 <entity-and entity-name="InvoiceRole" list="invoiceRoles">
-                    <field-map field-name="invoiceId" from-field="invoiceId"/>
+                    <field-map from-field="invoiceId" field-name="invoiceId"/>
                     <order-by field-name="partyId"/>
                 </entity-and>
             </actions>
@@ -529,40 +521,6 @@ under the License.
                             <include-form name="EditInvoiceRole" location="component://accounting/widget/InvoiceForms.xml"/>
                         </screenlet>
                         <include-form name="ListInvoiceRoles" location="component://accounting/widget/InvoiceForms.xml"/>
-                    </decorator-section>
-                </decorator-screen>
-            </widgets>
-        </section>
-    </screen>
-
-    <screen name="InvoiceTerms">
-        <section>
-            <actions>
-                <set field="titleProperty" value="PageTitleListInvoiceTerms"/>
-                <set field="tabButtonItem" value="invoiceTerms"/>
-                <set field="invoiceId" from-field="parameters.invoiceId"/>
-                <entity-one entity-name="Invoice" value-field="invoice"/>
-                <entity-and entity-name="InvoiceTerm" list="invoiceTerms">
-                    <field-map field-name="invoiceId" from-field="invoiceId"/>
-                    <order-by field-name="invoiceTermId"/>
-                </entity-and>
-            </actions>
-            <widgets>
-                <decorator-screen name="CommonInvoiceDecorator" location="${parameters.invoiceDecoratorLocation}">
-                    <decorator-section name="body">
-                        <section>
-                            <condition>
-                                <not>
-                                    <if-compare field="invoice.statusId" operator="equals" value="INVOICE_APPROVED"/>
-                                </not>
-                            </condition>
-                            <widgets>
-                                <screenlet id="PartyInvoiceTermPanel" collapsible="true">
-                                    <include-form name="EditInvoiceTerm" location="component://accounting/widget/InvoiceForms.xml"/>
-                                </screenlet>
-                            </widgets>
-                        </section>
-                        <include-form name="ListInvoiceTerms" location="component://accounting/widget/InvoiceForms.xml"/>
                     </decorator-section>
                 </decorator-screen>
             </widgets>
@@ -592,7 +550,7 @@ under the License.
     <screen name="sendPerEmailBody">
         <section>
             <widgets>
-                <platform-specific><html><html-template location="component://accounting/template/invoice/sendPerEmail.ftl"/></html></platform-specific>
+                <platform-specific><html><html-template location="component://accounting/webapp/accounting/invoice/sendPerEmail.ftl"/></html></platform-specific>
             </widgets>
         </section>
     </screen>
@@ -601,8 +559,8 @@ under the License.
         <section>
             <actions>
                 <property-map resource="AccountingUiLabels" map-name="uiLabelMap" global="true"/>
-                <script location="component://party/groovyScripts/party/GetMyCompany.groovy"/>
-                <entity-condition entity-name="Invoice" list="invoices">
+                <script location="component://party/webapp/partymgr/WEB-INF/actions/party/GetMyCompany.groovy"/>
+                <entity-condition list="invoices" entity-name="Invoice">
                     <condition-list combine="and">
                         <condition-expr field-name="partyId" operator="equals" from-field="myCompanyId"/>
                         <condition-list combine="or">
@@ -627,7 +585,7 @@ under the License.
         <section>
             <actions>
                 <set field="myCompanyId" from-field="userLogin.partyId"/>
-                <entity-condition entity-name="Invoice" list="invoiceslistexternal">
+                <entity-condition list="invoiceslistexternal" entity-name="Invoice">
                     <condition-list combine="and">
                         <condition-expr field-name="partyIdFrom" operator="equals" from-field="myCompanyId"/>
                         <condition-expr field-name="invoiceTypeId" operator="equals" value="PURCHASE_INVOICE"/>

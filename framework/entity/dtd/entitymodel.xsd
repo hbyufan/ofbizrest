@@ -18,7 +18,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 <!--
-    *This is the DTD for the Apache OFBiz Generic Entity Model entity definition XML file.
+    *This is the DTD for the Open For Business Generic Entity Model entity definition XML file.
     *This DTD is meant to be as simple as possible, and is modelled from the standard ejb deployment descriptor ejb-jar.xml.
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
@@ -39,9 +39,6 @@ under the License.
             <xs:enumeration value="count-distinct"/>
             <xs:enumeration value="upper"/>
             <xs:enumeration value="lower"/>
-            <xs:enumeration value="extract-year"/>
-            <xs:enumeration value="extract-month"/>
-            <xs:enumeration value="extract-day"/>
         </xs:restriction>
     </xs:simpleType>
 
@@ -138,15 +135,7 @@ under the License.
         <xs:attribute name="name" type="xs:string" use="required"/>
         <xs:attribute name="col-name" type="xs:string"/>
         <xs:attribute name="type" type="xs:string" use="required"/>
-        <xs:attribute name="encrypt" default="false">
-            <xs:simpleType>
-                <xs:restriction base="xs:token">
-                    <xs:enumeration value="true"/>
-                    <xs:enumeration value="false"/>
-                    <xs:enumeration value="salt"/>
-                </xs:restriction>
-            </xs:simpleType>
-        </xs:attribute>
+        <xs:attribute name="encrypt" default="false" type="boolean"/>
         <xs:attribute name="enable-audit-log" default="false" type="boolean">
             <xs:annotation>
                 <xs:documentation>
@@ -435,7 +424,7 @@ under the License.
         </xs:complexType>
     </xs:element>
     <xs:attributeGroup name="attlist.condition-expr">
-        <xs:attribute name="entity-alias" type="xs:string"  use="required"/>
+        <xs:attribute name="entity-alias" type="xs:string"/>
         <xs:attribute name="field-name" type="xs:string" use="required"/>
         <xs:attribute name="operator" default="equals">
             <xs:simpleType>
@@ -510,13 +499,7 @@ under the License.
     <xs:element name="extend-entity">
         <xs:complexType>
             <xs:sequence>
-                <xs:element minOccurs="0" maxOccurs="unbounded" ref="field">
-                    <xs:annotation>
-                        <xs:documentation>
-                            Only overrides of type, colName, description and enable-audit-log are currently supported
-                        </xs:documentation>
-                    </xs:annotation>
-                </xs:element>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="field"/>
                 <xs:element minOccurs="0" maxOccurs="unbounded" ref="relation"/>
                 <xs:element minOccurs="0" maxOccurs="unbounded" ref="index"/>
             </xs:sequence>

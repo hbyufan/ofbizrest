@@ -19,11 +19,11 @@ under the License.
 -->
 
 <screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://ofbiz.apache.org/Widget-Screen" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
     <screen name="CommonBomDecorator">
         <section>
             <widgets>
-                <decorator-screen name="CommonManufacturingDecorator" location="${parameters.commonManufacturingDecoratorLocation}">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <section>
                             <!-- do check for MANUFACTURING, _VIEW permission -->
@@ -52,13 +52,13 @@ under the License.
                 <set field="headerItem" value="bom"/>
                 <set field="productId" from-field="parameters.productId"/>
                 <entity-one entity-name="Product" value-field="product"/>
-                <script location="component://manufacturing/groovyScripts/bom/EditProductBom.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/bom/EditProductBom.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonBomDecorator">
                     <decorator-section name="body">
                         <platform-specific>
-                            <html><html-template location="component://manufacturing/template/bom/EditProductBom.ftl"/></html>
+                            <html><html-template location="component://manufacturing/webapp/manufacturing/bom/EditProductBom.ftl"/></html>
                         </platform-specific>
                     </decorator-section>
                 </decorator-screen>
@@ -109,11 +109,11 @@ under the License.
                 <property-to-field field="defaultCurrencyUomId" resource="general" property="currency.uom.id.default" default="USD"/>
 
                 <entity-and entity-name="ProductFeatureAndAppl" list="selectedFeatures">
-                    <field-map field-name="productId" from-field="productId"/>
-                    <field-map field-name="productFeatureApplTypeId" from-field="productFeatureApplTypeId"/>
+                    <field-map from-field="productId" field-name="productId"/>
+                    <field-map from-field="productFeatureApplTypeId" field-name="productFeatureApplTypeId"/>
                     <order-by field-name="sequenceNum"/>
                 </entity-and>
-                <script location="component://manufacturing/groovyScripts/bom/BomSimulation.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/bom/BomSimulation.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonBomDecorator">
@@ -122,7 +122,7 @@ under the License.
                             <include-form name="RunBomSimulation" location="component://manufacturing/widget/manufacturing/BomForms.xml"/>
                         </screenlet>
                         <platform-specific>
-                            <html><html-template location="component://manufacturing/template/bom/BomSimulation.ftl"/></html>
+                            <html><html-template location="component://manufacturing/webapp/manufacturing/bom/BomSimulation.ftl"/></html>
                         </platform-specific>
                     </decorator-section>
                 </decorator-screen>
@@ -136,22 +136,39 @@ under the License.
                 <set field="tabButtonItem" value="findBom"/>
                 <set field="labelTitleProperty" value="findBom"/>
                 <set field="headerItem" value="bom"/>
-                <script location="component://manufacturing/groovyScripts/bom/FindProductBom.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/bom/FindProductBom.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonBomDecorator">
                     <decorator-section name="body">
                         <decorator-screen name="FindScreenDecorator" location="component://common/widget/CommonScreens.xml">
                             <decorator-section name="menu-bar">
-                                <container style="button-bar"><link target="EditProductBom" text="${uiLabelMap.ManufacturingCreateBom}" style="buttontext"/></container>
+                                <container style="button-bar"><link target="CreateProductBom" text="${uiLabelMap.ManufacturingCreateBom}" style="buttontext"/></container>
                             </decorator-section>
                             <decorator-section name="search-options">
-                                <include-form name="FindBom" location="component://manufacturing/widget/manufacturing/BomForms.xml"/>
+                                <include-form name="findBom" location="component://manufacturing/widget/manufacturing/BomForms.xml"/>
                             </decorator-section>
                             <decorator-section name="search-results">
                                 <include-form name="ListBom" location="component://manufacturing/widget/manufacturing/BomForms.xml"/>
                             </decorator-section>
                         </decorator-screen>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+    <screen name="CreateProductBom">
+        <section>
+            <actions>
+                <set field="titleProperty" value="ManufacturingCreateProductBom"/>
+                <set field="headerItem" value="bom"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="${uiLabelMap.ManufacturingCreateProductBom}">
+                            <include-form name="CreateProductBom" location="component://manufacturing/widget/manufacturing/BomForms.xml"/>
+                        </screenlet>
                     </decorator-section>
                 </decorator-screen>
             </widgets>

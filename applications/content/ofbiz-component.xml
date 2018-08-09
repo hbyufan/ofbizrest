@@ -24,7 +24,10 @@ under the License.
     <resource-loader name="main" type="component"/>
     <classpath type="dir" location="config"/>
     <classpath type="dir" location="dtd"/>
-
+    <classpath type="jar" location="lib/*"/>
+    <classpath type="jar" location="lib/uno/*"/>
+    <classpath type="jar" location="build/lib/*"/>
+    <entity-resource type="model" reader-name="main" loader="main" location="entitydef/entitymodel.xml"/>
     <entity-resource type="eca" reader-name="main" loader="main" location="entitydef/eecas.xml"/>
     <entity-resource type="data" reader-name="seed" loader="main" location="data/ContentTypeData.xml"/>
     <entity-resource type="data" reader-name="seed" loader="main" location="data/ContentOperationData.xml"/>
@@ -54,7 +57,6 @@ under the License.
     <service-resource type="model" loader="main" location="servicedef/services_content.xml"/>
     <service-resource type="model" loader="main" location="servicedef/services_contenttypes.xml"/>
     <service-resource type="model" loader="main" location="servicedef/services_data.xml"/>
-    <service-resource type="model" loader="main" location="servicedef/services_document.xml"/>
     <service-resource type="model" loader="main" location="servicedef/services_output.xml"/>
     <service-resource type="model" loader="main" location="servicedef/services_survey.xml"/>
     <service-resource type="model" loader="main" location="servicedef/services_commevent.xml"/>
@@ -68,12 +70,13 @@ under the License.
         location="webapp/content"
         base-permission="OFBTOOLS,CONTENTMGR"
         mount-point="/content"/>
-    
-    <webapp name="contentimages"
-        title="Content Images"
-        server="default-server"
-        location="webapp/contentimages"
-        mount-point="/contentimages/"
-        app-bar-display="false"/>
 
+    <!-- 
+    <webapp name="ofbizhelp"
+        title="OFBiz Help"
+        server="default-server"
+        location="webapp/ofbizhelp"
+        base-permission="OFBTOOLS"
+        mount-point="/ofbizhelp"/>
+     -->
 </ofbiz-component>

@@ -19,14 +19,14 @@ under the License.
 -->
 
 <forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-       xmlns="http://ofbiz.apache.org/Widget-Form" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Form http://ofbiz.apache.org/dtds/widget-form.xsd">
+       xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
     <form name="FindPartySkills" type="single" target="FindPartySkills"
         header-row-style="header-row" default-table-style="basic-table">
         <auto-fields-entity entity-name="PartySkill" default-field-type="find"/>
         <field name="partyId"><lookup target-form-name="LookupPartyName"/></field>
         <field name="skillTypeId">
             <drop-down allow-empty="true">
-                <entity-options entity-name="SkillType">
+                <entity-options description="${description}" entity-name="SkillType">
                     <entity-order-by field-name="description"/>
                 </entity-options>
             </drop-down>
@@ -40,20 +40,23 @@ under the License.
     <form name="ListPartySkills" type="list" list-name="listIt" use-row-submit="true" separate-columns="true" target="updatePartySkillExt" paginate-target="findPartySkills"
         odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
-            <entity-condition entity-name="PartySkill">
-                <condition-expr field-name="partyId" from-field="partyId"/>
-                <order-by field-name="skillTypeId"/>
-            </entity-condition>
+            <service service-name="performFind" result-map="result" result-map-list="listIt">
+                <field-map field-name="inputFields" from-field="parameters"/>
+                <field-map field-name="entityName" value="PartySkill"/>
+                <field-map field-name="orderBy" value="skillTypeId"/>
+                <field-map field-name="viewIndex" from-field="viewIndex"/>
+                <field-map field-name="viewSize" from-field="viewSize"/>
+            </service>
         </actions>
         <auto-fields-service default-field-type="hidden" service-name="updatePartySkill"/>
         <field name="skillTypeId">
-            <display-entity entity-name="SkillType"/>
+            <display-entity entity-name="SkillType" description="${description}"/>
         </field>
         <field name="yearsExperience"><text/></field>
         <field name="rating"><text/></field>
         <field name="skillLevel"><text/></field>
         <field name="deleteLink" title="${uiLabelMap.CommonDelete}" widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="deletePartySkill" also-hidden="false">
+            <hyperlink target="deletePartySkill" description="${uiLabelMap.CommonDelete}" also-hidden="false">
                 <parameter param-name="skillTypeId"/>
                 <parameter param-name="partyId"/>
             </hyperlink>
@@ -67,10 +70,10 @@ under the License.
         </actions>
         <alt-target use-when="insideEmployee != null" target="createPartySkillExt"/>
         <field name="partyId" use-when="partySkill != null"><hidden/></field>
-        <field name="partyId" use-when="partySkill == null" required-field="true"><lookup target-form-name="LookupPartyName"/></field>
-        <field name="skillTypeId" required-field="true">
+        <field name="partyId" use-when="partySkill == null" tooltip="${uiLabelMap.CommonRequired}" widget-style="required"><lookup target-form-name="LookupPartyName"/></field>
+        <field name="skillTypeId" tooltip="${uiLabelMap.CommonRequired}" widget-style="required">
             <drop-down>
-                <entity-options entity-name="SkillType">
+                <entity-options description="${description}" entity-name="SkillType">
                     <entity-order-by field-name="description"/>
                 </entity-options>
             </drop-down>

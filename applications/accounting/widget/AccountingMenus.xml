@@ -19,7 +19,7 @@ under the License.
 -->
 
 <menus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xmlns="http://ofbiz.apache.org/Widget-Menu" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Menu http://ofbiz.apache.org/dtds/widget-menu.xsd">
+ xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-menu.xsd">
 
     <menu name="AccountingAppBar" title="${uiLabelMap.AccountingManager}" extends="CommonAppBarMenu" extends-resource="component://common/widget/CommonMenus.xml">
         <menu-item name="invoices" title="${uiLabelMap.AccountingInvoicesMenu}"><link target="findInvoices"/></menu-item>
@@ -48,7 +48,6 @@ under the License.
         <menu-item name="TaxAuthorities" title="${uiLabelMap.AccountingTaxAuthorities}"><link target="FindTaxAuthority"/></menu-item>
         <menu-item name="agreements" title="${uiLabelMap.AccountingAgreements}"><link target="FindAgreement"/></menu-item>
         <menu-item name="ListFixedAssets" title="${uiLabelMap.AccountingFixedAssets}"><link target="ListFixedAssets"/></menu-item>
-        <menu-item name="ListBudgets" title="${uiLabelMap.AccountingBudgets}"><link target="ListBudgets"/></menu-item>
         <menu-item name="GlobalGLSettings" title="${uiLabelMap.AccountingGlobalGLSettings}"><link target="globalGLSettings"/></menu-item>
         <menu-item name="companies" title="${uiLabelMap.AccountingOrgGlSettings}"><link target="ListCompanies"/></menu-item>
     </menu>
@@ -110,7 +109,7 @@ under the License.
                 <parameter param-name="invoiceId" from-field="invoice.invoiceId"/>
             </link>
         </menu-item>
-        
+
         <menu-item name="invoiceRoles" title="${uiLabelMap.AccountingInvoiceRoles}">
             <condition>
                 <and>
@@ -125,22 +124,7 @@ under the License.
                 <parameter param-name="invoiceId" from-field="invoice.invoiceId"/>
             </link>
         </menu-item>
-        
-        <menu-item name="invoiceTerms" title="${uiLabelMap.PartyTerms}">
-            <condition>
-                <and>
-                    <not><if-empty field="invoice.invoiceId"/></not>
-                    <or>
-                        <if-compare field="invoice.statusId" operator="equals" value="INVOICE_IN_PROCESS"/>
-                        <if-compare field="invoice.statusId" operator="equals" value="INVOICE_RECEIVED"/>
-                    </or>
-                </and>
-            </condition>
-            <link target="invoiceTerms">
-                <parameter param-name="invoiceId" from-field="invoice.invoiceId"/>
-            </link>
-        </menu-item>
-        
+
         <menu-item name="editInvoiceApplications" title="${uiLabelMap.AccountingApplications}">
             <condition>
                 <and>
@@ -419,7 +403,7 @@ under the License.
     <menu name="PaymentSubTabBar" extends="CommonTabBarMenu" extends-resource="component://common/widget/CommonMenus.xml"
           menu-container-style="button-bar button-style-2">
         <actions>
-            <set field="isDisbursement" value="${groovy:if(context.payment != null) return org.apache.ofbiz.accounting.util.UtilAccounting.isDisbursement(context.payment)}"/>
+            <set field="isDisbursement" value="${bsh:if(payment!=void)return org.ofbiz.accounting.util.UtilAccounting.isDisbursement(payment)}"/>
         </actions>
         <menu-item name="createNew" title="${uiLabelMap.CommonCreateNew}" widget-style="buttontext create" >
             <condition>
@@ -515,7 +499,7 @@ under the License.
                     </or>
                 </and>
             </condition>
-            <link target="PaymentAcctgTransEntriesPdf" link-type="anchor">
+            <link target="PaymentAcctgTransEntriesPdf">
                 <parameter param-name="paymentId" from-field="payment.paymentId"/>
             </link>
         </menu-item>
@@ -684,117 +668,6 @@ under the License.
         <menu-item name="FixedAssetGeoLocation" title="${uiLabelMap.CommonGeoLocation}">
             <link target="FixedAssetGeoLocation">
                 <parameter param-name="fixedAssetId"/>
-            </link>
-        </menu-item>
-    </menu>
-
-    <menu name="BudgetTabBar" extends="CommonTabBarMenu" extends-resource="component://common/widget/CommonMenus.xml"
-          default-menu-item-name="EditBudget">
-        <menu-item name="ListBudgets" title="${uiLabelMap.AccountingBudgetFind}">
-            <link target="ListBudgets"/>
-        </menu-item>
-        <menu-item name="BudgetOverview" title="${uiLabelMap.AccountingBudgetOverview}">
-            <link target="BudgetOverview">
-                <parameter param-name="budgetId"/>
-            </link>
-        </menu-item>
-        <menu-item name="EditBudget" title="${uiLabelMap.AccountingBudgetHeader}">
-            <condition>
-                <and>
-                    <not><if-empty field="budgetId"/></not>
-                    <or>
-                        <if-compare field="statusId" operator="equals" value="BG_CREATED"/>
-                        <if-compare field="statusId" operator="equals" value="BG_REVIEWED"/>
-                    </or>
-                </and>
-            </condition>
-            <link target="EditBudget">
-                <parameter param-name="budgetId"/>
-            </link>
-        </menu-item>
-        <menu-item name="BudgetItem" title="${uiLabelMap.AccountingBudgetItems}">
-            <condition>
-                <and>
-                    <not><if-empty field="budgetId"/></not>
-                    <or>
-                        <if-compare field="statusId" operator="equals" value="BG_CREATED"/>
-                        <if-compare field="statusId" operator="equals" value="BG_REVIEWED"/>
-                    </or>
-                </and>
-            </condition>
-            <link target="EditBudgetItems">
-                <parameter param-name="budgetId"/>
-            </link>
-        </menu-item>
-        <menu-item name="BudgetRoles" title="${uiLabelMap.AccountingBudgetRoles}">
-            <condition>
-                <and>
-                    <not><if-empty field="budgetId"/></not>
-                    <or>
-                        <if-compare field="statusId" operator="equals" value="BG_CREATED"/>
-                        <if-compare field="statusId" operator="equals" value="BG_REVIEWED"/>
-                    </or>
-                </and>
-            </condition>
-            <link target="BudgetRoles">
-                <parameter param-name="budgetId"/>
-            </link>
-        </menu-item>
-        <menu-item name="BudgetReviews" title="${uiLabelMap.AccountingBudgetReviews}">
-            <condition>
-                <and>
-                    <not><if-empty field="budgetId"/></not>
-                    <if-compare field="statusId" operator="not-equals" value="BG_REJECTED"/>
-                </and>
-            </condition>
-            <link target="BudgetReviews">
-                <parameter param-name="budgetId"/>
-            </link>
-        </menu-item>
-    </menu>
-
-    <menu name="BudgetSubTabBar" menu-container-style="button-bar button-style-2" default-selected-style="selected">
-        <menu-item name="statusToApproved" title="${uiLabelMap.AccountingBudgetStatusToApproved}">
-            <condition>
-                <and>
-                    <not><if-empty field="budgetId"/></not>
-                    <or>
-                        <if-compare field="statusId" operator="equals" value="BG_CREATED"/>
-                        <if-compare field="statusId" operator="equals" value="BG_REVIEWED"/>
-                    </or>
-                </and>
-            </condition>
-            <link target="updateBudgetStatus">
-                <parameter param-name="budgetId" from-field="budgetId"/>
-                <parameter param-name="statusId" value="BG_APPROVED"/>
-            </link>
-        </menu-item>
-        <menu-item name="statusToReview" title="${uiLabelMap.AccountingBudgetStatusToReviewed}">
-            <condition>
-                <and>
-                    <not><if-empty field="budgetId"/></not>
-                    <if-compare field="statusId" operator="equals" value="BG_CREATED"/>
-                </and>
-            </condition>
-            <link target="updateBudgetStatus">
-                <parameter param-name="budgetId" from-field="budgetId"/>
-                <parameter param-name="statusId" value="BG_REVIEWED"/>
-            </link>
-        </menu-item>
-        <menu-item name="statusToReject" title="${uiLabelMap.AccountingBudgetStatusToRejected}">
-            <condition>
-                <and>
-                    <not><if-empty field="budgetId"/></not>
-                    <or>
-                        <if-compare field="statusId" operator="equals" value="BG_CREATED"/>
-                        <if-compare field="statusId" operator="equals" value="BG_REVIEWED"/>
-                        <if-compare field="statusId" operator="equals" value="BG_APPROVED"/>
-                    </or>
-                </and>
-            </condition>
-            <link target="updateBudgetStatus">
-                <parameter param-name="budgetId" from-field="budgetId"/>
-                <parameter param-name="statusId" value="BG_REJECTED"/>
             </link>
         </menu-item>
     </menu>
@@ -1174,11 +1047,6 @@ under the License.
                 <parameter param-name="agreementId" from-field="agreement.agreementId"/>
             </link>
         </menu-item>
-        <menu-item name="AgreementContents" title="${uiLabelMap.AccountingAgreementContents}">
-            <link target="EditAgreementContents">
-                <parameter param-name="agreementId" from-field="agreement.agreementId"/>
-            </link>
-        </menu-item>
     </menu>
 
     <menu name="AgreementItemTabBar" extends="CommonTabBarMenu" extends-resource="component://common/widget/CommonMenus.xml"
@@ -1444,7 +1312,7 @@ under the License.
             </link>
         </menu-item>
     </menu>
-    <menu name="NewAccountOrganization">
+    <menu name="newAccountOrganization">
         <menu-item name="addCompany"  title="${uiLabelMap.AccountingNewCompany}">
             <condition>
                 <if-compare field="hasPrefPermission" operator="equals" value="true" type="Boolean"/>

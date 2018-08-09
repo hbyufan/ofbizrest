@@ -23,16 +23,16 @@ access. For a detailed description see the core/docs/entityconfig.html file.
 -->
 <entity-config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entity-config.xsd">
-    <resource-loader name="fieldfile" class="org.apache.ofbiz.base.config.FileLoader"
+    <resource-loader name="fieldfile" class="org.ofbiz.base.config.FileLoader"
             prepend-env="ofbiz.home" prefix="/framework/entity/fieldtype/"/>
 
     <!-- the transaction factory class to use, one is needed for each way of getting JTA interfaces -->
     <!-- Use this one for Geronimo -->
-    <transaction-factory class="org.apache.ofbiz.entity.transaction.GeronimoTransactionFactory"/>
+    <transaction-factory class="org.ofbiz.geronimo.GeronimoTransactionFactory"/>
 
     <!-- Use this one for getting the JTA objects from JNDI -->
     <!-- NOTE: to use the JndiFactory you must specify the necessary JNDI properties
-    <transaction-factory class="org.apache.ofbiz.entity.transaction.JNDITransactionFactory">
+    <transaction-factory class="org.ofbiz.entity.transaction.JNDIFactory">
         <user-transaction-jndi jndi-server-name="default" jndi-name="java:comp/UserTransaction"/>
         <transaction-manager-jndi jndi-server-name="default" jndi-name="java:comp/UserTransaction"/>
     </transaction-factory>
@@ -47,26 +47,44 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     -->
 
     <!-- the connection factory class to use, one is needed for obtaining connections/pools for defined resources -->
-    <connection-factory class="org.apache.ofbiz.entity.connection.DBCPConnectionFactory"/>
+    <connection-factory class="org.ofbiz.entity.connection.DBCPConnectionFactory"/>
 
     <debug-xa-resources value="false" />  <!-- see https://issues.apache.org/jira/browse/OFBIZ-4282 for more -->
     
     <delegator name="default" entity-model-reader="main" entity-group-reader="main" entity-eca-reader="main" distributed-cache-clear-enabled="false">
-        <group-map group-name="org.apache.ofbiz" datasource-name="localderby"/>
-        <group-map group-name="org.apache.ofbiz.olap" datasource-name="localderbyolap"/>
-        <group-map group-name="org.apache.ofbiz.tenant" datasource-name="localderbytenant"/>
+        <group-map group-name="org.ofbiz" datasource-name="localderby"/>
+        <group-map group-name="org.ofbiz.olap" datasource-name="localderbyolap"/>
+        <group-map group-name="org.ofbiz.tenant" datasource-name="localderbytenant"/>
+        <!-- <group-map group-name="org.ofbiz" datasource-name="localmysql"/>
+        <group-map group-name="org.ofbiz.olap" datasource-name="localmysqlolap"/>
+        <group-map group-name="org.ofbiz.tenant" datasource-name="localmysqltenant"/>  -->
+        <!-- <group-map group-name="org.ofbiz" datasource-name="localpostnew"/>
+        <group-map group-name="org.ofbiz.olap" datasource-name="localpostolap"/>
+        <group-map group-name="org.ofbiz.tenant" datasource-name="localposttenant"/> -->
     </delegator>
     <delegator name="default-no-eca" entity-model-reader="main" entity-group-reader="main" entity-eca-reader="main" entity-eca-enabled="false" distributed-cache-clear-enabled="false">
-        <group-map group-name="org.apache.ofbiz" datasource-name="localderby"/>
-        <group-map group-name="org.apache.ofbiz.olap" datasource-name="localderbyolap"/>
-        <group-map group-name="org.apache.ofbiz.tenant" datasource-name="localderbytenant"/>
+        <group-map group-name="org.ofbiz" datasource-name="localderby"/>
+        <group-map group-name="org.ofbiz.olap" datasource-name="localderbyolap"/>
+        <group-map group-name="org.ofbiz.tenant" datasource-name="localderbytenant"/>
+        <!-- <group-map group-name="org.ofbiz" datasource-name="localmysql"/>
+        <group-map group-name="org.ofbiz.olap" datasource-name="localmysqlolap"/>
+        <group-map group-name="org.ofbiz.tenant" datasource-name="localmysqltenant"/>  -->
+        <!-- <group-map group-name="org.ofbiz" datasource-name="localpostnew"/>
+        <group-map group-name="org.ofbiz.olap" datasource-name="localpostolap"/>
+        <group-map group-name="org.ofbiz.tenant" datasource-name="localposttenant"/>  -->
     </delegator>
 
-    <!-- be sure that your default delegator (or the one you use) uses the same datasource for test. You must run "gradlew loadDefault" before running "gradlew testIntegration" -->
+    <!-- be sure that your default delegator (or the one you use) uses the same datasource for test. You must run "ant load-demo" before running "ant run-tests" -->
     <delegator name="test" entity-model-reader="main" entity-group-reader="main" entity-eca-reader="main">
-        <group-map group-name="org.apache.ofbiz" datasource-name="localderby"/>
-        <group-map group-name="org.apache.ofbiz.olap" datasource-name="localderbyolap"/>
-        <group-map group-name="org.apache.ofbiz.tenant" datasource-name="localderbytenant"/>
+        <group-map group-name="org.ofbiz" datasource-name="localderby"/>
+        <group-map group-name="org.ofbiz.olap" datasource-name="localderbyolap"/>
+        <group-map group-name="org.ofbiz.tenant" datasource-name="localderbytenant"/>
+        <!-- <group-map group-name="org.ofbiz" datasource-name="localmysql"/>
+        <group-map group-name="org.ofbiz.olap" datasource-name="localmysqlolap"/>
+        <group-map group-name="org.ofbiz.tenant" datasource-name="localmysqltenant"/>  -->
+        <!-- <group-map group-name="org.ofbiz" datasource-name="localpostnew"/>
+        <group-map group-name="org.ofbiz.olap" datasource-name="localpostolap"/>
+        <group-map group-name="org.ofbiz.tenant" datasource-name="localposttenant"/>  -->
     </delegator>
    
     <!-- need to at least define a name for each component to use -->
@@ -102,6 +120,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     <field-type name="axion" loader="fieldfile" location="fieldtypeaxion.xml"/>
     <field-type name="mysql" loader="fieldfile" location="fieldtypemysql.xml"/>
     <field-type name="postgres" loader="fieldfile" location="fieldtypepostgres.xml"/>
+    <field-type name="postnew" loader="fieldfile" location="fieldtypepostnew.xml"/>
     <field-type name="oracle" loader="fieldfile" location="fieldtypeoracle.xml"/>
     <field-type name="sapdb" loader="fieldfile" location="fieldtypesapdb.xml"/>
     <field-type name="sybase" loader="fieldfile" location="fieldtypesybase.xml"/>
@@ -123,9 +142,8 @@ access. For a detailed description see the core/docs/entityconfig.html file.
      * Serializable (NOT Recommended)
      * Not set uses database default
     -->
-    
     <datasource name="localhsql"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             field-type-name="hsql"
             check-on-start="true"
             add-missing-on-start="true"
@@ -144,9 +162,9 @@ access. For a detailed description see the core/docs/entityconfig.html file.
         <read-data reader-name="ext-demo"/>
         <inline-jdbc
                 jdbc-driver="org.hsqldb.jdbcDriver"
-                jdbc-uri="jdbc:hsqldb:runtime/data/hsqldb/ofbiz"
-                jdbc-username="ofbiz"
-                jdbc-password="ofbiz"
+                jdbc-uri="jdbc:hsqldb:data/hsqldb/ofbiz"
+                jdbc-username="sa"
+                jdbc-password=""
                 isolation-level="ReadCommitted"
                 pool-minsize="2"
                 pool-maxsize="250"
@@ -157,7 +175,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     </datasource>
 
     <datasource name="localderby"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             schema-name="OFBIZ"
             field-type-name="derby"
             check-on-start="true"
@@ -183,14 +201,11 @@ access. For a detailed description see the core/docs/entityconfig.html file.
                 isolation-level="ReadCommitted"
                 pool-minsize="2"
                 pool-maxsize="250"
-                test-on-borrow="true"
-                pool-jdbc-test-stmt="values 1"
-                soft-min-evictable-idle-time-millis="600000"
                 time-between-eviction-runs-millis="600000"/>
         <!-- <jndi-jdbc jndi-server-name="localjndi" jndi-name="java:/DerbyDataSource" isolation-level="ReadCommitted"/> -->
     </datasource>
     <datasource name="localderbyodbc"
-        helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+        helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
         schema-name="OFBIZ"
         field-type-name="derby"
         check-on-start="true"
@@ -213,7 +228,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
         <!-- <jndi-jdbc jndi-server-name="localjndi" jndi-name="java:/DerbyDataSource" isolation-level="ReadCommitted"/> -->
     </datasource>
     <datasource name="localderbyolap"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             schema-name="OFBIZ"
             field-type-name="derby"
             check-on-start="true"
@@ -242,7 +257,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
         <!-- <jndi-jdbc jndi-server-name="localjndi" jndi-name="java:/DerbyDataSource" isolation-level="ReadCommitted"/> -->
     </datasource>
     <datasource name="localderbytenant"
-        helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+        helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
         schema-name="OFBIZ"
         field-type-name="derby"
         check-on-start="true"
@@ -272,7 +287,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     </datasource>
     
     <datasource name="localdaffodil"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             field-type-name="daffodil"
             check-on-start="true"
             add-missing-on-start="true">
@@ -298,7 +313,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     </datasource>
 
     <datasource name="localaxion"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             field-type-name="axion"
             check-on-start="true"
             add-missing-on-start="true"
@@ -322,7 +337,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     </datasource>
 
     <datasource name="localmysql"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             field-type-name="mysql"
             check-on-start="true"
             add-missing-on-start="true"
@@ -355,7 +370,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
         <!-- <jndi-jdbc jndi-server-name="localjndi" jndi-name="java:/MySqlDataSource" isolation-level="Serializable"/> -->
     </datasource>
     <datasource name="localmysqlolap"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             field-type-name="mysql"
             check-on-start="true"
             add-missing-on-start="true"
@@ -388,7 +403,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
         <!-- <jndi-jdbc jndi-server-name="localjndi" jndi-name="java:/MySqlDataSource" isolation-level="Serializable"/> -->
     </datasource>
     <datasource name="localmysqltenant"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             field-type-name="mysql"
             check-on-start="true"
             add-missing-on-start="true"
@@ -421,7 +436,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
         <!-- <jndi-jdbc jndi-server-name="localjndi" jndi-name="java:/MySqlDataSource" isolation-level="Serializable"/> -->
     </datasource>
     <datasource name="odbcmysql"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             field-type-name="mysql"
             check-on-start="true"
             add-missing-on-start="true"
@@ -448,7 +463,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     </datasource>
 
     <datasource name="localpostgres"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             schema-name="public"
             field-type-name="postgres"
             check-on-start="true"
@@ -457,10 +472,10 @@ access. For a detailed description see the core/docs/entityconfig.html file.
             alias-view-columns="false"
             join-style="ansi"
             use-binary-type-for-blob="true"
-            use-order-by-nulls="true"
-            result-fetch-size="50"> <!-- Comment out the result-fetch-size attribute for jdbc driver versions older than 8.0.
-            Not recommended to use those though. They are archived unsupported versions: http://jdbc.postgresql.org/download.html -->
-        
+            use-order-by-nulls="true">
+            <!-- use this attribute to make the EntityListIterator more effective for pgjdbc 7.5devel and later:
+                result-fetch-size="50"
+            -->
         <read-data reader-name="tenant"/>
         <read-data reader-name="seed"/>
         <read-data reader-name="seed-initial"/>
@@ -485,10 +500,50 @@ access. For a detailed description see the core/docs/entityconfig.html file.
         <!-- <jndi-jdbc jndi-server-name="default" jndi-name="jdbc/localpostgres" isolation-level="ReadCommitted"/> --> <!-- JRun4 Style JNDI name -->
         <!-- <tyrex-dataSource dataSource-name="localpostgres" isolation-level="ReadCommitted"/> -->
     </datasource>
+
+    <!-- use localpostnew for NEW installations (don't switch from localpostgres) and for PostgreSQL
+     at or above 8.1 (for more information see the comment in the fieldtype file "fieldtypepostnew") -->
+
+    <datasource name="localpostnew"
+        helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
+        schema-name="public"
+        field-type-name="postnew"
+        check-on-start="true"
+        add-missing-on-start="true"
+        use-fk-initially-deferred="false"
+        alias-view-columns="false"
+        join-style="ansi"
+        result-fetch-size="50"
+        use-binary-type-for-blob="true"
+        use-order-by-nulls="true">
+        <read-data reader-name="tenant"/>
+        <read-data reader-name="seed"/>
+        <read-data reader-name="seed-initial"/>
+        <read-data reader-name="demo"/>
+        <read-data reader-name="ext"/>
+        <read-data reader-name="ext-test"/>
+        <read-data reader-name="ext-demo"/>
+        <inline-jdbc
+            jdbc-driver="org.postgresql.Driver"
+            jdbc-uri="jdbc:postgresql://127.0.0.1/ofbiz"
+            jdbc-username="ofbiz"
+            jdbc-password="ofbiz"
+            isolation-level="ReadCommitted"
+            pool-minsize="2"
+            pool-maxsize="250"
+            time-between-eviction-runs-millis="600000"/><!-- Be warned that at this date (2009-09-20) the max_connections parameters in postgresql.conf
+                is set by default to 100 by the initdb process see http://www.postgresql.org/docs/8.4/static/runtime-config-connection.html#GUC-MAX-CONNECTIONS-->
+        
+        <!-- <jndi-jdbc jndi-server-name="default" jndi-name="java:comp/env/jdbc/localpostgres" isolation-level="ReadCommitted"/>-->
+        <!-- <jndi-jdbc jndi-server-name="default" jndi-name="comp/env/jdbc/xa/localpostgres" isolation-level="ReadCommitted"/> --> <!-- Orion Style JNDI name -->
+        <!-- <jndi-jdbc jndi-server-name="localweblogic" jndi-name="PostgresDataSource"/> --> <!-- Weblogic Style JNDI name -->
+        <!-- <jndi-jdbc jndi-server-name="default" jndi-name="jdbc/localpostgres" isolation-level="ReadCommitted"/> --> <!-- JRun4 Style JNDI name -->
+        <!-- <tyrex-dataSource dataSource-name="localpostgres" isolation-level="ReadCommitted"/> -->
+    </datasource>
     <datasource name="localpostolap"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             schema-name="public"
-            field-type-name="postgres"
+            field-type-name="postnew"
             check-on-start="true"
             add-missing-on-start="true"
             use-fk-initially-deferred="false"
@@ -522,9 +577,9 @@ access. For a detailed description see the core/docs/entityconfig.html file.
         <!-- <tyrex-dataSource dataSource-name="localpostgres" isolation-level="ReadCommitted"/> -->
     </datasource>
     <datasource name="localposttenant"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             schema-name="public"
-            field-type-name="postgres"
+            field-type-name="postnew"
             check-on-start="true"
             add-missing-on-start="true"
             use-fk-initially-deferred="false"
@@ -559,7 +614,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     </datasource>
 
     <datasource name="localoracle"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             schema-name="OFBIZ"
             field-type-name="oracle"
             check-on-start="true"
@@ -584,7 +639,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
                 time-between-eviction-runs-millis="600000"/>
     </datasource>
     <datasource name="localoracledd"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             schema-name="OFBIZ"
             field-type-name="oracle"
             check-on-start="true"
@@ -603,7 +658,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     </datasource>
 
     <datasource name="localsybase"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             field-type-name="sybase"
             schema-name="dbo"
             check-on-start="true"
@@ -629,7 +684,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     </datasource>
 
     <datasource name="localsapdb"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             field-type-name="sapdb"
             check-on-start="true"
             add-missing-on-start="true"
@@ -659,7 +714,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     </datasource>
 
     <datasource name="localfirebird"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             field-type-name="firebird"
             check-on-start="true"
             use-foreign-key-indices="false"
@@ -703,7 +758,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
       http://support.microsoft.com/kb/820773/
     -->
     <datasource name="localmssql"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             schema-name="dbo"
             field-type-name="mssql"
             check-on-start="true"
@@ -731,7 +786,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     </datasource>
 
     <datasource name="localp6spy"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             schema-name="public"
             field-type-name="postgres"
             check-on-start="true"
@@ -757,7 +812,7 @@ access. For a detailed description see the core/docs/entityconfig.html file.
     </datasource>
 
     <datasource name="localadvantage"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+            helper-class="org.ofbiz.entity.datasource.GenericHelperDAO"
             field-type-name="advantage"
             check-on-start="true"
             add-missing-on-start="true"
@@ -783,38 +838,5 @@ access. For a detailed description see the core/docs/entityconfig.html file.
                 pool-minsize="2"
                 pool-maxsize="250"
                 time-between-eviction-runs-millis="600000"/>
-    </datasource>
-    
-    <!-- According to http://markmail.org/message/s75sf6zhtizzkqbv Since version V6R1 (AS/400, db2) there is no need for an own fieldtype.xml - just use the derby-fieldtypes like this: -->
-    <!-- Beware use-indices-unique="false" is needed because of Derby bug with null values in a unique index, not sure it's needed with DB2 -->
-    <datasource name="DB2"
-            helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
-            schema-name="OFBIZ"
-            field-type-name="derby"
-            check-on-start="true"
-            add-missing-on-start="true"
-            use-pk-constraint-names="false"
-            use-indices-unique="false"
-            alias-view-columns="false"
-            use-order-by-nulls="true"
-            offset-style="fetch">
-        <read-data reader-name="tenant"/>
-        <read-data reader-name="seed"/>
-        <read-data reader-name="seed-initial"/>
-        <read-data reader-name="demo"/>
-        <read-data reader-name="ext"/>
-        <read-data reader-name="ext-test"/>
-        <read-data reader-name="ext-demo"/>
-            
-            <!--   There is an open source version of the jdbc driver at sourceforge: http://sourceforge.net/projects/jt400/ -->
-        <inline-jdbc
-            jdbc-driver="com.ibm.as400.access.AS400JDBCDriver"
-            jdbc-uri="jdbc:as400:192.168.1.10;prompt=false;libraries=ofbiz;lazyclose=true;translate binary=true"
-            jdbc-username="ofbiz"
-            jdbc-password="ofbiz"
-            isolation-level="ReadCommitted"
-            pool-minsize="2"
-            pool-maxsize="250"
-            time-between-eviction-runs-millis="600000"/>
     </datasource>
 </entity-config>

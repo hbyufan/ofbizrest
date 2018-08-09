@@ -19,13 +19,17 @@ under the License.
 -->
 
 <screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://ofbiz.apache.org/Widget-Screen" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
     <screen name="CommonJobshopDecorator">
         <section>
             <widgets>
-                <decorator-screen name="CommonManufacturingDecorator" location="${parameters.commonManufacturingDecoratorLocation}">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <section>
+                            <!-- do check for MANUFACTURING, _VIEW permission -->
+                            <condition>
+                                <if-has-permission permission="MANUFACTURING" action="_VIEW"/>
+                            </condition>
                             <widgets>
                                 <section>
                                     <condition>
@@ -43,6 +47,9 @@ under the License.
                                 </container>
                                 <decorator-section-include name="body"/>
                             </widgets>
+                            <fail-widgets>
+                                <label style="h3">${uiLabelMap.ManufacturingViewPermissionError}</label>
+                            </fail-widgets>
                         </section>
                     </decorator-section>
                 </decorator-screen>
@@ -56,25 +63,13 @@ under the License.
                 <set field="headerItem" value="jobshop"/>
             </actions>
             <widgets>
-                <decorator-screen name="CommonManufacturingDecorator" location="${parameters.commonManufacturingDecoratorLocation}">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="${uiLabelMap.ManufacturingCreateProductionRun}">
                             <include-form name="CreateProductionRun" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                         </screenlet>
                     </decorator-section>
                 </decorator-screen>
-            </widgets>
-        </section>
-    </screen>
-    <screen name="CreateProductionRunParty">
-        <section>
-            <actions>
-                <set field="productionRunId" from-field="parameters.productionRunId"/>
-            </actions>
-            <widgets>
-                <screenlet title="${uiLabelMap.AddParty}">
-                    <include-form name="AssocProductionRunParty" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
-                </screenlet>
             </widgets>
         </section>
     </screen>
@@ -87,8 +82,8 @@ under the License.
                 <set field="viewIndex" from-field="parameters.VIEW_INDEX" type="Integer"/>
                 <property-to-field resource="widget" property="widget.form.defaultViewSize" field="viewSizeDefaultValue"/>
                 <set field="viewSize" from-field="parameters.VIEW_SIZE" type="Integer" default-value="${viewSizeDefaultValue}"/>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ViewProductionRun.groovy"/>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ProductionRunAllFixedAssets.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/ViewProductionRun.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/productionRunAllFixedAssets.groovy"/>
 
                 <set field="productionRunId" from-field="parameters.productionRunId"/>
                 <entity-one entity-name="WorkEffort" value-field="productionRun">
@@ -122,7 +117,7 @@ under the License.
                             </condition>
                             <widgets>
                                 <screenlet title="${uiLabelMap.ManufacturingPrecedingProductionRun}">
-                                    <include-form name="MandatoryWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
+                                    <include-form name="mandatoryWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                                 </screenlet>
                             </widgets>
                         </section>
@@ -132,7 +127,7 @@ under the License.
                             </condition>
                             <widgets>
                                 <screenlet title="${uiLabelMap.ManufacturingSucceedingProductionRun}">
-                                    <include-form name="DependentWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
+                                    <include-form name="dependentWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                                 </screenlet>
                             </widgets>
                         </section>
@@ -161,13 +156,14 @@ under the License.
             <actions>
                 <set field="titleProperty" value="ManufacturingProductionRunDeclaration"/>
                 <set field="tabButtonItem" value="declaration"/>
+                <!--<set field="labelTitleProperty" value="ProductProductBom"/>-->
                 <set field="headerItem" value="jobshop"/>
                 <set field="viewIndex" from-field="parameters.VIEW_INDEX" type="Integer"/>
                 <property-to-field resource="widget" property="widget.form.defaultViewSize" field="viewSizeDefaultValue"/>
                 <set field="viewSize" from-field="parameters.VIEW_SIZE" type="Integer" default-value="${viewSizeDefaultValue}"/>
 
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ProductionRunDeclaration.groovy"/>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ProductionRunAllFixedAssets.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/ProductionRunDeclaration.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/productionRunAllFixedAssets.groovy"/>
 
                 <set field="productionRunId" from-field="parameters.productionRunId" default-value="${parameters.workEffortId}"/>
                 <entity-one entity-name="WorkEffort" value-field="productionRun">
@@ -225,7 +221,7 @@ under the License.
                             </condition>
                             <widgets>
                                 <screenlet title="${uiLabelMap.ManufacturingMandatoryWorkEfforts}">
-                                    <include-form name="MandatoryWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
+                                    <include-form name="mandatoryWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                                 </screenlet>
                             </widgets>
                         </section>
@@ -235,7 +231,7 @@ under the License.
                             </condition>
                             <widgets>
                                 <screenlet title="${uiLabelMap.ManufacturingDependentWorkEfforts}">
-                                    <include-form name="DependentWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
+                                    <include-form name="dependentWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                                 </screenlet>
                             </widgets>
                         </section>
@@ -245,16 +241,6 @@ under the License.
                         <screenlet title="${uiLabelMap.ManufacturingListOfProductionRunRoutingTasks}">
                             <include-form name="ListProductionRunDeclRoutingTasks" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                         </screenlet>
-                        <section>
-                            <condition>
-                                <if-compare field="canDeclareAndProduce" operator="equals" value="N"/>
-                            </condition>
-                            <widgets>
-                                <screenlet title="${uiLabelMap.ManufacturingMaterials}">
-                                    <include-form name="ListProductionRunComponents" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
-                                </screenlet>
-                            </widgets>
-                        </section>
                         <screenlet title="${uiLabelMap.ManufacturingProductionRunDeclaration}">
                           <section>
                             <condition>
@@ -276,7 +262,6 @@ under the License.
                             </widgets>
                           </section>
                         </screenlet>
-                        
                         <screenlet title="${uiLabelMap.ManufacturingMaterialsRequiredByRunningTask}">
                             <include-form name="ListIssueProductionRunDeclComponents" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                         </screenlet>
@@ -300,13 +285,13 @@ under the License.
                 <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
                 <set field="titleProperty" value="ManufacturingProductionRun"/>
                 <set field="bodyFontSize" value="10pt"/>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ProductionRunDeclaration.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/ProductionRunDeclaration.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="SimpleDecorator" location="component://common/widget/CommonScreens.xml">
                     <decorator-section name="body">
                         <platform-specific>
-                            <xsl-fo><html-template location="component://manufacturing/template/jobshopmgt/ProductionRun.fo.ftl"/></xsl-fo>
+                            <xsl-fo><html-template location="component://manufacturing/webapp/manufacturing/jobshopmgt/ProductionRun.fo.ftl"/></xsl-fo>
                         </platform-specific>
                     </decorator-section>
                 </decorator-screen>
@@ -343,101 +328,14 @@ under the License.
             <widgets>
                 <decorator-screen name="CommonJobshopDecorator" location="${parameters.commonJobshopDecorator}">
                     <decorator-section name="body">
-                        <screenlet title="${uiLabelMap.ManufacturingPrecedingProductionRun}">
-                            <include-form name="MandatoryWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
+                        <screenlet title="${uiLabelMap.ManufacturingMandatoryWorkEfforts}">
+                            <include-form name="mandatoryWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                         </screenlet>
-                        <screenlet title="${uiLabelMap.ManufacturingSucceedingProductionRun}">
-                            <include-form name="DependentWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
+                        <screenlet title="${uiLabelMap.ManufacturingDependentWorkEfforts}">
+                            <include-form name="dependentWorkEfforts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                         </screenlet>
                     </decorator-section>
                 </decorator-screen>
-            </widgets>
-        </section>
-    </screen>
-    <screen name="ProductionRunParties">
-        <section>
-            <actions>
-                <set field="titleProperty" value="ManufacturingProductionRunAssocs"/>
-                <set field="tabButtonItem" value="parties"/>
-                <set field="headerItem" value="jobshop"/>
-
-                <set field="productionRunId" from-field="parameters.productionRunId"/>
-                <entity-one entity-name="WorkEffort" value-field="productionRun">
-                    <field-map field-name="workEffortId" from-field="productionRunId"/>
-                </entity-one>
-                <!-- Find all the work efforts that must be completed before this one. -->
-                <entity-condition entity-name="WorkEffortAssoc" list="mandatoryWorkEfforts">
-                    <condition-list>
-                        <condition-expr field-name="workEffortIdTo" from-field="productionRunId"/>
-                        <condition-expr field-name="workEffortAssocTypeId" value="WORK_EFF_PRECEDENCY"/>
-                    </condition-list>
-                </entity-condition>
-                <!-- Find all the work efforts that are dependent from this one. -->
-                <entity-condition entity-name="WorkEffortAssoc" list="dependentWorkEfforts">
-                    <condition-list>
-                        <condition-expr field-name="workEffortIdFrom" from-field="productionRunId"/>
-                        <condition-expr field-name="workEffortAssocTypeId" value="WORK_EFF_PRECEDENCY"/>
-                    </condition-list>
-                </entity-condition>
-            </actions>
-            <widgets>
-                <decorator-screen name="CommonJobshopDecorator" location="${parameters.commonJobshopDecorator}">
-                    <decorator-section name="body">
-                            <section>
-                                <widgets>
-                                    <include-screen name="CreateProductionRunParty"/>
-                                </widgets>
-                            </section>
-                            <section>
-                                <widgets>
-                                    <include-screen name="ProductionRunPartyAssocs"/>
-                                </widgets>
-                            </section>
-                            <section>
-                                <widgets>
-                                    <container>
-                                        <include-screen name="ProductionRunTaskPartyAssocs"/>
-                                    </container>
-                                </widgets>
-                            </section>
-                    </decorator-section>
-                </decorator-screen>
-            </widgets>
-        </section>
-    </screen>
-    <screen name="ProductionRunPartyAssocs">
-        <section>
-            <actions>
-                <set field="productionRunId" from-field="parameters.productionRunId"/>
-                <entity-one entity-name="WorkEffort" value-field="productionRun">
-                    <field-map field-name="workEffortId" from-field="productionRunId"/>
-                </entity-one>
-                <entity-condition entity-name="WorkEffortPartyAssignment" list="productionRunParties">
-                    <condition-list>
-                        <condition-expr field-name="workEffortId" from-field="productionRunId"/>
-                    </condition-list>
-                </entity-condition>
-            </actions>
-            <widgets>
-                <screenlet>
-                    <include-form name="ProductionRunPartyAssocs" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
-                </screenlet>
-            </widgets>
-        </section>
-    </screen>
-    <screen name="ProductionRunTaskPartyAssocs">
-        <section>
-            <actions>
-                <set field="productionRunId" from-field="parameters.productionRunId"/>
-                <entity-one entity-name="WorkEffort" value-field="productionRun">
-                    <field-map field-name="workEffortId" from-field="productionRunId"/>
-                </entity-one>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ProductionRunTaskParties.groovy"/>
-            </actions>
-            <widgets>
-                <screenlet>
-                    <include-form name="ProductionRunTaskPartyAssocs" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
-                </screenlet>
             </widgets>
         </section>
     </screen>
@@ -459,7 +357,7 @@ under the License.
                 <entity-one entity-name="WorkEffort" value-field="productionRunTask">
                     <field-map field-name="workEffortId" from-field="routingTaskId"/>
                 </entity-one>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ProductionRunTasks.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/ProductionRunTasks.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonJobshopDecorator" location="${parameters.commonJobshopDecorator}">
@@ -479,7 +377,6 @@ under the License.
                 <set field="titleProperty" value="ManufacturingProductionRunComponents"/>
                 <set field="tabButtonItem" value="components"/>
                 <set field="headerItem" value="jobshop"/>
-                <set field="formName" value="ProductionRunTaskComponents"/>
                 <set field="viewIndex" from-field="parameters.VIEW_INDEX" type="Integer"/>
                 <property-to-field resource="widget" property="widget.form.defaultViewSize" field="viewSizeDefaultValue"/>
                 <set field="viewSize" from-field="parameters.VIEW_SIZE" type="Integer" default-value="${viewSizeDefaultValue}"/>
@@ -488,7 +385,7 @@ under the License.
                 <entity-one entity-name="WorkEffort" value-field="productionRun">
                     <field-map field-name="workEffortId" from-field="productionRunId"/>
                 </entity-one>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ProductionRunComponents.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/ProductionRunComponents.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonJobshopDecorator" location="${parameters.commonJobshopDecorator}">
@@ -499,7 +396,7 @@ under the License.
                         <section>
                             <widgets>
                                 <platform-specific>
-                                    <html><html-template location="component://manufacturing/template/jobshopmgt/ProductionRunTasksInfo.ftl"/></html>
+                                    <html><html-template location="component://manufacturing/webapp/manufacturing/jobshopmgt/ProductionRunTasksInfo.ftl"/></html>
                                 </platform-specific>
                             </widgets>
                         </section>
@@ -514,7 +411,6 @@ under the License.
                 <set field="titleProperty" value="ManufacturingProductionRunActualComponents"/>
                 <set field="tabButtonItem" value="actualComponents"/>
                 <set field="headerItem" value="jobshop"/>
-                <set field="formName" value="ProductionRunTaskActualComponents"/>
                 <set field="viewIndex" from-field="parameters.VIEW_INDEX" type="Integer"/>
                 <property-to-field resource="widget" property="widget.form.defaultViewSize" field="viewSizeDefaultValue"/>
                 <set field="viewSize" from-field="parameters.VIEW_SIZE" type="Integer" default-value="${viewSizeDefaultValue}"/>
@@ -523,7 +419,7 @@ under the License.
                 <entity-one entity-name="WorkEffort" value-field="productionRun">
                     <field-map field-name="workEffortId" from-field="productionRunId"/>
                 </entity-one>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ProductionRunActualComponents.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/ProductionRunActualComponents.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonJobshopDecorator" location="${parameters.commonJobshopDecorator}">
@@ -532,7 +428,7 @@ under the License.
                             <include-form name="IssueProductionRunComponent" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                         </screenlet>
                         <platform-specific>
-                            <html><html-template location="component://manufacturing/template/jobshopmgt/ProductionRunTasksInfo.ftl"/></html>
+                            <html><html-template location="component://manufacturing/webapp/manufacturing/jobshopmgt/ProductionRunTasksInfo.ftl"/></html>
                         </platform-specific>
                     </decorator-section>
                 </decorator-screen>
@@ -545,7 +441,6 @@ under the License.
                 <set field="titleProperty" value="ManufacturingProductionRunFixedAssets"/>
                 <set field="tabButtonItem" value="fixedAssets"/>
                 <set field="headerItem" value="jobshop"/>
-                <set field="formName" value="ProductionRunTaskFixedAssets"/>
                 <set field="viewIndex" from-field="parameters.VIEW_INDEX" type="Integer"/>
                 <property-to-field resource="widget" property="widget.form.defaultViewSize" field="viewSizeDefaultValue"/>
                 <set field="viewSize" from-field="parameters.VIEW_SIZE" type="Integer" default-value="${viewSizeDefaultValue}"/>
@@ -554,7 +449,7 @@ under the License.
                 <entity-one entity-name="WorkEffort" value-field="productionRun">
                     <field-map field-name="workEffortId" from-field="productionRunId"/>
                 </entity-one>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ProductionRunFixedAssets.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/ProductionRunFixedAssets.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonJobshopDecorator" location="${parameters.commonJobshopDecorator}">
@@ -565,22 +460,12 @@ under the License.
                         <section>
                             <widgets>
                                 <platform-specific>
-                                    <html><html-template location="component://manufacturing/template/jobshopmgt/ProductionRunTasksInfo.ftl"/></html>
+                                    <html><html-template location="component://manufacturing/webapp/manufacturing/jobshopmgt/ProductionRunTasksInfo.ftl"/></html>
                                 </platform-specific>
                             </widgets>
                         </section>
                     </decorator-section>
                 </decorator-screen>
-            </widgets>
-        </section>
-    </screen>
-    <screen name="ProductionRunTasksInfo">
-        <section>
-            <actions>
-                <set field="records" value="${groovy: request.getAttribute('records');}"/>
-            </actions>
-            <widgets>
-                <include-form name="${formName}" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
             </widgets>
         </section>
     </screen>
@@ -595,7 +480,7 @@ under the License.
                 <entity-one entity-name="WorkEffort" value-field="productionRun">
                     <field-map field-name="workEffortId" from-field="productionRunId"/>
                 </entity-one>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ProductionRunCosts.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/ProductionRunCosts.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonJobshopDecorator" location="${parameters.commonJobshopDecorator}">
@@ -603,22 +488,12 @@ under the License.
                         <section>
                             <widgets>
                                 <platform-specific>
-                                    <html><html-template location="component://manufacturing/template/jobshopmgt/ProductionRunCosts.ftl"/></html>
+                                    <html><html-template location="component://manufacturing/webapp/manufacturing/jobshopmgt/ProductionRunCosts.ftl"/></html>
                                 </platform-specific>
                             </widgets>
                         </section>
                     </decorator-section>
                 </decorator-screen>
-            </widgets>
-        </section>
-    </screen>
-    <screen name="ProductionRunTaskCosts">
-        <section>
-            <actions>
-                <set field="taskCosts" value="${groovy: request.getAttribute('taskCosts');}"/>
-            </actions>
-            <widgets>
-                <include-form name="ProductionRunTaskCosts" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
             </widgets>
         </section>
     </screen>
@@ -633,7 +508,7 @@ under the License.
                 <entity-one entity-name="WorkEffort" value-field="productionRun">
                     <field-map field-name="workEffortId" from-field="productionRunId"/>
                 </entity-one>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/ProductionRunContent.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/ProductionRunContent.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonJobshopDecorator" location="${parameters.commonJobshopDecorator}">
@@ -652,28 +527,6 @@ under the License.
             </widgets>
         </section>
     </screen>
-    <screen name="LinkProductionRun">
-        <section>
-            <actions>
-                <set field="titleProperty" value="PageTitleProductionRunLink"/>
-                <set field="tabButtonItem" value="assocs"/>
-                <set field="headerItem" value="jobshop"/>
-                <set field="productionRunId" from-field="parameters.productionRunId"/>
-                <entity-one entity-name="WorkEffort" value-field="productionRun">
-                    <field-map field-name="workEffortId" from-field="productionRunId"/>
-                </entity-one>
-            </actions>
-            <widgets>
-                <decorator-screen name="CommonJobshopDecorator" location="${parameters.commonJobshopDecorator}">
-                    <decorator-section name="body">
-                        <screenlet title="${uiLabelMap.PageTitleProductionRunLink}">
-                            <include-form name="LinkProductionRun" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
-                        </screenlet>
-                    </decorator-section>
-                </decorator-screen>
-            </widgets>
-        </section>
-    </screen>
     <screen name="FindProductionRun">
         <section>
             <actions>
@@ -684,7 +537,7 @@ under the License.
                 <set field="viewSize" from-field="parameters.VIEW_SIZE" type="Integer" default-value="${viewSizeDefaultValue}"/>
             </actions>
             <widgets>
-                <decorator-screen name="CommonManufacturingDecorator" location="${parameters.commonManufacturingDecoratorLocation}">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <section>
                             <widgets>
@@ -695,10 +548,10 @@ under the License.
                                         </container>
                                     </decorator-section>
                                     <decorator-section name="search-options">
-                                        <include-form name="FindProductionRun" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
+                                        <include-form name="findProductionRun" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                                     </decorator-section>
                                     <decorator-section name="search-results">
-                                        <include-form name="ListFindProductionRun" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
+                                        <include-form name="listFindProductionRun" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                                     </decorator-section>
                                 </decorator-screen>
                             </widgets>
@@ -723,13 +576,13 @@ under the License.
                     </condition-list>
                     <order-by field-name="${sortField}"/>
                 </entity-condition>
-                <script location="component://manufacturing/groovyScripts/jobshopmgt/WorkWithShipmentPlans.groovy"/>
+                <script location="component://manufacturing/webapp/manufacturing/WEB-INF/actions/jobshopmgt/WorkWithShipmentPlans.groovy"/>
             </actions>
             <widgets>
-                <decorator-screen name="CommonManufacturingDecorator" location="${parameters.commonManufacturingDecoratorLocation}">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="${uiLabelMap.ManufacturingWorkWithShipmentPlans}">
-                            <include-form name="ListShipmentPlans" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
+                            <include-form name="listShipmentPlans" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                         </screenlet>
                         <section>
                             <condition>
@@ -737,7 +590,7 @@ under the License.
                             </condition>
                             <widgets>
                                 <screenlet title="${uiLabelMap.FormFieldTitle_shipmentId} ${shipment.shipmentId}">
-                                    <include-form name="ListShipmentPlan" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
+                                    <include-form name="listShipmentPlan" location="component://manufacturing/widget/manufacturing/ProductionRunForms.xml"/>
                                 </screenlet>
                                 <section>
                                     <condition>

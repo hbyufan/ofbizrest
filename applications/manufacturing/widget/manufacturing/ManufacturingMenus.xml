@@ -19,7 +19,7 @@ under the License.
 -->
 
 <menus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xmlns="http://ofbiz.apache.org/Widget-Menu" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Menu http://ofbiz.apache.org/dtds/widget-menu.xsd">
+ xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-menu.xsd">
 
     <menu name="ManufacturingAppBar" title="${uiLabelMap.ManufacturingManager}" extends="CommonAppBarMenu" extends-resource="component://common/widget/CommonMenus.xml">
         <menu-item name="jobshop" title="${uiLabelMap.ManufacturingJobShop}">
@@ -165,11 +165,6 @@ under the License.
                 <parameter param-name="productionRunId"/>
             </link>
         </menu-item>
-        <menu-item name="parties" title="${uiLabelMap.ManufacturingProductionRunParties}">
-            <link target="productionRunParties">
-                <parameter param-name="productionRunId"/>
-            </link>
-        </menu-item>
         <menu-item name="assocs" title="${uiLabelMap.ManufacturingProductionRunAssocs}">
             <link target="ProductionRunAssocs">
                 <parameter param-name="productionRunId"/>
@@ -279,11 +274,6 @@ under the License.
                 <parameter param-name="statusId" value="PRUN_SCHEDULED"/>
             </link>
         </menu-item>
-        <menu-item name="link" title="${uiLabelMap.ManufacturingLinkProductionRun}">
-            <link target="LinkProductionRun">
-                <parameter param-name="productionRunId"/>
-            </link>
-        </menu-item>
         <menu-item name="print" title="${uiLabelMap.CommonPrint}">
             <link target="PrintProductionRun" target-window="_BLANK">
                 <parameter param-name="productionRunId"/>
@@ -370,16 +360,6 @@ under the License.
         </menu-item>
         <menu-item name="editRoutingTaskFixedAssets" title="${uiLabelMap.ManufacturingRoutingTaskFixedAssets}">
             <link target="EditRoutingTaskFixedAssets">
-                <parameter param-name="workEffortId" from-field="routingTask.workEffortId"/>
-            </link>
-        </menu-item>
-        <menu-item name="editRoutingTaskParties" title="${uiLabelMap.WorkEffortParties}">
-            <link target="EditRoutingTaskParties">
-                <parameter param-name="workEffortId" from-field="routingTask.workEffortId"/>
-            </link>
-        </menu-item>
-        <menu-item name="editRoutingTaskSkills" title="${uiLabelMap.WorkEffortSkills}">
-            <link target="EditRoutingTaskSkills">
                 <parameter param-name="workEffortId" from-field="routingTask.workEffortId"/>
             </link>
         </menu-item>

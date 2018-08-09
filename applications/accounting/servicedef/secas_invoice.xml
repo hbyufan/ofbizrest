@@ -46,7 +46,6 @@ under the License.
         <condition operator="equals" field-name="oldStatusId" value="INVOICE_IN_PROCESS"/>
         <action service="createMatchingPaymentApplication" mode="sync"/>
     </eca>
-
     <eca service="setInvoiceStatus" event="commit">
         <condition field-name="invoiceId" operator="is-not-empty"/>
         <condition field-name="statusId" operator="equals" value="INVOICE_READY"/>

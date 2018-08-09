@@ -46,17 +46,17 @@ under the License.
 <#macro renderContentBegin editRequest enableEditValue editContainerStyle><#if editRequest?has_content && enableEditValue == "true"><div class=${editContainerStyle}></#if></#macro>
 <#macro renderContentBody></#macro>
 <#macro renderContentEnd urlString editMode editContainerStyle editRequest enableEditValue>
-<#if editRequest?? && enableEditValue == "true">
-<#if urlString??><a href="${urlString}">${editMode}</a><#rt/></#if>
-<#if editContainerStyle??></div><#rt/></#if>
+<#if editRequest?exists && enableEditValue == "true">
+<#if urlString?exists><a href="${urlString}">${editMode}</a><#rt/></#if>
+<#if editContainerStyle?exists></div><#rt/></#if>
 </#if>
 </#macro>
-<#macro renderSubContentBegin editContainerStyle editRequest enableEditValue><#if editRequest?? && enableEditValue == "true"><div class="${editContainerStyle}"></#if></#macro>
+<#macro renderSubContentBegin editContainerStyle editRequest enableEditValue><#if editRequest?exists && enableEditValue == "true"><div class="${editContainerStyle}"></#if></#macro>
 <#macro renderSubContentBody></#macro>
 <#macro renderSubContentEnd urlString editMode editContainerStyle editRequest enableEditValue>
-<#if editRequest?? && enableEditValue == "true">
-<#if urlString??><a href="${urlString}">${editMode}</a><#rt/></#if>
-<#if editContainerStyle??></div><#rt/></#if>
+<#if editRequest?exists && enableEditValue == "true">
+<#if urlString?exists><a href="${urlString}">${editMode}</a><#rt/></#if>
+<#if editContainerStyle?exists></div><#rt/></#if>
 </#if>
 </#macro>
 
@@ -91,7 +91,7 @@ under the License.
 </#macro>
 
 <#macro renderLink parameterList targetWindow target uniqueItemName linkType actionUrl id style name height width linkUrl text imgStr>
-    <#if "layered-modal" != linkType>
+    <#if "ajax-window" != linkType>
         <#if "hidden-form" == linkType>
             <form method="post" action="${actionUrl}" <#if targetWindow?has_content>target="${targetWindow}"</#if> onsubmit="javascript:submitFormDisableSubmits(this)" name="${uniqueItemName}"><#rt/>
                 <#list parameterList as parameter>
@@ -113,7 +113,7 @@ under the License.
         <#if style?has_content>class="${style}"</#if>>
         <#if text?has_content>${text}</#if></a>
         <script type="text/javascript">
-            function ${uniqueItemName}_data() {
+            function getRequestData () {
                 var data =  {
                     <#list parameterList as parameter>
                         "${parameter.name}": "${parameter.value}",
@@ -132,12 +132,11 @@ under the License.
                  height: ${height},
                  width: ${width},
                  modal: true,
-                 closeOnEscape: true,
                  open: function() {
                          jQuery.ajax({
                              url: "${target}",
                              type: "POST",
-                             data: ${uniqueItemName}_data(),
+                             data: getRequestData(),
                              success: function(data) {jQuery("#${uniqueItemName}").html(data);}
                          });
                  }

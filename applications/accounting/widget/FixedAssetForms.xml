@@ -19,15 +19,9 @@ under the License.
 -->
 
 <forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-        xmlns="http://ofbiz.apache.org/Widget-Form" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Form http://ofbiz.apache.org/dtds/widget-form.xsd">
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
     <!-- list all assets in a tabular format -->
-    <form name="FindFixedAssetOptions" extends="LookupFixedAsset" extends-resource="component://accounting/widget/FieldLookupForms.xml"
-        target="ListFixedAssets">
-        <field name="searchOptions_collapsed"><hidden value="true"/></field>
-        <field name="submitButton" title="${uiLabelMap.CommonFind}" widget-style="smallSubmit"><submit button-type="button"/></field>
-    </form>
-
-    <grid name="ListFixedAssets" list-name="listIt" paginate-target="ListFixedAssets"
+    <form name="ListFixedAssets" type="list" list-name="listIt" paginate-target="ListFixedAssets"
         odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
             <service service-name="performFind" result-map="result" result-map-list="listIt">
@@ -44,7 +38,7 @@ under the License.
             </service>
         </row-actions>
         <field name="fixedAssetId" widget-style="linktext" sort-field="true">
-            <hyperlink description="${fixedAssetId}" target="EditFixedAsset" also-hidden="false">
+            <hyperlink also-hidden="false" description="${fixedAssetId}" target="EditFixedAsset">
                 <parameter param-name="fixedAssetId"/>
             </hyperlink>
         </field>
@@ -66,8 +60,13 @@ under the License.
         <field name="depreciation" sort-field="true"><display type="currency" currency="${purchaseCostUomId}"/></field>
         <field name="plannedPastDepreciationTotal"><display description="${assetDepreciationResultMap.plannedPastDepreciationTotal}"/></field>
         <on-event-update-area event-type="paginate" area-id="search-results" area-target="FixedAssetSearchResults"/>
-    </grid>
+    </form>
 
+    <form name="FindFixedAssetOptions" extends="lookupFixedAsset" extends-resource="component://accounting/widget/FieldLookupForms.xml"
+        target="ListFixedAssets">
+        <field name="searchOptions_collapsed"><hidden value="true"/></field>
+        <field name="submitButton" title="${uiLabelMap.CommonFind}" widget-style="smallSubmit"><submit button-type="button"/></field>
+    </form>
 
     <!-- create and update a fixed asset -->
     <form name="EditFixedAsset" type="single" target="updateFixedAsset" title="" default-map-name="fixedAsset"
@@ -75,13 +74,13 @@ under the License.
         <alt-target use-when="fixedAsset==null" target="createFixedAsset"/>
         <auto-fields-service service-name="updateFixedAsset" map-name="fixedAsset"/>
 
-        <field use-when="fixedAsset!=null" name="fixedAssetId"><display/></field>
+        <field use-when="fixedAsset!=null" name="fixedAssetId" tooltip="${uiLabelMap.CommonNotModifRecreat}"><display/></field>
         <field use-when="fixedAsset==null&amp;&amp;fixedAssetId==null" name="fixedAssetId"><text size="20" maxlength="20"/></field>
         <field use-when="fixedAsset==null&amp;&amp;fixedAssetId!=null" name="fixedAssetId" tooltip="${uiLabelMap.CommonCannotBeFound}:[${fixedAssetId}]"><text size="20" maxlength="20"/></field>
 
         <field name="fixedAssetTypeId">
             <drop-down allow-empty="false">
-                <entity-options entity-name="FixedAssetType">
+                <entity-options entity-name="FixedAssetType" description="${description}">
                     <entity-order-by field-name="description"/>
                 </entity-options>
             </drop-down>
@@ -89,7 +88,7 @@ under the License.
         <field name="instanceOfProductId"><lookup target-form-name="LookupProduct"/></field>
         <field name="classEnumId">
             <drop-down allow-empty="true">
-                <entity-options entity-name="Enumeration" key-field-name="enumId">
+                <entity-options description="${description}" entity-name="Enumeration" key-field-name="enumId">
                     <entity-constraint name="enumTypeId" operator="equals" value="FXAST_CLASS"/>
                     <entity-order-by field-name="description"/>
                 </entity-options>
@@ -98,7 +97,7 @@ under the License.
         <field name="partyId" title="${uiLabelMap.PartyPartyId}"><lookup target-form-name="LookupPerson"/></field>
         <field name="roleTypeId" title="${uiLabelMap.PartyRoleTypeId}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="RoleType">
+                <entity-options entity-name="RoleType" description="${description}">
                     <entity-order-by field-name="description"/>
                 </entity-options>
             </drop-down>
@@ -126,8 +125,7 @@ under the License.
     </form>
 
     <form name="ListFixedAssetProducts" type="list"  list-name="fixedAssetProducts"  target="updateFixedAssetProduct"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar"
-        paginate-target="ListFixedAssetProducts" separate-columns="true">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <field name="productId" title="${uiLabelMap.AccountingProduct}"><display-entity entity-name="Product" description="${description}[${productId}]"/></field>
         <field name="fixedAssetProductTypeId" title="${uiLabelMap.AccountingFixedAssetProductType}"><display-entity entity-name="FixedAssetProductType"/></field>
         <field name="fromDate" title="${uiLabelMap.CommonFromDate}"><display/></field>
@@ -135,7 +133,7 @@ under the License.
         <field name="fixedAssetId"><hidden/></field>
         <field name="submitButton" title="${uiLabelMap.CommonUpdate}" widget-style="smallSubmit"><submit button-type="button"/></field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonRemove}" target="removeFixedAssetProduct" also-hidden="false">
+            <hyperlink target="removeFixedAssetProduct" description="${uiLabelMap.CommonRemove}" also-hidden="false">
                 <parameter param-name="fixedAssetId"/>
                 <parameter param-name="productId"/>
                 <parameter param-name="fixedAssetProductTypeId"/>
@@ -153,7 +151,7 @@ under the License.
         <field name="productId" title="${uiLabelMap.ProductProductId}"><lookup target-form-name="LookupProduct"/></field>
         <field name="fixedAssetProductTypeId" title="${uiLabelMap.AccountingFixedAssetProductTypeId}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="FixedAssetProductType">
+                <entity-options entity-name="FixedAssetProductType" description="${description}">
                     <entity-order-by field-name="description"/>
                 </entity-options>
             </drop-down>
@@ -174,13 +172,13 @@ under the License.
         <field name="workEffortId"><display/></field>
         <field name="workEffortName" title="${uiLabelMap.CommonName}"><display/></field>
         <field name="workEffortTypeId" title="${uiLabelMap.CommonType}">
-            <display-entity entity-name="WorkEffortType"/>
+            <display-entity entity-name="WorkEffortType" description="${description}"/>
         </field>
         <field name="workEffortPurposeTypeId" title="${uiLabelMap.CommonPurpose}">
-            <display-entity entity-name="WorkEffortPurposeType"/>
+            <display-entity entity-name="WorkEffortPurposeType" description="${description}"/>
         </field>
         <field name="currentStatusId" title="${uiLabelMap.CommonStatus}">
-            <display-entity entity-name="StatusItem" key-field-name="statusId"/>
+            <display-entity entity-name="StatusItem" key-field-name="statusId" description="${description}"/>
         </field>
         <field name="percentComplete"><display/></field>
         <field name="estimatedStartDate"><display/></field>
@@ -190,7 +188,7 @@ under the License.
     </form>
 
     <form name="ListFixedAssetStdCosts" list-name="fixedAssetStdCosts" type="list" target="updateFixedAssetStdCost" title="" paginate-target="EditFixedAssetStdCosts"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" separate-columns="true">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
             <entity-condition entity-name="FixedAssetStdCost">
                 <condition-expr field-name="fixedAssetId" from-field="fixedAssetId"/>
@@ -212,7 +210,7 @@ under the License.
             </drop-down>
         </field>
         <field name="cancel" title=" " widget-style="buttontext">
-           <hyperlink description="${uiLabelMap.CommonCancel}" target="cancelFixedAssetStdCost" also-hidden="false">
+           <hyperlink also-hidden="false" description="${uiLabelMap.CommonCancel}" target="cancelFixedAssetStdCost">
                 <parameter param-name="fixedAssetId"/>
                 <parameter param-name="fixedAssetStdCostTypeId"/>
                 <parameter param-name="fromDate"/>
@@ -226,7 +224,7 @@ under the License.
         <field name="fixedAssetId"><hidden/></field>
         <field name="fixedAssetStdCostTypeId" title="${uiLabelMap.AccountingFixedAssetStdCostTypeId}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="FixedAssetStdCostType" key-field-name="fixedAssetStdCostTypeId"/>
+                <entity-options description="${description}" entity-name="FixedAssetStdCostType" key-field-name="fixedAssetStdCostTypeId"/>
             </drop-down>
         </field>
         <field name="fromDate" title="${uiLabelMap.CommonFromDate}"/>
@@ -243,8 +241,7 @@ under the License.
 
     <!-- List all fixed asset idents  -->
     <form name="ListFixedAssetIdents" type="list" list-name="fixedAssetIdents" target="updateFixedAssetIdent"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar"
-        paginate-target="EditFixedAssetIdents" separate-columns="true">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
             <entity-condition entity-name="FixedAssetIdent">
                 <condition-expr field-name="fixedAssetId" from-field="fixedAssetId"/>
@@ -257,7 +254,7 @@ under the License.
         </field>
         <field name="idValue" title="${uiLabelMap.AccountingFixedAssetIdentIdValue}"/>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="removeFixedAssetIdent" also-hidden="false">
+            <hyperlink target="removeFixedAssetIdent" description="${uiLabelMap.CommonDelete}" also-hidden="false">
                 <parameter param-name="fixedAssetId"/>
                 <parameter param-name="fixedAssetIdentTypeId"/>
             </hyperlink>
@@ -272,7 +269,7 @@ under the License.
         <field name="fixedAssetId"><hidden/></field>
         <field name="fixedAssetIdentTypeId" title="${uiLabelMap.AccountingFixedAssetIdentType}">
             <drop-down allow-empty="false">
-                <entity-options entity-name="FixedAssetIdentType">
+                <entity-options entity-name="FixedAssetIdentType" description="${description}">
                     <entity-order-by field-name="description"/>
                 </entity-options>
             </drop-down>
@@ -283,8 +280,7 @@ under the License.
 
     <!-- List all fixed asset Registration  -->
     <form name="ListFixedAssetRegistrations" type="list" list-name="fixedAssetRegistrations" target="updateFixedAssetRegistration"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar"
-        paginate-target="EditFixedAssetRegistrations" separate-columns="true">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
             <entity-condition entity-name="FixedAssetRegistration">
                 <condition-expr field-name="fixedAssetId" from-field="fixedAssetId"/>
@@ -297,7 +293,7 @@ under the License.
         <field name="licenseNumber" title="${uiLabelMap.AccountingFixedAssetLicenseNumber}"><text size="20"/></field>
         <field name="govAgencyPartyId" title="${uiLabelMap.AccountingFixedAssetGovAgencyPartyId}"><lookup target-form-name="LookupPartyName"/></field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="deleteFixedAssetRegistration" also-hidden="false">
+            <hyperlink target="deleteFixedAssetRegistration" description="${uiLabelMap.CommonDelete}" also-hidden="false">
                 <parameter param-name="fixedAssetId"/>
                 <parameter param-name="fromDate"/>
             </hyperlink>
@@ -329,7 +325,7 @@ under the License.
             </service>
         </actions>
         <field name="maintHistSeqId">
-            <hyperlink description="${maintHistSeqId}" target="EditFixedAssetMaint" also-hidden="false">
+            <hyperlink also-hidden="false" description="${maintHistSeqId}" target="EditFixedAssetMaint">
                 <parameter param-name="fixedAssetId"/>
                 <parameter param-name="maintHistSeqId"/>
             </hyperlink>
@@ -357,7 +353,7 @@ under the License.
         <field use-when="fixedAssetMaint!=null" title="${uiLabelMap.CommonCreated}" name="createdStamp"><display/></field>
         <field name="statusId" use-when="fixedAssetMaint==null" title="${uiLabelMap.CommonStatus}">
             <drop-down allow-empty="false">
-                <entity-options entity-name="StatusItem">
+                <entity-options description="${description}" entity-name="StatusItem">
                     <entity-constraint name="statusTypeId" operator="equals" value="FIXEDAST_MNT_STATUS"/>
                     <entity-order-by field-name="sequenceId"/>
                 </entity-options>
@@ -373,7 +369,7 @@ under the License.
         </field>
         <field name="productMaintTypeId" title="${uiLabelMap.AccountingFixedAssetMaintType}" tooltip="${uiLabelMap.AccountingFixedAssetMaintMessage1}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="ProductMaintType">
+                <entity-options description="${description}" entity-name="ProductMaintType">
                     <entity-order-by field-name="productMaintTypeId"/>
                 </entity-options>
             </drop-down>
@@ -391,7 +387,7 @@ under the License.
         </field>
         <field name="intervalMeterTypeId" title="${uiLabelMap.AccountingFixedAssetMaintIntervalMeterType}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="ProductMeterType" key-field-name="productMeterTypeId">
+                <entity-options description="${description}" entity-name="ProductMeterType" key-field-name="productMeterTypeId">
                     <entity-order-by field-name="productMeterTypeId"/>
                 </entity-options>
             </drop-down>
@@ -410,7 +406,7 @@ under the License.
             </drop-down>
         </field>
         <field name="scheduleWorkEffortId" widget-style="buttontext">
-            <hyperlink description="${fixedAssetMaint.scheduleWorkEffortId}" target="/workeffort/control/WorkEffortSummary" also-hidden="false" target-type="inter-app">
+            <hyperlink target="/workeffort/control/WorkEffortSummary" also-hidden="false" description="${fixedAssetMaint.scheduleWorkEffortId}" target-type="inter-app">
                 <parameter param-name="workEffortId" from-field="fixedAssetMaint.scheduleWorkEffortId"/>
             </hyperlink>
         </field>
@@ -434,19 +430,19 @@ under the License.
         </actions>
         <field name="fixedAssetId"><hidden/></field>
         <field name="productMeterTypeId">
-            <display-entity entity-name="ProductMeterType" key-field-name="productMeterTypeId"/>
+            <display-entity entity-name="ProductMeterType" key-field-name="productMeterTypeId" description="${description}"/>
         </field>
         <field name="readingDate"><display/></field>
         <field name="meterValue" title="${uiLabelMap.AccountingFixedAssetMeterValue}"><text/></field>
         <field name="maintHistSeqId" title="${uiLabelMap.AccountingFixedAssetMaint}">
-            <hyperlink description="${maintHistSeqId}" target="EditFixedAssetMaint" also-hidden="false">
+            <hyperlink target="EditFixedAssetMaint" description="${maintHistSeqId}" also-hidden="false">
                 <parameter param-name="fixedAssetId"/>
                 <parameter param-name="maintHistSeqId"/>
             </hyperlink>
         </field>
         <field name="submitButton" title="${uiLabelMap.CommonUpdate}" widget-style="smallSubmit"><submit button-type="button"/></field>
         <field name="deleteLink" title="${uiLabelMap.CommonRemove}" widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonRemove}" target="deleteFixedAssetMeter" also-hidden="false">
+            <hyperlink target="deleteFixedAssetMeter" description="${uiLabelMap.CommonRemove}" also-hidden="false">
                 <parameter param-name="fixedAssetId"/>
                 <parameter param-name="productMeterTypeId"/>
                 <parameter param-name="readingDate"/>
@@ -463,7 +459,7 @@ under the License.
         <field name="maintHistSeqId" use-when="maintHistSeqId == null"><ignored/></field>
         <field name="productMeterTypeId" >
             <drop-down allow-empty="true">
-                <entity-options entity-name="ProductMeterType" key-field-name="productMeterTypeId">
+                <entity-options description="${description}" entity-name="ProductMeterType" key-field-name="productMeterTypeId">
                     <entity-order-by field-name="productMeterTypeId"/>
                 </entity-options>
             </drop-down>
@@ -473,7 +469,7 @@ under the License.
     </form>
     <!-- List all fixed asset Maintenance Order  -->
     <form name="ListFixedAssetMaintOrders" type="list" list-name="fixedAssetMaintOrders" target="updateFixedAssetMaintOrder"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" paginate-target="EditFixedAssetMaintOrders">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
             <entity-condition entity-name="FixedAssetMaintOrder" list="fixedAssetMaintOrders">
                 <condition-list combine="and">
@@ -486,13 +482,13 @@ under the License.
         <field name="fixedAssetId"><hidden/></field>
         <field name="maintHistSeqId"><hidden/></field>
         <field name="orderId" widget-style="buttontext">
-            <hyperlink description="${orderId}" target="/ordermgr/control/orderview" also-hidden="false" target-type="inter-app">
+            <hyperlink target="/ordermgr/control/orderview" also-hidden="false" description="${orderId}" target-type="inter-app">
                 <parameter param-name="orderId"/>
             </hyperlink>
         </field>
         <field name="orderItemSeqId"><display/></field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonRemove}" target="deleteFixedAssetMaintOrder" also-hidden="false">
+            <hyperlink target="deleteFixedAssetMaintOrder" description="${uiLabelMap.CommonRemove}" also-hidden="false">
                 <parameter param-name="fixedAssetId"/>
                 <parameter param-name="maintHistSeqId"/>
                 <parameter param-name="orderId"/>
@@ -512,8 +508,7 @@ under the License.
 
     <!-- =====================Party Fixed Asset Assignment Forms============== -->
     <form name="ListPartyFixedAssetAssignments" type="list"  list-name="listPartyFixedAssets"  target="updatePartyFixedAssetAssignment"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar"
-        paginate-target="EditPartyFixedAssetAssignments" separate-columns="true">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
             <entity-condition entity-name="PartyFixedAssetAssignment" list="listPartyFixedAssets">
                 <condition-expr field-name="fixedAssetId" from-field="fixedAssetId"/>
@@ -535,7 +530,7 @@ under the License.
         <field name="allocatedDate"><date-time/></field>
         <field name="statusId" title="${uiLabelMap.FormFieldTitle_statusId}">
             <drop-down allow-empty="false">
-                 <entity-options entity-name="StatusItem" key-field-name="statusId">
+                 <entity-options description="${description}" entity-name="StatusItem" key-field-name="statusId">
                      <entity-constraint name="statusTypeId" value="PRTYASGN_STATUS"/>
                      <entity-order-by field-name="statusId"/>
                  </entity-options>
@@ -546,7 +541,7 @@ under the License.
             <submit button-type="button"/>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="deletePartyFixedAssetAssignment" also-hidden="false">
+            <hyperlink target="deletePartyFixedAssetAssignment" description="${uiLabelMap.CommonDelete}" also-hidden="false">
                 <parameter param-name="fixedAssetId"/>
                 <parameter param-name="partyId"/>
                 <parameter param-name="roleTypeId"/>
@@ -564,14 +559,14 @@ under the License.
          </field>
          <field name="roleTypeId">
              <drop-down allow-empty="true">
-                 <entity-options entity-name="RoleType" key-field-name="roleTypeId">
+                 <entity-options description="${description}" entity-name="RoleType" key-field-name="roleTypeId">
                      <entity-order-by field-name="roleTypeId"/>
                  </entity-options>
              </drop-down>
          </field>
          <field name="statusId">
              <drop-down allow-empty="false">
-                 <entity-options entity-name="StatusItem" key-field-name="statusId">
+                 <entity-options description="${description}" entity-name="StatusItem" key-field-name="statusId">
                      <entity-constraint name="statusTypeId" value="PRTYASGN_STATUS"/>
                      <entity-order-by field-name="statusId"/>
                  </entity-options>
@@ -586,7 +581,7 @@ under the License.
         <field name="fixedAssetId"><hidden/></field>
         <field name="depreciationCustomMethodId">
             <drop-down allow-empty="true">
-                <entity-options entity-name="CustomMethod" key-field-name="customMethodId">
+                <entity-options entity-name="CustomMethod" key-field-name="customMethodId" description="${description}">
                     <entity-constraint name="customMethodTypeId" operator="equals" value="DEPRECIATION_FORMULA"/>
                 </entity-options>
             </drop-down>
@@ -594,7 +589,7 @@ under the License.
         <field name="submitButton" title="${uiLabelMap.CommonAdd}" widget-style="smallSubmit"><submit button-type="button"/></field>
     </form>
     <form name="ListFixedAssetDepMethods" type="list" list-name="fixedAssetDepMethods"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" paginate-target="showFixedAssetDepreciation">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
             <entity-condition entity-name="FixedAssetDepMethod" list="fixedAssetDepMethods">
                 <condition-expr field-name="fixedAssetId" from-field="parameters.fixedAssetId"/>
@@ -606,7 +601,7 @@ under the License.
             <display-entity entity-name="CustomMethod" key-field-name="customMethodId"/>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="deleteFixedAssetDepMethod" also-hidden="false">
+            <hyperlink target="deleteFixedAssetDepMethod" description="${uiLabelMap.CommonDelete}" also-hidden="false">
                 <parameter param-name="fixedAssetId"/>
                 <parameter param-name="depreciationCustomMethodId"/>
                 <parameter param-name="fromDate"/>
@@ -614,7 +609,7 @@ under the License.
         </field>
     </form>
     <form name="ListFixedAssetDepreciations" type="list" list-name="assetDepreciationInfoList" default-map-name="assetDepreciationInfo"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" paginate-target="showFixedAssetDepreciation">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <field name="index"><display description="${itemIndex + 1}"/></field>
         <field name="year"><display/></field>
         <field name="depreciation"><display type="currency" currency="${fixedAsset.purchaseCostUomId}"/></field>
@@ -622,7 +617,7 @@ under the License.
         <field name="nbv" title="Net Book Value"><display type="currency" currency="${fixedAsset.purchaseCostUomId}"/></field>
     </form>
     <form name="FixedAssetTransactions" type="list"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" list-name="fixedAssetTransactions" paginate-target="showFixedAssetDepreciation">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" list-name="fixedAssetTransactions">
         <actions>
             <entity-condition entity-name="AcctgTransAndEntries" list="fixedAssetTransactions">
                 <condition-expr field-name="fixedAssetId" from-field="fixedAssetId"/>
@@ -631,7 +626,7 @@ under the License.
             </entity-condition>
         </actions>
         <field name="acctgTransId" widget-style="buttontext">
-            <hyperlink description="${acctgTransId}" target="EditAcctgTrans" also-hidden="false">
+            <hyperlink target="EditAcctgTrans" description="${acctgTransId}" also-hidden="false">
                 <parameter param-name="acctgTransId"/>
                 <parameter param-name="organizationPartyId"/>
             </hyperlink>
@@ -708,7 +703,7 @@ under the License.
         <field name="submitButton" title="${uiLabelMap.CommonAdd}" widget-style="smallSubmit"><submit button-type="button"/></field>
     </form>
     <form name="GlobalFixedAssetTypeGlAccounts" type="list" list-name="globalFixedAssetTypeGlAccounts"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" paginate-target="showFixedAssetDepreciation">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
             <entity-condition entity-name="FixedAssetTypeGlAccount" list="globalFixedAssetTypeGlAccounts">
                 <condition-list combine="and">
@@ -728,7 +723,7 @@ under the License.
         <field name="lossGlAccountId"><display-entity entity-name="GlAccount" key-field-name="glAccountId" description="${accountCode} - ${accountName} [${glAccountId}]"/></field>
     </form>
     <form name="FixedAssetTypeGlAccounts" type="list" list-name="fixedAssetTypeGlAccounts"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" paginate-target="showFixedAssetDepreciation">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
             <entity-condition entity-name="FixedAssetTypeGlAccount" list="fixedAssetTypeGlAccounts">
                 <condition-expr field-name="fixedAssetId" from-field="fixedAssetId"/>
@@ -740,7 +735,7 @@ under the License.
         <field name="profitGlAccountId"><display-entity entity-name="GlAccount" key-field-name="glAccountId" description="${accountCode} - ${accountName} [${glAccountId}]"/></field>
         <field name="lossGlAccountId"><display-entity entity-name="GlAccount" key-field-name="glAccountId" description="${accountCode} - ${accountName} [${glAccountId}]"/></field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="deleteFixedAssetTypeGlAccountForFixedAsset" also-hidden="false">
+            <hyperlink target="deleteFixedAssetTypeGlAccountForFixedAsset" description="${uiLabelMap.CommonDelete}" also-hidden="false">
                 <parameter param-name="fixedAssetTypeId"/>
                 <parameter param-name="fixedAssetId"/>
                 <parameter param-name="organizationPartyId"/>

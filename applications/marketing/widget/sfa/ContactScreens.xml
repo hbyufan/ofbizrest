@@ -19,7 +19,7 @@ under the License.
 -->
 
 <screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://ofbiz.apache.org/Widget-Screen" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
     <screen name="FindContacts">
         <section>
             <actions>
@@ -34,7 +34,7 @@ under the License.
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="left-column">
                         <include-screen name="leftbar" location="component://marketing/widget/sfa/CommonScreens.xml"/>
-                    </decorator-section>
+                    </decorator-section>                    
                     <decorator-section name="body">
                         <section>
                             <widgets>
@@ -98,7 +98,7 @@ under the License.
                 <set field="titleProperty" value="PageTitleCreateContact"/>
                 <set field="headerItem" value="Contacts"/>
                 <set field="tabButtonItem" value="MergeContacts"/>
-                <script location="component://marketing/groovyScripts/sfa/MergeContacts.groovy"/>
+                <script location="component://marketing/webapp/sfa/WEB-INF/action/MergeContacts.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="CommonContactDecorator" location="${parameters.mainDecoratorLocation}">
@@ -113,7 +113,7 @@ under the License.
                                 </condition>
                                 <widgets>
                                     <platform-specific>
-                                        <html><html-template location="component://marketing/template/contact/MergeContacts.ftl"/></html>
+                                        <html><html-template location="component://marketing/webapp/sfa/contact/mergeContacts.ftl"/></html>
                                     </platform-specific>
                                 </widgets>
                                 <fail-widgets>

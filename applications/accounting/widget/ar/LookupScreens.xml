@@ -19,7 +19,7 @@ under the License.
 -->
 
 <screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://ofbiz.apache.org/Widget-Screen" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
 
     <screen name="LookupInvoice">
         <section>
@@ -42,7 +42,7 @@ under the License.
                         <include-form name="LookupInvoice" location="component://accounting/widget/ar/forms/LookupForms.xml"/>
                     </decorator-section>
                     <decorator-section name="search-results">
-                        <include-form name="ListInvoice" location="component://accounting/widget/FieldLookupForms.xml"/>
+                        <include-form name="listInvoice" location="component://accounting/widget/FieldLookupForms.xml"/>
                     </decorator-section>
                 </decorator-screen>
             </widgets>
@@ -70,7 +70,7 @@ under the License.
                         <include-form name="LookupPayment" location="component://accounting/widget/ar/forms/LookupForms.xml"/>
                     </decorator-section>
                     <decorator-section name="search-results">
-                        <include-form name="ListPayment" location="component://accounting/widget/FieldLookupForms.xml"/>
+                        <include-form name="listPayment" location="component://accounting/widget/FieldLookupForms.xml"/>
                     </decorator-section>
                 </decorator-screen>
             </widgets>

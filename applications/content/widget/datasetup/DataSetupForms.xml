@@ -19,7 +19,7 @@ under the License.
 -->
 
 <forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-        xmlns="http://ofbiz.apache.org/Widget-Form" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Form http://ofbiz.apache.org/dtds/widget-form.xsd">
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
     <!-- DataResourceType forms -->
     <form name="AddDataResourceType" target="addDataResourceType" title="" type="single"
         header-row-style="header-row" default-table-style="basic-table">
@@ -29,7 +29,7 @@ under the License.
         </field>
     </form>
     <form name="UpdateDataResourceType" list-name="contentList" target="updateDataResourceType" title="" type="list" paginate-target="EditDataResourceType"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" separate-columns="true">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
           <entity-condition entity-name="DataResourceType" use-cache="false"/>
         </actions>
@@ -41,7 +41,7 @@ under the License.
             <submit button-type="button"/>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="removeDataResourceType" also-hidden="false">
+            <hyperlink also-hidden="false" description="${uiLabelMap.CommonDelete}" target="removeDataResourceType">
                 <parameter param-name="dataResourceTypeId"/>
             </hyperlink>
         </field>
@@ -53,7 +53,8 @@ under the License.
         <auto-fields-service service-name="createDataResourceTypeAttr"/>
         <field entity-name="DataResource" name="dataResourceTypeId">
             <drop-down allow-empty="false">
-                <entity-options entity-name="DataResourceType" key-field-name="dataResourceTypeId"/>
+                <entity-options description="${description}"
+                    entity-name="DataResourceType" key-field-name="dataResourceTypeId"/>
             </drop-down>
         </field>
         <field name="submitButton" title="${uiLabelMap.CommonAdd}" widget-style="smallSubmit">
@@ -73,7 +74,7 @@ under the License.
             <display/>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="removeDataResourceTypeAttr" also-hidden="false">
+            <hyperlink also-hidden="false" description="${uiLabelMap.CommonDelete}" target="removeDataResourceTypeAttr">
                 <parameter param-name="dataResourceTypeId"/>
                 <parameter param-name="attrName"/>
             </hyperlink>
@@ -89,7 +90,7 @@ under the License.
         </field>
     </form>
     <form name="UpdateCharacterSet" list-name="contentList" target="updateCharacterSet" title="" type="list" paginate-target="EditCharacterSet"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" separate-columns="true">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
           <entity-condition entity-name="CharacterSet" use-cache="false"/>
         </actions>
@@ -101,7 +102,7 @@ under the License.
             <submit button-type="button"/>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="removeCharacterSet" also-hidden="false">
+            <hyperlink also-hidden="false" description="${uiLabelMap.CommonDelete}" target="removeCharacterSet">
                 <parameter param-name="characterSetId"/>
             </hyperlink>
         </field>
@@ -113,7 +114,7 @@ under the License.
         <auto-fields-service service-name="createDataCategory"/>
         <field name="parentCategoryId">
             <drop-down allow-empty="true">
-                <entity-options entity-name="DataCategory" key-field-name="dataCategoryId" description="${categoryName}"></entity-options>
+                <entity-options entity-name="DataCategory" description="${categoryName}" key-field-name="dataCategoryId"></entity-options>
             </drop-down>
         </field>
         <field name="submitButton" title="${uiLabelMap.CommonAdd}" widget-style="smallSubmit">
@@ -121,7 +122,7 @@ under the License.
         </field>
     </form>
     <form name="UpdateDataCategory" list-name="dataCategoryList" target="updateDataCategory" title="" type="list" paginate-target="EditDataCategory"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" separate-columns="true">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
             <entity-condition entity-name="DataCategory" use-cache="false"/>
         </actions>
@@ -140,7 +141,7 @@ under the License.
             <submit button-type="button"/>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="removeDataCategory" also-hidden="false">
+            <hyperlink also-hidden="false" description="${uiLabelMap.CommonDelete}" target="removeDataCategory">
                 <parameter param-name="dataCategoryId"/>
             </hyperlink>
         </field>
@@ -152,7 +153,7 @@ under the License.
         <auto-fields-service service-name="createFileExtension"/>
         <field name="mimeTypeId" title=" ">
             <drop-down allow-empty="false">
-                <entity-options
+                <entity-options description="${description}"
                     entity-name="MimeType" key-field-name="mimeTypeId"/>
             </drop-down>
         </field>
@@ -171,14 +172,15 @@ under the License.
         </field>
         <field name="mimeTypeId" title=" ">
             <drop-down allow-empty="false">
-                <entity-options entity-name="MimeType" key-field-name="mimeTypeId"/>
+                <entity-options description="${description}"
+                    entity-name="MimeType" key-field-name="mimeTypeId"/>
             </drop-down>
         </field>
         <field name="submitButton" title="${uiLabelMap.CommonUpdate}" widget-style="smallSubmit">
             <submit button-type="button"/>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="removeFileExtension" also-hidden="false">
+            <hyperlink also-hidden="false" description="${uiLabelMap.CommonDelete}" target="removeFileExtension">
                 <parameter param-name="fileExtensionId"/>
             </hyperlink>
         </field>
@@ -193,8 +195,7 @@ under the License.
         </field>
     </form>
     <form name="UpdateMetaDataPredicate" list-name="contentList" target="updateMetaDataPredicate" title="" type="list"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" paginate-target="EditMetaDataPredicate"
-        separate-columns="true">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" paginate-target="EditMetaDataPredicate">
         <actions>
           <entity-condition entity-name="MetaDataPredicate" use-cache="false"/>
         </actions>
@@ -206,7 +207,7 @@ under the License.
             <submit button-type="button"/>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="removeMetaDataPredicate" also-hidden="false">
+            <hyperlink also-hidden="false" description="${uiLabelMap.CommonDelete}" target="removeMetaDataPredicate">
                 <parameter param-name="metaDataPredicateId"/>
             </hyperlink>
         </field>
@@ -221,7 +222,7 @@ under the License.
         </field>
     </form>
     <form name="UpdateMimeType" list-name="contentList" target="updateMimeType" title="" type="list" paginate-target="EditMimeType"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" separate-columns="true">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
           <entity-condition entity-name="MimeType" use-cache="false"/>
         </actions>
@@ -233,7 +234,7 @@ under the License.
             <submit button-type="button"/>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="removeMimeType" also-hidden="false">
+            <hyperlink also-hidden="false" description="${uiLabelMap.CommonDelete}" target="removeMimeType">
                 <parameter param-name="mimeTypeId"/>
             </hyperlink>
         </field>
@@ -245,7 +246,7 @@ under the License.
         <auto-fields-service service-name="createMimeTypeHtmlTemplate"/>
         <field name="mimeTypeId">
             <drop-down allow-empty="false">
-                <entity-options entity-name="MimeType" key-field-name="mimeTypeId"/>
+                <entity-options entity-name="MimeType" description="${description}" key-field-name="mimeTypeId"/>
             </drop-down>
         </field>
         <field name="submitButton" title="${uiLabelMap.CommonAdd}" widget-style="smallSubmit">
@@ -254,7 +255,7 @@ under the License.
     </form>
 
     <form name="UpdateMimeTypeHtmlTemplate" target="updateMimeTypeHtmlTemplate" title="" type="list" list-name="contentList" paginate-target="EditMimeTypeHtmlTemplate"
-        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar" separate-columns="true">
+        odd-row-style="alternate-row" header-row-style="header-row-2" default-table-style="basic-table hover-bar">
         <actions>
           <entity-condition entity-name="MimeTypeHtmlTemplate" use-cache="false"/>
         </actions>
@@ -268,7 +269,7 @@ under the License.
             <submit button-type="button"/>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonDelete}" target="removeMimeTypeHtmlTemplate" also-hidden="false">
+            <hyperlink also-hidden="false" description="${uiLabelMap.CommonDelete}" target="removeMimeTypeHtmlTemplate">
                 <parameter param-name="mimeTypeId"/>
                 <parameter param-name="dataResourceId"/>
                 <parameter param-name="fromDate"/>

@@ -18,7 +18,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 <forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-        xmlns="http://ofbiz.apache.org/Widget-Form" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Form http://ofbiz.apache.org/dtds/widget-form.xsd">
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
 
     <form name="FindQuotes" target="FindQuote" title="" type="single"
         header-row-style="header-row" default-table-style="basic-table">
@@ -26,12 +26,12 @@ under the License.
         <field name="quoteId" title="${uiLabelMap.OrderOrderQuoteId}"></field>
         <field name="quoteTypeId" title="${uiLabelMap.OrderOrderQuoteTypeId}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="QuoteType" key-field-name="quoteTypeId"/>
+                <entity-options description="${description}" entity-name="QuoteType" key-field-name="quoteTypeId"/>
             </drop-down>
         </field>
         <field name="salesChannelEnumId" title="${uiLabelMap.OrderSalesChannel}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="Enumeration" key-field-name="enumId">
+                <entity-options entity-name="Enumeration" description="${description}" key-field-name="enumId">
                     <entity-constraint name="enumTypeId" value="ORDER_SALES_CHANNEL"/>
                     <entity-order-by field-name="sequenceId"/>
                 </entity-options>
@@ -42,12 +42,12 @@ under the License.
         </field>
         <field name="issueDate" title="${uiLabelMap.OrderOrderQuoteIssueDate}"></field>
         <field name="statusId" title="${uiLabelMap.CommonStatus}">
-            <check all-checked="false">
-                <entity-options entity-name="StatusItem">
+            <drop-down allow-empty="true">
+                <entity-options entity-name="StatusItem" description="${description}">
                     <entity-constraint name="statusTypeId" operator="equals" value="QUOTE_STATUS"/>
                     <entity-order-by field-name="sequenceId"/>
                 </entity-options>
-            </check>
+            </drop-down>
         </field>
         <field name="currencyUomId" title="${uiLabelMap.CommonCurrency}">
             <drop-down allow-empty="true" no-current-selected-key="${defaultOrganizationPartyCurrencyUomId}">
@@ -85,7 +85,7 @@ under the License.
           </actions>
         <auto-fields-entity entity-name="Quote" default-field-type="display"/>
         <field name="quoteId" title="${uiLabelMap.OrderOrderQuoteId}" widget-style="buttontext">
-            <hyperlink description="${quoteId}" target="ViewQuote" also-hidden="false">
+            <hyperlink also-hidden="false" description="${quoteId}" target="ViewQuote">
                 <parameter param-name="quoteId"/>
             </hyperlink>
         </field>
@@ -109,19 +109,17 @@ under the License.
         </actions>
         <alt-target use-when="quote==null" target="createQuote"/>
         <auto-fields-entity entity-name="Quote" default-field-type="edit"/>
-        <field name="quoteId" use-when="quote!=null" title="${uiLabelMap.OrderOrderQuoteId}"><display/></field>
-        <field name="quoteId" use-when="quote==null" title="${uiLabelMap.OrderOrderQuoteId}"><hidden/></field>
-        <field name="statusId" title="${uiLabelMap.FormFieldTitle_statusId}"><ignored/></field>
+        <field name="quoteId" title="${uiLabelMap.OrderOrderQuoteId}"><display/></field>
         <field name="quoteTypeId" title="${uiLabelMap.OrderOrderQuoteTypeId}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="QuoteType" key-field-name="quoteTypeId">
+                <entity-options description="${description}" entity-name="QuoteType" key-field-name="quoteTypeId">
                     <entity-order-by field-name="description"/>
                 </entity-options>
             </drop-down>
         </field>
         <field name="salesChannelEnumId" title="${uiLabelMap.OrderSalesChannel}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="Enumeration" key-field-name="enumId">
+                <entity-options entity-name="Enumeration" description="${description}" key-field-name="enumId">
                     <entity-constraint name="enumTypeId" value="ORDER_SALES_CHANNEL"/>
                     <entity-order-by field-name="sequenceId"/>
                 </entity-options>
@@ -129,7 +127,7 @@ under the License.
         </field>
         <field name="partyId" title="${uiLabelMap.PartyPartyId}"><lookup target-form-name="LookupPartyName"/></field>
         <field name="issueDate" title="${uiLabelMap.OrderOrderQuoteIssueDate}"></field>
-        <field name="statusId" use-when="quote!=null" title="${uiLabelMap.CommonStatus}">
+        <field name="statusId" title="${uiLabelMap.CommonStatus}">
             <drop-down allow-empty="false" current-description="${currentStatus.description}">
                 <entity-options entity-name="StatusValidChangeToDetail" key-field-name="statusIdTo" description="${transitionName} (${description})">
                     <entity-constraint name="statusId" value="${quote.statusId}"/>
@@ -165,7 +163,7 @@ under the License.
         <field name="roleTypeId" title="${uiLabelMap.PartyRoleType}"><display-entity also-hidden="false" entity-name="RoleType"/></field>
         <field name="quoteId"><hidden/></field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonRemove}" target="removeQuoteRole" also-hidden="false">
+            <hyperlink target="removeQuoteRole" description="${uiLabelMap.CommonRemove}" also-hidden="false">
                 <parameter param-name="partyId"/>
                 <parameter param-name="roleTypeId"/>
                 <parameter param-name="quoteId"/>
@@ -176,15 +174,14 @@ under the License.
         header-row-style="header-row" default-table-style="basic-table">
         <auto-fields-entity entity-name="QuoteRole" default-field-type="edit"/>
         <field name="quoteId"><hidden/></field>
-        <field name="partyId" title="${uiLabelMap.PartyParty}"><lookup target-form-name="LookupPartyName"/></field>
         <field name="roleTypeId" title="${uiLabelMap.PartyRoleType}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="RoleType">
+                <entity-options entity-name="RoleType" description="${description}">
                     <entity-order-by field-name="description"/>
                 </entity-options>
             </drop-down>
         </field>
-        <field name="fromDate"><date-time default-value="${nowTimestamp}"/></field>
+        <field name="partyId" title="${uiLabelMap.PartyParty}"><lookup target-form-name="LookupPartyName"/></field>
         <field name="submitButton" title="${uiLabelMap.CommonSubmit}" widget-style="smallSubmit"><submit button-type="button"/></field>
     </form>
     <form name="ListQuoteItems" list-name="quoteItems" target="" title="" type="list"
@@ -193,13 +190,13 @@ under the License.
         <field name="quoteId"><hidden/></field>
         <field name="quoteItemSeqId"><hidden/></field>
         <field name="quoteItemSeqId" title="${uiLabelMap.OrderOrderQuoteItemSeqId}" widget-style="buttontext" use-when="${groovy:isPromo==null}">
-            <hyperlink description="${quoteItemSeqId}" target="EditQuoteItem" also-hidden="false">
+            <hyperlink also-hidden="false" description="${quoteItemSeqId}" target="EditQuoteItem">
                 <parameter param-name="quoteId"/>
                 <parameter param-name="quoteItemSeqId"/>
             </hyperlink>
         </field>
         <field name="quoteItemSeqId" title="${uiLabelMap.OrderOrderQuoteItemSeqId}" widget-style="buttontext" use-when="${groovy: 'N'.equals(isPromo)}">
-            <hyperlink description="${quoteItemSeqId}" target="EditQuoteItem" also-hidden="false">
+            <hyperlink also-hidden="false" description="${quoteItemSeqId}" target="EditQuoteItem">
                 <parameter param-name="quoteId"/>
                 <parameter param-name="quoteItemSeqId"/>
             </hyperlink>
@@ -215,19 +212,18 @@ under the License.
         <field name="productFeatureId"><hidden/></field>
         <field name="skillTypeId"><hidden/></field>
         <field name="deliverableTypeId"><hidden/></field>
-        <field name="comments"></field>
-        <field name="leadTimeDays"></field>
+        <field name="comments"><hidden/></field>
         <field name="uomId"><hidden/></field>
         <!--<field name="custRequestId"><display description="${custRequestId} - ${custRequestItemSeqId}"/></field>-->
         <field name="custRequestId" title="${uiLabelMap.CommonViewRequest}" widget-style="buttontext">
-            <hyperlink description="${custRequestId}-${custRequestItemSeqId}" target="requestitem" also-hidden="false">
+            <hyperlink also-hidden="false" description="${custRequestId}-${custRequestItemSeqId}" target="requestitem">
                 <parameter param-name="custRequestId"/>
                 <parameter param-name="custRequestItemSeqId"/>
             </hyperlink>
         </field>
         <field name="custRequestItemSeqId"><hidden/></field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonRemove}" target="removeQuoteItem" also-hidden="false">
+            <hyperlink target="removeQuoteItem" description="${uiLabelMap.CommonRemove}" also-hidden="false">
                 <parameter param-name="quoteItemSeqId"/>
                 <parameter param-name="quoteId"/>
             </hyperlink>
@@ -244,14 +240,14 @@ under the License.
         <field name="productFeatureId" title="${uiLabelMap.ProductFeatures}"><lookup target-form-name="LookupProductFeature"/></field>
         <field name="deliverableTypeId" title="${uiLabelMap.OrderOrderQuoteDeliverableTypeId}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="DeliverableType" key-field-name="deliverableTypeId">
+                <entity-options description="${description}" entity-name="DeliverableType" key-field-name="deliverableTypeId">
                     <entity-order-by field-name="description"/>
                 </entity-options>
             </drop-down>
         </field>
         <field name="skillTypeId" title="${uiLabelMap.OrderOrderQuoteSkillTypeId}">
             <drop-down allow-empty="true">
-                <entity-options entity-name="SkillType" key-field-name="skillTypeId">
+                <entity-options description="${description}" entity-name="SkillType" key-field-name="skillTypeId">
                     <entity-order-by field-name="description"/>
                 </entity-options>
             </drop-down>
@@ -284,7 +280,7 @@ under the License.
         odd-row-style="alternate-row" default-table-style="basic-table hover-bar" paginate-target="ListQuoteAttributes">
         <auto-fields-entity entity-name="QuoteAttribute" default-field-type="display"/>
         <field name="attrName" title="${uiLabelMap.OrderOrderQuoteAttributeName}" widget-style="buttontext">
-            <hyperlink description="${attrName}" target="EditQuoteAttribute" also-hidden="false">
+            <hyperlink also-hidden="false" description="${attrName}" target="EditQuoteAttribute">
                 <parameter param-name="quoteId"/>
                 <parameter param-name="attrName"/>
             </hyperlink>
@@ -292,7 +288,7 @@ under the License.
         <field name="attrValue" title="${uiLabelMap.OrderOrderQuoteAttributeValue}"></field>
         <field name="quoteId"><hidden/></field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonRemove}" target="removeQuoteAttribute" also-hidden="false">
+            <hyperlink target="removeQuoteAttribute" description="${uiLabelMap.CommonRemove}" also-hidden="false">
                 <parameter param-name="attrName"/>
                 <parameter param-name="quoteId"/>
             </hyperlink>
@@ -313,7 +309,7 @@ under the License.
         odd-row-style="alternate-row" default-table-style="basic-table hover-bar" paginate-target="ListQuoteCoefficients">
         <auto-fields-entity entity-name="QuoteCoefficient" default-field-type="display"/>
         <field name="coeffName" title="${uiLabelMap.OrderOrderQuoteCoeffName}" widget-style="buttontext">
-            <hyperlink description="${coeffName}" target="EditQuoteCoefficient" also-hidden="false">
+            <hyperlink also-hidden="false" description="${coeffName}" target="EditQuoteCoefficient">
                 <parameter param-name="quoteId"/>
                 <parameter param-name="coeffName"/>
             </hyperlink>
@@ -321,7 +317,7 @@ under the License.
         <field name="coeffValue" title="${uiLabelMap.OrderOrderQuoteCoeffValue}"></field>
         <field name="quoteId"><hidden/></field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonRemove}" target="removeQuoteCoefficient" also-hidden="false">
+            <hyperlink target="removeQuoteCoefficient" description="${uiLabelMap.CommonRemove}" also-hidden="false">
                 <parameter param-name="coeffName"/>
                 <parameter param-name="quoteId"/>
             </hyperlink>
@@ -348,7 +344,7 @@ under the License.
         <field name="custRequestItemSeqId"><hidden/></field>
         <field name="quoteId"><hidden/></field>
         <field name="quoteItemSeqId" title="${uiLabelMap.OrderOrderQuoteItemSeqId}" widget-style="buttontext">
-            <hyperlink description="${quoteItemSeqId}" target="EditQuoteItem" also-hidden="true">
+            <hyperlink also-hidden="true" description="${quoteItemSeqId}" target="EditQuoteItem">
                 <parameter param-name="quoteId"/>
                 <parameter param-name="quoteItemSeqId"/>
             </hyperlink>
@@ -382,7 +378,7 @@ under the License.
         <field name="createdDate"><hidden/></field>
         <field name="createdByUserLogin"><hidden/></field>
         <field name="quoteAdjustmentId" title="${uiLabelMap.OrderOrderQuoteAdjustmentId}" widget-style="buttontext" use-when="${groovy:productPromoId==null}">
-            <hyperlink description="${quoteAdjustmentId}" target="EditQuoteAdjustment" also-hidden="false">
+            <hyperlink also-hidden="false" description="${quoteAdjustmentId}" target="EditQuoteAdjustment">
                 <parameter param-name="quoteId"/>
                 <parameter param-name="quoteAdjustmentId"/>
             </hyperlink>
@@ -392,7 +388,7 @@ under the License.
             <display-entity entity-name="OrderAdjustmentType" key-field-name="orderAdjustmentTypeId"/>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonRemove}" target="removeQuoteAdjustment" also-hidden="false">
+            <hyperlink target="removeQuoteAdjustment" description="${uiLabelMap.CommonRemove}" also-hidden="false">
                 <parameter param-name="quoteAdjustmentId"/>
                 <parameter param-name="quoteId"/>
             </hyperlink>
@@ -421,7 +417,7 @@ under the License.
 
         <field name="quoteAdjustmentTypeId" title="${uiLabelMap.OrderOrderQuoteAdjustmentType}">
             <drop-down allow-empty="false">
-                <entity-options entity-name="OrderAdjustmentType" key-field-name="orderAdjustmentTypeId"/>
+                <entity-options description="${description}" entity-name="OrderAdjustmentType" key-field-name="orderAdjustmentTypeId"/>
             </drop-down>
         </field>
         <field name="submitButton" title="${uiLabelMap.CommonSubmit}" widget-style="smallSubmit"><submit button-type="button"/></field>
@@ -437,7 +433,7 @@ under the License.
         <field name="custRequestItemSeqId"><hidden/></field>
         <field name="quoteId"><hidden/></field>
         <field name="quoteItemSeqId" title="${uiLabelMap.OrderOrderQuoteItemSeqId}" widget-style="buttontext">
-            <hyperlink description="${quoteItemSeqId}" target="EditQuoteItem" also-hidden="true">
+            <hyperlink also-hidden="true" description="${quoteItemSeqId}" target="EditQuoteItem">
                 <parameter param-name="quoteId"/>
                 <parameter param-name="quoteItemSeqId"/>
             </hyperlink>
@@ -464,13 +460,13 @@ under the License.
         odd-row-style="alternate-row" default-table-style="basic-table hover-bar" paginate-target="ListQuoteTerms">
         <auto-fields-entity entity-name="QuoteTerm" default-field-type="display"/>
         <field name="termTypeId" >
-            <display-entity entity-name="TermType" key-field-name="termTypeId"/>
+            <display-entity entity-name="TermType" description="${description}" key-field-name="termTypeId"/>
         </field>
         <field name="uomId" title="${uiLabelMap.OrderOrderQuoteUomId}">
-            <display-entity entity-name="Uom" key-field-name="uomId"/>
+            <display-entity entity-name="Uom" description="${description}" key-field-name="uomId"/>
         </field>
         <field name="editLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonEdit}" target="EditQuoteTerm" also-hidden="false">
+            <hyperlink target="EditQuoteTerm" description="${uiLabelMap.CommonEdit}" also-hidden="false">
                 <parameter param-name="termTypeId"/>
                 <parameter param-name="quoteItemSeqId"/>
                 <parameter param-name="quoteId"/>
@@ -479,7 +475,7 @@ under the License.
             </hyperlink>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonRemove}" target="deleteQuoteTerm" also-hidden="false">
+            <hyperlink target="deleteQuoteTerm" description="${uiLabelMap.CommonRemove}" also-hidden="false">
                 <parameter param-name="termTypeId"/>
                 <parameter param-name="quoteItemSeqId"/>
                 <parameter param-name="quoteId"/>
@@ -488,7 +484,7 @@ under the License.
     </form>
     <form name="ListQuoteTermItem" extends="ListQuoteTerms">
         <field name="editLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonEdit}" target="EditQuoteTermItem" also-hidden="false">
+            <hyperlink target="EditQuoteTermItem" description="${uiLabelMap.CommonEdit}" also-hidden="false">
                 <parameter param-name="termTypeId"/>
                 <parameter param-name="quoteItemSeqId"/>
                 <parameter param-name="quoteId"/>
@@ -497,7 +493,7 @@ under the License.
             </hyperlink>
         </field>
         <field name="deleteLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonRemove}" target="deleteQuoteTermFromItem" also-hidden="false">
+            <hyperlink target="deleteQuoteTermFromItem" description="${uiLabelMap.CommonRemove}" also-hidden="false">
                 <parameter param-name="termTypeId"/>
                 <parameter param-name="quoteItemSeqId"/>
                 <parameter param-name="quoteId"/>
@@ -527,20 +523,20 @@ under the License.
                 </entity-options>
             </drop-down>
         </field>
-        <field name="quoteItemSeqId" use-when="quoteItemSeqId!=null"><display/></field>
-        <field name="termTypeId" required-field="true">
+        <field name="quoteItemSeqId" use-when="quoteItemSeqId!=null" tooltip="${uiLabelMap.CommonRequired}"><display/></field>
+        <field name="termTypeId" tooltip="${uiLabelMap.CommonRequired}">
             <drop-down current-description="">
-                <entity-options entity-name="TermType" key-field-name="termTypeId"/>
+                <entity-options description="${description}" entity-name="TermType" key-field-name="termTypeId"/>
             </drop-down>
         </field>
-        <field name="termTypeId" use-when="termTypeId!=null">
+        <field name="termTypeId" use-when="termTypeId!=null" tooltip="${uiLabelMap.CommonRequired}">
             <display-entity entity-name="TermType" description="${description} [${termTypeId}]" key-field-name="termTypeId"/>
         </field>
         <field name="quoteId"><hidden/></field>
         
         <field name="uomId">
             <drop-down current-description="">
-                <entity-options entity-name="Uom" key-field-name="uomId"/>
+                <entity-options description="${description}" entity-name="Uom" key-field-name="uomId"/>
             </drop-down>
         </field>
         <field name="submitButton" title="${uiLabelMap.CommonSubmit}" widget-style="smallSubmit"><submit button-type="button"/></field>
@@ -555,7 +551,7 @@ under the License.
         <field name="quoteId"><hidden/></field>
         <field name="noteId"><hidden/></field>
         <field name="editLink" title=" " widget-style="buttontext">
-            <hyperlink description="${uiLabelMap.CommonEdit}" target="EditQuoteNote" also-hidden="false">
+            <hyperlink target="EditQuoteNote" description="${uiLabelMap.CommonEdit}" also-hidden="false">
                 <parameter param-name="quoteId"/>
                 <parameter param-name="noteId"/>
             </hyperlink>

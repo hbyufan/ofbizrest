@@ -23,9 +23,6 @@ under the License.
     <eca service="createPerson" event="commit">
         <action service="ensureNaPartyRole" mode="sync"/>
     </eca>
-    <eca service="createProductStoreRole" event="invoke">
-        <action service="ensurePartyRole" mode="sync" run-as-user="system"/>
-    </eca>
     <eca service="createPartyGroup" event="commit">
         <action service="ensureNaPartyRole" mode="sync"/>
     </eca>
@@ -43,11 +40,11 @@ under the License.
     <!-- before running the createPartyRelationship service, make sure the party is in the _NA_ role if that is the desired roleTypeId for From or To -->
     <eca service="createPartyRelationship" event="invoke">
         <condition field-name="roleTypeIdFrom" operator="equals" value="_NA_"/>
-        <action service="ensurePartyRoleFrom" mode="sync"/>
+        <action service="ensureNaPartyRoleFrom" mode="sync"/>
     </eca>
     <eca service="createPartyRelationship" event="invoke">
         <condition field-name="roleTypeIdTo" operator="equals" value="_NA_"/>
-        <action service="ensurePartyRoleTo" mode="sync"/>
+        <action service="ensureNaPartyRoleTo" mode="sync"/>
     </eca>
 
     <!-- party contact mech service ECAs -->

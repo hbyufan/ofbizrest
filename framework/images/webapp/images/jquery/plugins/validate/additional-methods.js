@@ -421,28 +421,28 @@ jQuery.validator.addMethod("creditcardtypes", function(value, element, param) {
 
 	var validTypes = 0x0000;
 
-	if (param.CCT_MASTERCARD) {
+	if (param.mastercard) {
 		validTypes |= 0x0001;
 	}
-	if (param.CCT_VISA) {
+	if (param.visa) {
 		validTypes |= 0x0002;
 	}
-	if (param.CCT_AMEX) {
+	if (param.amex) {
 		validTypes |= 0x0004;
 	}
-	if (param.CCT_DINERSCLUB) {
+	if (param.dinersclub) {
 		validTypes |= 0x0008;
 	}
-	if (param.CCT_ENROUTE) {
+	if (param.enroute) {
 		validTypes |= 0x0010;
 	}
-	if (param.CCT_DISCOVER) {
+	if (param.discover) {
 		validTypes |= 0x0020;
 	}
-	if (param.CCT_JCB) {
+	if (param.jcb) {
 		validTypes |= 0x0040;
 	}
-	if (param.CCT_UNKNOWN) {
+	if (param.unknown) {
 		validTypes |= 0x0080;
 	}
 	if (param.all) {

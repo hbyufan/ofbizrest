@@ -23,14 +23,13 @@ under the License.
       NOTE: All UomConversion conversionFactors are multipliers to change from uomId to uomIdTo.
       In other words there is 1 uomId for conversionFactor uomIdTos, for instance 1 minute for 60 seconds.
     -->
- 
+
     <!-- =============== DATA_MEASURE =============== -->
     <Uom abbreviation="b" description="Bit of Data" uomId="DATA_b" uomTypeId="DATA_MEASURE"/>
     <Uom abbreviation="Kb" description="Kilobit of Data" uomId="DATA_Kb" uomTypeId="DATA_MEASURE"/>
     <Uom abbreviation="Mb" description="Megabit of Data" uomId="DATA_Mb" uomTypeId="DATA_MEASURE"/>
     <Uom abbreviation="Gb" description="Gigabit of Data" uomId="DATA_Gb" uomTypeId="DATA_MEASURE"/>
     <Uom abbreviation="Tb" description="Terabit of Data" uomId="DATA_Tb" uomTypeId="DATA_MEASURE"/>
-    <Uom abbreviation="Pb" description="Petabit of Data" uomId="DATA_Pb" uomTypeId="DATA_MEASURE"/>
 
     <Uom abbreviation="B" description="Byte of Data" uomId="DATA_B" uomTypeId="DATA_MEASURE"/>
     <Uom abbreviation="KB" description="Kilobyte of Data" uomId="DATA_KB" uomTypeId="DATA_MEASURE"/>
@@ -43,7 +42,6 @@ under the License.
     <UomConversion uomId="DATA_Mb" uomIdTo="DATA_Kb" conversionFactor="1024"/>
     <UomConversion uomId="DATA_Gb" uomIdTo="DATA_Mb" conversionFactor="1024"/>
     <UomConversion uomId="DATA_Tb" uomIdTo="DATA_Gb" conversionFactor="1024"/>
-    <UomConversion uomId="DATA_Pb" uomIdTo="DATA_Tb" conversionFactor="1024"/>
 
     <UomConversion uomId="DATA_B" uomIdTo="DATA_b" conversionFactor="8"/>
     <UomConversion uomId="DATA_KB" uomIdTo="DATA_B" conversionFactor="1024"/>
@@ -201,8 +199,6 @@ under the License.
     <Uom abbreviation="gi" description="Gill (1/4 UK pint)" uomId="VLIQ_gi" uomTypeId="VOLUME_LIQ_MEASURE"/>
     <Uom abbreviation="gal" description="Gallon (UK)" uomId="VLIQ_galUK" uomTypeId="VOLUME_LIQ_MEASURE"/>
     <Uom abbreviation="gal" description="Gallon (US)" uomId="VLIQ_galUS" uomTypeId="VOLUME_LIQ_MEASURE"/>
-    <Uom abbreviation="m3" description="Cubic meter (liquid)" uomId="VLIQ_M3" uomTypeId="VOLUME_LIQ_MEASURE"/>
-    <Uom abbreviation="hL" description="Hectoliter" uomId="VLIQ_HL" uomTypeId="VOLUME_LIQ_MEASURE"/>
     <Uom abbreviation="L" description="Liter" uomId="VLIQ_L" uomTypeId="VOLUME_LIQ_MEASURE"/>
     <Uom abbreviation="ml" description="Milliliter" uomId="VLIQ_ml" uomTypeId="VOLUME_LIQ_MEASURE"/>
     <Uom abbreviation="fl. oz (UK)" description="Ounce, fluid (UK)" uomId="VLIQ_ozUK" uomTypeId="VOLUME_LIQ_MEASURE"/>
@@ -219,11 +215,9 @@ under the License.
     <UomConversion uomId="VLIQ_galUK" uomIdTo="VLIQ_galUS" conversionFactor="1.2009"/>
     <UomConversion uomId="VLIQ_galUS" uomIdTo="VLIQ_qt" conversionFactor="4"/>
     <UomConversion uomId="VLIQ_galUS" uomIdTo="VLIQ_L" conversionFactor="3.785"/>
-    <UomConversion uomId="VLIQ_M3" uomIdTo="VLIQ_L" conversionFactor="1000"/>
     <UomConversion uomId="VLIQ_L" uomIdTo="VLIQ_qt" conversionFactor="1.056"/>
     <UomConversion uomId="VLIQ_ml" uomIdTo="VLIQ_L" conversionFactor="0.001"/>
     <UomConversion uomId="VLIQ_L" uomIdTo="VLIQ_ml" conversionFactor="1000"/>
-    <UomConversion uomId="VLIQ_HL" uomIdTo="VLIQ_L" conversionFactor="100"/>
     <UomConversion uomId="VLIQ_ozUK" uomIdTo="VLIQ_L" conversionFactor="0.029"/>
     <UomConversion uomId="VLIQ_ozUK" uomIdTo="VLIQ_ozUS" conversionFactor="0.96"/>
     <UomConversion uomId="VLIQ_ozUS" uomIdTo="VLIQ_Tbs" conversionFactor="2"/>

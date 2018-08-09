@@ -138,6 +138,7 @@ under the License.
 
     <DataTemplateType dataTemplateTypeId="NONE" description="No Template" extension=""/>
     <DataTemplateType dataTemplateTypeId="FTL" description="FreeMarker" extension="ftl"/>
+    <DataTemplateType dataTemplateTypeId="VTL" description="Velocity" extension="vtl"/>
     <DataTemplateType dataTemplateTypeId="WM" description="WebMacro" extension="wm"/>
     <DataTemplateType dataTemplateTypeId="XSLT" description="XSLT" extension="xsl"/>
     <DataTemplateType dataTemplateTypeId="SCREEN_COMBINED" description="Screen widget" extension="xml"/>
@@ -164,16 +165,16 @@ under the License.
     <StatusItem description="Deactivated" sequenceId="99" statusCode="DEACTIVATED" statusId="CTNT_DEACTIVATED" statusTypeId="CONTENT_STATUS"/>
     <StatusItem description="Available" sequenceId="10" statusCode="AVAILABLE" statusId="CTNT_AVAILABLE" statusTypeId="CONTENT_STATUS"/>
 
-    <StatusValidChange statusId="CTNT_IN_PROGRESS" statusIdTo="CTNT_INITIAL_DRAFT" transitionName="First draft"/>
-    <StatusValidChange statusId="CTNT_IN_PROGRESS" statusIdTo="CTNT_PUBLISHED" transitionName="Publised, not revised"/>
-    <StatusValidChange statusId="CTNT_IN_PROGRESS" statusIdTo="CTNT_AVAILABLE" transitionName="Available"/>
-    <StatusValidChange statusId="CTNT_INITIAL_DRAFT" statusIdTo="CTNT_REVISED_DRAFT" transitionName="Draft revised"/>
-    <StatusValidChange statusId="CTNT_INITIAL_DRAFT" statusIdTo="CTNT_PUBLISHED" transitionName="Initial draft Publised"/>
-    <StatusValidChange statusId="CTNT_REVISED_DRAFT" statusIdTo="CTNT_FINAL_DRAFT" transitionName="Final draft"/>
-    <StatusValidChange statusId="CTNT_REVISED_DRAFT" statusIdTo="CTNT_PUBLISHED" transitionName="Revised draft Publised"/>
-    <StatusValidChange statusId="CTNT_FINAL_DRAFT" statusIdTo="CTNT_PUBLISHED" transitionName="Final draft Published"/>
-    <StatusValidChange statusId="CTNT_PUBLISHED" statusIdTo="CTNT_DEACTIVATED" transitionName="Deactivated"/>
-    <StatusValidChange statusId="CTNT_AVAILABLE" statusIdTo="CTNT_DEACTIVATED" transitionName="Available to Deactivated"/>
+    <StatusValidChange condition="" statusId="CTNT_IN_PROGRESS" statusIdTo="CTNT_INITIAL_DRAFT" transitionName="First draft"/>
+    <StatusValidChange condition="" statusId="CTNT_IN_PROGRESS" statusIdTo="CTNT_PUBLISHED" transitionName="Publised, not revised"/>
+    <StatusValidChange condition="" statusId="CTNT_IN_PROGRESS" statusIdTo="CTNT_AVAILABLE" transitionName="Available"/>
+    <StatusValidChange condition="" statusId="CTNT_INITIAL_DRAFT" statusIdTo="CTNT_REVISED_DRAFT" transitionName="Draft revised"/>
+    <StatusValidChange condition="" statusId="CTNT_INITIAL_DRAFT" statusIdTo="CTNT_PUBLISHED" transitionName="Initial draft Publised"/>
+    <StatusValidChange condition="" statusId="CTNT_REVISED_DRAFT" statusIdTo="CTNT_FINAL_DRAFT" transitionName="Final draft"/>
+    <StatusValidChange condition="" statusId="CTNT_REVISED_DRAFT" statusIdTo="CTNT_PUBLISHED" transitionName="Revised draft Publised"/>
+    <StatusValidChange condition="" statusId="CTNT_FINAL_DRAFT" statusIdTo="CTNT_PUBLISHED" transitionName="Final draft Published"/>
+    <StatusValidChange condition="" statusId="CTNT_PUBLISHED" statusIdTo="CTNT_DEACTIVATED" transitionName="Deactivated"/>
+    <StatusValidChange condition="" statusId="CTNT_AVAILABLE" statusIdTo="CTNT_DEACTIVATED" transitionName="Available to Deactivated"/>
 
     <SubscriptionType description="Newsgroup" hasTable="N" parentTypeId="" subscriptionTypeId="NEWSGROUP_SUBSCR"/>
     <SubscriptionType description="Other" hasTable="N" parentTypeId="" subscriptionTypeId="OTHER_SUBSCR"/>
@@ -186,8 +187,6 @@ under the License.
     <WebSiteContentType webSiteContentTypeId="MENU_ROOT" description="Menu Containers" hasTable="N" parentTypeId=""/>
     <WebSiteContentType webSiteContentTypeId="ERROR_ROOT" description="Error Page Containers" hasTable="N" parentTypeId=""/>
     <WebSiteContentType webSiteContentTypeId="PUBLISH_POINT" description="Publish Point" hasTable="N" parentTypeId=""/>
-    <WebSiteContentType webSiteContentTypeId="WEB_PAGE" description="Web Page" hasTable="N" parentTypeId="" />
-    <WebSiteContentType webSiteContentTypeId="MAINTENANCE_PAGE" description="Maintenance Page" hasTable="N" parentTypeId=""/>
 
     <!-- survey data -->
     <SurveyApplType surveyApplTypeId="CART_ADD" description="Add-To Cart"/>
@@ -221,7 +220,7 @@ under the License.
     <SurveyQuestionType surveyQuestionTypeId="TEXTAREA" description="Text (multi-line)"/>
     <SurveyQuestionType surveyQuestionTypeId="URL" description="URL"/>
 
-    <DataResource dataResourceId="STDWRAP001" dataResourceTypeId="ELECTRONIC_TEXT" dataTemplateTypeId="FTL" dataResourceName="Standard SubContent Wrapper" mimeTypeId="text/html"/>
+    <DataResource dataResourceId="STDWRAP001" dataResourceTypeId="ELECTRONIC_TEXT" dataTemplateTypeId="FTL"/>
     <ElectronicText dataResourceId="STDWRAP001">
         <textData><![CDATA[<#assign mapKey=wrapMapKey?if_exists/>
 <#assign subDataResourceId=wrapDataResourceId?if_exists/>
@@ -254,7 +253,9 @@ under the License.
 </div>
 </div>]]></textData>
     </ElectronicText>
-    <Content contentId="STDWRAP001" contentTypeId="DOCUMENT" dataResourceId="STDWRAP001" contentName="Standard SubContent Wrapper" description="Standard SubContent Wrapper" mimeTypeId="text/html"/>
+    <Content contentId="STDWRAP001" contentTypeId="DOCUMENT" dataResourceId="STDWRAP001" contentName="Standard SubContent Wrapper" description="Standard SubContent Wrapper"/>
+
+    <Content contentId="TREE_ROOT"/>
 
     <WebAnalyticsType description="Web Analytics" hasTable="N" parentTypeId="" webAnalyticsTypeId="WEB_ANALYTICS"/>
     <WebAnalyticsType webAnalyticsTypeId="GOOGLE_ANALYTICS" parentTypeId="WEB_ANALYTICS" hasTable="N" description="Google Analytics"/>

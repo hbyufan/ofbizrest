@@ -39,14 +39,14 @@ under the License.
   ========================================================= -->
   <!-- ======================== Data Model ===================== -->
   <!-- The modules in this file are as follows:                  -->
-  <!--  - org.apache.ofbiz.entity.test -->
+  <!--  - org.ofbiz.entity.test -->
   <!-- ========================================================= -->
 
   <!-- =========================================================
     The testing entity is a basic entity with a type
   ========================================================= -->
     <entity entity-name="Testing"
-        package-name="org.apache.ofbiz.entity.test"
+        package-name="org.ofbiz.entity.test"
         title="Testing Entity">
         <field name="testingId" type="id-ne"/>
         <field name="testingTypeId" type="id-ne"/>
@@ -64,7 +64,7 @@ under the License.
      Testing entity type
     ========================================================= -->
     <entity entity-name="TestingType"
-        package-name="org.apache.ofbiz.entity.test"
+        package-name="org.ofbiz.entity.test"
         title="Testing Entity Type">
         <field name="testingTypeId" type="id-ne"/>
         <field name="description" type="description"/>
@@ -74,7 +74,7 @@ under the License.
     Used for testing views with pks.
     This simulates the Party->PartyGroup and Party->Person entity relationships.
   ========================================================= -->
-    <entity entity-name="TestingSubtype" package-name="org.apache.ofbiz.entity.test" title="Testing Subtype Entity">
+    <entity entity-name="TestingSubtype" package-name="org.ofbiz.entity.test" title="Testing Subtype Entity">
         <field name="testingTypeId" type="id-ne" />
         <field name="subtypeDescription" type="description" />
         <prim-key field="testingTypeId" />
@@ -82,7 +82,7 @@ under the License.
   <!-- =========================================================
     Used for testing views with pks
   ========================================================= -->
-    <view-entity entity-name="TestingViewPks" package-name="org.apache.ofbiz.entity.test" title="Testing And TestingSubtype View">
+    <view-entity entity-name="TestingViewPks" package-name="org.ofbiz.entity.test" title="Testing And TestingSubtype View">
         <member-entity entity-alias="TST" entity-name="TestingType" />
         <member-entity entity-alias="TSTSUB" entity-name="TestingSubtype" />
         <alias-all entity-alias="TST" />
@@ -91,31 +91,11 @@ under the License.
             <key-map field-name="testingTypeId" />
         </view-link>
     </view-entity>
-    <!-- =========================================================
-      Used for testing EntityStatus concept on entity-auto
-    ========================================================= -->
-    <entity entity-name="TestingStatus"
-            package-name="org.apache.ofbiz.entity.test"
-            title="Entity for testing EntityStatus concept">
-        <description>An entity for testing EntityStatus concept</description>
-        <field name="testingStatusId" type="id-ne"/>
-        <field name="testingId" type="id-ne" />
-        <field name="statusId" type="id-ne"/>
-        <field name="statusDate" type="date-time"/>
-        <field name="changeByUserLoginId" type="id-vlong"/>
-        <prim-key field="testingStatusId"/>
-        <relation type="one" fk-name="TEST_STA_STSITM" rel-entity-name="StatusItem">
-          <key-map field-name="statusId"/>
-        </relation>
-        <relation type="one" fk-name="TEST_STA_USRLGN" title="ChangeBy" rel-entity-name="UserLogin">
-           <key-map field-name="changeByUserLoginId" rel-field-name="userLoginId"/>
-        </relation>
-    </entity>
   <!-- =========================================================
      An entity for testing the BLOB data type
    ========================================================== -->
     <entity entity-name="TestBlob"
-        package-name="org.apache.ofbiz.entity.test"
+        package-name="org.ofbiz.entity.test"
         title="Entity for testing the blob type (Deprecated)">
         <description>Deprecated - use TestFieldType instead</description>
         <field name="testBlobId" type="id-ne"/>
@@ -126,7 +106,7 @@ under the License.
      An entity for testing the field data types
    ========================================================== -->
     <entity entity-name="TestFieldType"
-        package-name="org.apache.ofbiz.entity.test"
+        package-name="org.ofbiz.entity.test"
         title="Entity for testing the field data types">
         <description>An entity for testing the field data types</description>
         <field name="testFieldTypeId" type="id-ne"/>
@@ -143,26 +123,11 @@ under the License.
         <prim-key field="testFieldTypeId"/>
     </entity>
   <!-- =========================================================
-    Testing Item entity : testing line on a Testing entity
-  ========================================================= -->
-    <entity entity-name="TestingItem"
-            package-name="org.apache.ofbiz.entity.test"
-            title="Testing Item">
-        <field name="testingId" type="id-ne"/>
-        <field name="testingSeqId" type="id-ne"/>
-        <field name="testingHistory" type="very-long"/>
-        <prim-key field="testingId"/>
-        <prim-key field="testingSeqId"/>
-        <relation type="one" fk-name="TESTING_IT_TEST" rel-entity-name="Testing">
-            <key-map field-name="testingId"/>
-        </relation>
-    </entity>
-  <!-- =========================================================
     Testing Node entity : hierarchy of nodes having
     'testing node member' as potential members
   ========================================================= -->
     <entity entity-name="TestingNode"
-            package-name="org.apache.ofbiz.entity.test"
+            package-name="org.ofbiz.entity.test"
             title="Testing Node">
         <field name="testingNodeId" type="id-ne"></field>
         <field name="primaryParentNodeId" type="id"></field>
@@ -180,14 +145,12 @@ under the License.
     A testing member entity can belong to any testing node
   ========================================================= -->
     <entity entity-name="TestingNodeMember"
-            package-name="org.apache.ofbiz.entity.test"
+            package-name="org.ofbiz.entity.test"
             title="Testing Node Member">
-      <field name="testingNodeId" type="id-ne"/>
-      <field name="testingId" type="id-ne"/>
-      <field name="fromDate" type="date-time"/>
-      <field name="thruDate" type="date-time"/>
-      <field name="extendFromDate" type="date-time"/><!--use to test filterDate -->
-      <field name="extendThruDate" type="date-time"/><!--use to test filterDate -->
+      <field name="testingNodeId" type="id-ne"></field>
+      <field name="testingId" type="id-ne"></field>
+      <field name="fromDate" type="date-time"></field>
+      <field name="thruDate" type="date-time"></field>
       <prim-key field="testingNodeId"/>
       <prim-key field="testingId"/>
       <prim-key field="fromDate"/>
@@ -202,7 +165,7 @@ under the License.
     View : a Testing Node with its member(s)
   ========================================================= -->
     <view-entity entity-name="TestingNodeAndMember"
-            package-name="org.apache.ofbiz.entity.test"
+            package-name="org.ofbiz.entity.test"
             title="TestingNode And TestingNodeMember View">
       <member-entity entity-alias="TN" entity-name="TestingNode"/>
       <member-entity entity-alias="TNM" entity-name="TestingNodeMember"/>
@@ -223,38 +186,8 @@ under the License.
         <key-map field-name="testingId"/>
       </relation>
     </view-entity>
-
-    <!-- =========================================================
-    The testing entity is a basic entity with a type
-    ========================================================= -->
-    <entity entity-name="TestingCrypto"
-        package-name="org.apache.ofbiz.entity.test"
-        title="Testing Crypto Entity">
-        <field name="testingCryptoId" type="id-ne"/>
-        <field name="testingCryptoTypeId" type="id-ne"/>
-        <field name="unencryptedValue" type="description"/>
-        <field name="encryptedValue" type="description" encrypt="true"/>
-        <field name="saltedEncryptedValue" type="description" encrypt="salt"/>
-        <prim-key field="testingCryptoId"/>
-    </entity>
-    <view-entity entity-name="TestingCryptoRawView"
-            package-name="org.apache.ofbiz.entity.test"
-            title="TestingCrypto Raw View">
-      <member-entity entity-alias="TC" entity-name="TestingCrypto"/>
-      <alias-all entity-alias="TC"/>
-      <alias name="rawEncryptedValue">
-        <complex-alias operator="+">
-          <complex-alias-field entity-alias="TC" field="encryptedValue"/>
-        </complex-alias>
-      </alias>
-      <alias name="rawSaltedEncryptedValue">
-        <complex-alias operator="+">
-          <complex-alias-field entity-alias="TC" field="saltedEncryptedValue"/>
-        </complex-alias>
-      </alias>
-    </view-entity>
     <entity entity-name="TestingRemoveAll"
-        package-name="org.apache.ofbiz.entity.test"
+        package-name="org.ofbiz.entity.test"
         title="Testing Entity">
         <field name="testingRemoveAllId" type="id-ne"/>
         <field name="description" type="description"/>
