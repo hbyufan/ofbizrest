@@ -23,13 +23,13 @@ import org.ofbiz.widget.html.*;
 
 orderId = request.getParameter("orderId");
 orderTypeId = null;
-orderHeader = delegator.findOne("OrderHeader", [orderId : orderId], false);
+orderHeader = delegator.findByPrimaryKey("OrderHeader", [orderId : orderId]);
 if (orderHeader) {
     orderTypeId = orderHeader.orderTypeId;
 }
 
 //Determine whether a schedule has already been defined for this PO
-schedule = delegator.findOne("OrderDeliverySchedule", [orderId : orderId, orderItemSeqId : "_NA_"], false);
+schedule = delegator.findByPrimaryKey("OrderDeliverySchedule", [orderId : orderId, orderItemSeqId : "_NA_"]);
 
 // Determine whether the current user can VIEW the order
 checkMap = [orderId : orderId, userLogin : session.getAttribute("userLogin"), checkAction : "VIEW"];

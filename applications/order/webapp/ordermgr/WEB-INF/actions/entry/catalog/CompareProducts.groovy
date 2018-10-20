@@ -64,7 +64,7 @@ compareList.each { product ->
     cond = EntityCondition.makeCondition(condList);
     productFeatureAppls = delegator.findList("ProductFeatureAppl", cond, null, ["sequenceNum"], null, true);
     productFeatureAppls.each { productFeatureAppl ->
-        productFeature = productFeatureAppl.getRelatedOne("ProductFeature", true);
+        productFeature = productFeatureAppl.getRelatedOneCache("ProductFeature");
         if (!productData[productFeature.productFeatureTypeId]) {
             productData[productFeature.productFeatureTypeId] = [:];
         }

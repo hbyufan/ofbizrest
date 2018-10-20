@@ -238,11 +238,11 @@ context.yearItemTotalPaid = yearItemTotalPaid;
 context.yearItemCountPaid = yearItemCountPaid;
 
 // order state report
-waitingPayment = delegator.findByAnd("OrderHeader", [statusId : "ORDER_CREATED", orderTypeId : "SALES_ORDER"], null, false);
+waitingPayment = delegator.findByAnd("OrderHeader", [statusId : "ORDER_CREATED", orderTypeId : "SALES_ORDER"]);
 context.waitingPayment = waitingPayment.size();
 
-waitingApproval = delegator.findByAnd("OrderHeader", [statusId : "ORDER_PROCESSING", orderTypeId : "SALES_ORDER"], null, false);
+waitingApproval = delegator.findByAnd("OrderHeader", [statusId : "ORDER_PROCESSING", orderTypeId : "SALES_ORDER"]);
 context.waitingApproval = waitingApproval.size();
 
-waitingComplete = delegator.findByAnd("OrderHeader", [statusId : "ORDER_APPROVED", orderTypeId : "SALES_ORDER"], null, false);
+waitingComplete = delegator.findByAnd("OrderHeader", [statusId : "ORDER_APPROVED", orderTypeId : "SALES_ORDER"]);
 context.waitingComplete = waitingComplete.size();

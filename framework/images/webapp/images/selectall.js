@@ -240,11 +240,6 @@ function confirmActionFormLink(msg, formName) {
 */
 
 function ajaxUpdateArea(areaId, target, targetParams) {
-    if (areaId == "window") {
-        targetUrl = target + "?" + targetParams.replace('?','');
-        window.location.assign(targetUrl);
-        return;
-    }
     waitSpinnerShow();
     jQuery.ajax({
         url: target,
@@ -263,6 +258,7 @@ function ajaxUpdateArea(areaId, target, targetParams) {
   * form of: areaId, target, target parameters [, areaId, target, target parameters...].
 */
 function ajaxUpdateAreas(areaCsvString) {
+    waitSpinnerShow();
     /*split all parameters separate by comma, the regExp manage areaId,target,param1=a&param2={b,c,d}&param3=e as three parameters*/
     var regExpArea = /,(?=(?:[^{}]*{[^{}]*})*[^{}]*$)/g; 
     var areaArray = areaCsvString.split(regExpArea);
@@ -271,11 +267,21 @@ function ajaxUpdateAreas(areaCsvString) {
         var areaId = areaArray[i];
         var target = areaArray[i + 1];
         var targetParams = areaArray[i + 2];
-        // Remove the ? and the anchor flag from the parameters
+        // that was done by the prototype updater internally, remove the ? and the anchor flag from the parameters
         // not nice but works
         targetParams = targetParams.replace('#','');
         targetParams = targetParams.replace('?','');
-        ajaxUpdateArea(areaId, target, targetParams);
+        jQuery.ajax({
+            url: target,
+            async: false,
+            type: "POST",
+            data: targetParams,
+            success: function(data) {
+                jQuery("#" + areaId).html(data);
+                waitSpinnerHide();
+            },
+            error: function(data) {waitSpinnerHide()}
+        });
     }
 }
 
@@ -286,9 +292,8 @@ function ajaxUpdateAreas(areaCsvString) {
   * @param interval The update interval, in seconds.
 */
 function ajaxUpdateAreaPeriodic(areaId, target, targetParams, interval) {
-    var intervalMillis = interval * 1000;
     jQuery.fjTimer({
-        interval: intervalMillis,
+        interval: interval,
         repeat: true,
         tick: function(container, timerId){
             jQuery.ajax({
@@ -301,7 +306,7 @@ function ajaxUpdateAreaPeriodic(areaId, target, targetParams, interval) {
                 },
                 error: function(data) {waitSpinnerHide()}
             });
-
+            
         }
     });
 }
@@ -389,7 +394,7 @@ function ajaxSubmitFormUpdateAreas(form, areaCsvString) {
    });
 }
 
-/** Enable auto-completion for text elements, with a possible span of tooltip class showing description.
+/** Enable auto-completion for text elements.
  * @param areaCsvString The area CSV string. The CSV string is a flat array in the
  * form of: areaId, target, target parameters [, areaId, target, target parameters...].
 */
@@ -397,19 +402,19 @@ function ajaxSubmitFormUpdateAreas(form, areaCsvString) {
 function ajaxAutoCompleter(areaCsvString, showDescription, defaultMinLength, defaultDelay, formName){
     var areaArray = areaCsvString.replace(/&amp;/g, '&').split(",");
     var numAreas = parseInt(areaArray.length / 3);
-
+    
     for (var i = 0; i < numAreas * 3; i = i + 3) {
         var initUrl = areaArray[i + 1];
         if (initUrl.indexOf("?") > -1)
             var url = initUrl + "&" + areaArray[i + 2];
-        else
+        else 
             var url = initUrl + "?" + areaArray[i + 2];
         var div = areaArray[i];
         // create a separated div where the result JSON Opbject will be placed
         if ((jQuery("#" + div + "_auto")).length < 1) {
             jQuery("<div id='" + div + "_auto'></div>").insertBefore("#" + areaArray[i]);
         }
-
+        
         jQuery("#" + div).autocomplete({
             minLength: defaultMinLength,
             delay: defaultDelay,
@@ -446,13 +451,13 @@ function ajaxAutoCompleter(areaCsvString, showDescription, defaultMinLength, def
                         if(exception != 'abort') {
                             alert("An error occurred while communicating with the server:\n\n\nreason=" + reason + "\n\nexception=" + exception);
                         }
-                    }
+                    },
                 });
             },
             select: function(event, ui){
                 //jQuery("#" + areaArray[0]).html(ui.item);
-                jQuery("#" + areaArray[0]).val(ui.item.value); // setting a text field
-                if (showDescription && (ui.item.value != undefined && ui.item.value != '')) {
+                jQuery("#" + areaArray[0]).val(ui.item.value); // setting a text field   
+                if (showDescription && (ui.item.value != undefined && ui.item.value != '')) { 
                     setLookDescription(areaArray[0], ui.item.label, areaArray[2], formName, showDescription)
                 }
             }
@@ -472,8 +477,8 @@ function setLookDescription(textFieldId, description, params, formName, showDesc
         var start = description.lastIndexOf(' [');
         if (start != -1) {
             description = description.substring(0, start);
-
-            // This sets a (possibly hidden) dependent field if a description-field-name is provided
+            
+            // This sets a (possibly hidden) dependent field if a description-field-name is provided  
             var dependentField = params.substring(params.indexOf("searchValueFieldName"));
             dependentField = jQuery("#" + formName + "_" + dependentField.substring(dependentField.indexOf("=") + 1));
             var dependentFieldValue = description.substring(0, description.lastIndexOf(' '))
@@ -533,7 +538,7 @@ function ajaxAutoCompleteDropDown() {
                         }) );
                     },
                     select: function( event, ui ) {
-                        ui.item.option.selected = true;
+                        ui.item.option.selected = true;                        
                         //select.val( ui.item.option.value );
                         self._trigger( "selected", event, {
                             item: ui.item.option
@@ -751,7 +756,7 @@ function submitFormEnableButton(button) {
 
 /**
  * Expands or collapses all groups of one portlet
- *
+ * 
  * @param bool <code>true</code> to expand, <code>false</code> otherwise
  * @param portalPortletId The id of the portlet
  */
@@ -766,7 +771,7 @@ function expandAllP(bool, portalPortletId) {
 
 /**
  * Expands or collapses all groups of the page
- *
+ * 
  * @param bool <code>true</code> to expand, <code>false</code> otherwise
  */
 function expandAll(bool) {
@@ -799,7 +804,7 @@ function waitSpinnerShow() {
     lookupTop = (scrollOffY + winHeight / 2) - (jSpinner.height() / 2);
 
     jSpinner.css("display", "block");
-    jSpinner.css("left", lookupLeft + "px");
+    jSpinner.css("left", lookupLeft + "px"); 
     jSpinner.css("top", lookupTop + "px");
     jSpinner.show();
 }
@@ -822,6 +827,7 @@ function getJSONuiLabels(requiredLabels) {
             url: "getJSONuiLabelArray",
             type: "POST",
             data: {"requiredLabels" : requiredLabelsStr},
+            async: false,
             success: function(data) {
                 returnVal = data;
             }
@@ -849,6 +855,7 @@ function getJSONuiLabel(uiResource, errUiLabel) {
             url: "getJSONuiLabel",
             type: "POST",
             data: {"requiredLabel" : requiredLabelStr},
+            async: false,
             success: function(data) {
                 returnVal = data[0];
             }

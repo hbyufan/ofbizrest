@@ -30,7 +30,7 @@ under the License.
     </div>
     <div class="screenlet-body">
       <a href="<@ofbizUrl>EditFinAccountReconciliations?finAccountId=${finAccountId}&amp;glReconciliationId=${glReconciliationId}</@ofbizUrl>" class="buttontext">${uiLabelMap.CommonEdit}</a>
-      <#assign finAcctTransCondList = delegator.findByAnd("FinAccountTrans", {"glReconciliationId" : glReconciliationId, "statusId" : "FINACT_TRNS_CREATED"}, null, false)>
+      <#assign finAcctTransCondList = delegator.findByAnd("FinAccountTrans", {"glReconciliationId" : glReconciliationId, "statusId" : "FINACT_TRNS_CREATED"})>
       <#if finAcctTransCondList?has_content>
         <a href="javascript:document.CancelBankReconciliationForm.submit();" class="buttontext">${uiLabelMap.AccountingCancelBankReconciliation}</a>
       </#if>
@@ -43,7 +43,7 @@ under the License.
           <#if currentGlReconciliation.statusId?exists>
             <tr>
               <td><span class="label">${uiLabelMap.CommonStatus}</span></td>
-              <#assign currentStatus = currentGlReconciliation.getRelatedOne("StatusItem", true)>
+              <#assign currentStatus = currentGlReconciliation.getRelatedOneCache("StatusItem")>
               <td>${currentStatus.description?if_exists}</td>
             </tr>
           </#if>
@@ -88,7 +88,7 @@ under the License.
           <#if previousGlReconciliation.statusId?exists>
             <tr>
               <td><span class="label">${uiLabelMap.CommonStatus}</span></td>
-              <#assign previousStatus = previousGlReconciliation.getRelatedOne("StatusItem", true)>
+              <#assign previousStatus = previousGlReconciliation.getRelatedOneCache("StatusItem")>
               <td>${previousStatus.description?if_exists}</td>
             </tr>
           </#if>

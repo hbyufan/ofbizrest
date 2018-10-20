@@ -136,8 +136,8 @@ public class CommonEvents {
 
         if (visit.getString("sessionId").equals(sessionId)) {
             String currentPage = request.getParameter("currentPage");
-            Map<String, String> sessionMap = appletSessions.get(sessionId);
-            if (sessionMap != null) {
+            if (appletSessions.containsKey(sessionId)) {
+                Map<String, String> sessionMap = appletSessions.get(sessionId);
                 String followers = sessionMap.get("followers");
                 List<String> folList = StringUtil.split(followers, ",");
                 for (String follower: folList) {
@@ -344,7 +344,7 @@ public class CommonEvents {
         }
 
         JSONObject jsonUiLabel = new JSONObject();
-        Locale locale = UtilHttp.getLocale(request);
+        Locale locale = request.getLocale();
         if(!uiLabelObject.isEmpty()) {
             Set<String> resourceSet = UtilGenerics.checkSet(uiLabelObject.keySet());
             // Iterate over the resouce set
@@ -382,7 +382,7 @@ public class CommonEvents {
         }
 
         JSONArray jsonUiLabel = new JSONArray();
-        Locale locale = UtilHttp.getLocale(request);
+        Locale locale = request.getLocale();
         if(!uiLabelObject.isEmpty()) {
             Set<String> resourceSet = UtilGenerics.checkSet(uiLabelObject.keySet());
             // Iterate over the resource set

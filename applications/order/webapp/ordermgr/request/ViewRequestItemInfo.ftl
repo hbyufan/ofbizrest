@@ -34,7 +34,7 @@ under the License.
             <#assign alt_row = false>
             <#list requestItems as requestItem>
                 <#if requestItem.productId?exists>
-                    <#assign product = requestItem.getRelatedOne("Product", false)>
+                    <#assign product = requestItem.getRelatedOne("Product")>
                 </#if>
                 <tr valign="middle"<#if alt_row> class="alternate-row"</#if>>
                     <td valign="top">

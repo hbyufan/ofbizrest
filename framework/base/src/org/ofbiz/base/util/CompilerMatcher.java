@@ -33,7 +33,7 @@ public class CompilerMatcher {
 
     public static final String module = CompilerMatcher.class.getName();
 
-    private static final UtilCache<String, Pattern> compiledPatterns = UtilCache.createUtilCache("regularExpression.compiledPatterns", false);
+    public static UtilCache<String, Pattern> compiledPatterns = UtilCache.createUtilCache("regularExpression.compiledPatterns", false);
 
     private Perl5Compiler compiler = new Perl5Compiler();
     private Perl5Matcher matcher = new Perl5Matcher();
@@ -50,7 +50,6 @@ public class CompilerMatcher {
     public static ThreadLocal<CompilerMatcher> getThreadLocal() {
         return new ThreadLocal<CompilerMatcher>() {
 
-            @Override
             protected CompilerMatcher initialValue() {
                 return new CompilerMatcher();
             }

@@ -19,6 +19,7 @@
 package org.ofbiz.content.content;
 
 import java.sql.Timestamp;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -243,7 +244,7 @@ public class ContentServicesComplex {
         List<GenericValue> contentAssocsUnfiltered = null;
 
         //if (Debug.infoOn()) Debug.logInfo("in getAssocAndContent...Cache, fieldMap:" + fieldMap, module);
-        contentAssocsUnfiltered = delegator.findByAnd("ContentAssoc", fieldMap, UtilMisc.toList("-fromDate"), true);
+        contentAssocsUnfiltered = delegator.findByAndCache("ContentAssoc", fieldMap, UtilMisc.toList("-fromDate"));
 
         //if (Debug.infoOn()) Debug.logInfo("in getAssocAndContent...Cache, contentAssocsUnfiltered:" + contentAssocsUnfiltered, module);
         if (fromDate == null && fromDateStr != null) {
@@ -278,7 +279,7 @@ public class ContentServicesComplex {
         List<GenericValue> contentAssocDataResourceList = FastList.newInstance();
         Locale locale = Locale.getDefault(); // TODO: this needs to be passed in
         for(GenericValue contentAssoc : contentAssocsTypeFiltered) {
-            content = contentAssoc.getRelatedOne(assocRelationName, true);
+            content = contentAssoc.getRelatedOneCache(assocRelationName);
             if (UtilValidate.isNotEmpty(contentTypes)) {
                 String contentTypeId = (String)content.get("contentTypeId");
                 if (contentTypes.contains(contentTypeId)) {
@@ -294,7 +295,7 @@ public class ContentServicesComplex {
             //contentAssocDataResourceView.setAllFields(contentAssoc, false, null, null);
             String dataResourceId = content.getString("dataResourceId");
             if (UtilValidate.isNotEmpty(dataResourceId))
-                dataResource = content.getRelatedOne("DataResource", true);
+                dataResource = content.getRelatedOneCache("DataResource");
             //if (Debug.infoOn()) Debug.logInfo("dataResource:" + dataResource, module);
             //if (Debug.infoOn()) Debug.logInfo("contentAssocDataResourceView:" + contentAssocDataResourceView, module);
             if (dataResource != null) {

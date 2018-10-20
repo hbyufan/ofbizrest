@@ -19,8 +19,10 @@
 package org.ofbiz.content;
 
 import java.sql.Timestamp;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -44,7 +46,6 @@ import org.ofbiz.security.Security;
 import org.ofbiz.service.GenericServiceException;
 import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.service.ModelService;
-import org.ofbiz.webapp.website.WebSiteWorker;
 
 
 
@@ -60,7 +61,7 @@ public class ContentManagementEvents {
         Security security = (Security)request.getAttribute("security");
         GenericValue userLogin = (GenericValue)session.getAttribute("userLogin");
         ServletContext servletContext = session.getServletContext();
-        String webSiteId = WebSiteWorker.getWebSiteId(request);
+        String webSiteId = (String) servletContext.getAttribute("webSiteId");
         Delegator delegator = (Delegator)request.getAttribute("delegator");
         LocalDispatcher dispatcher = (LocalDispatcher)request.getAttribute("dispatcher");
         Map<String, Object> paramMap = UtilHttp.getParameterMap(request);
@@ -156,7 +157,7 @@ public class ContentManagementEvents {
         Security security = (Security)request.getAttribute("security");
         GenericValue userLogin = (GenericValue)session.getAttribute("userLogin");
         ServletContext servletContext = session.getServletContext();
-        String webSiteId = WebSiteWorker.getWebSiteId(request);
+        String webSiteId = (String) servletContext.getAttribute("webSiteId");
         Delegator delegator = (Delegator)request.getAttribute("delegator");
         LocalDispatcher dispatcher = (LocalDispatcher)request.getAttribute("dispatcher");
         Map<String, Object> paramMap = UtilHttp.getParameterMap(request);
@@ -194,7 +195,7 @@ public class ContentManagementEvents {
         List<Object []> origPublishedLinkList = null;
         try {
             // TODO: this needs to be given author userLogin
-            delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", authorId), true);
+            delegator.findByPrimaryKeyCache("UserLogin", UtilMisc.toMap("userLoginId", authorId));
             origPublishedLinkList = ContentManagementWorker.getPublishedLinks(delegator, targContentId, webSiteId, userLogin, security, permittedAction, permittedOperations, roles);
         } catch (GenericEntityException e) {
             request.setAttribute("_ERROR_MESSAGE_", e.getMessage());
@@ -254,7 +255,7 @@ public class ContentManagementEvents {
                     if (!currentSubContentId.equals(origSubContentId)) {
                         // disable existing link
                         if (UtilValidate.isNotEmpty(origSubContentId) && origFromDate != null) {
-                            List<GenericValue> oldActiveValues = delegator.findByAnd("ContentAssoc", UtilMisc.toMap("contentId", targContentId, "contentIdTo", origSubContentId, "contentAssocTypeId", "PUBLISH_LINK", "thruDate", null), null, false);
+                            List<GenericValue> oldActiveValues = delegator.findByAnd("ContentAssoc", UtilMisc.toMap("contentId", targContentId, "contentIdTo", origSubContentId, "contentAssocTypeId", "PUBLISH_LINK", "thruDate", null));
                             for(GenericValue cAssoc : oldActiveValues) {
                                 cAssoc.set("thruDate", nowTimestamp);
                                 cAssoc.store();
@@ -295,7 +296,7 @@ public class ContentManagementEvents {
                         //if (Debug.infoOn()) Debug.logInfo("in updatePublishLinks, results(3b):" + results , module);
                         if (!statusIdUpdated) {
                             try {
-                                GenericValue targContent = delegator.findOne("Content", UtilMisc.toMap("contentId", targContentId), false);
+                                GenericValue targContent = delegator.findByPrimaryKey("Content", UtilMisc.toMap("contentId", targContentId));
                                 targContent.set("statusId", "CTNT_PUBLISHED");
                                 targContent.store();
                                 statusIdUpdated = true;
@@ -308,12 +309,12 @@ public class ContentManagementEvents {
                     }
                 } else if (UtilValidate.isNotEmpty(origSubContentId)) {
                     // if no current link is passed in, look to see if there is an existing link(s) that must be disabled
-                    List<GenericValue> oldActiveValues = delegator.findByAnd("ContentAssoc", UtilMisc.toMap("contentId", targContentId, "contentIdTo", origSubContentId, "contentAssocTypeId", "PUBLISH_LINK", "thruDate", null), null, false);
+                    List<GenericValue> oldActiveValues = delegator.findByAnd("ContentAssoc", UtilMisc.toMap("contentId", targContentId, "contentIdTo", origSubContentId, "contentAssocTypeId", "PUBLISH_LINK", "thruDate", null));
                     for(GenericValue cAssoc : oldActiveValues) {
                         cAssoc.set("thruDate", nowTimestamp);
                         cAssoc.store();
                     }
-                    oldActiveValues = delegator.findByAnd("ContentAssoc", UtilMisc.toMap("contentId", targContentId, "contentIdTo", contentId, "contentAssocTypeId", "PUBLISH_LINK", "thruDate", null), null, false);
+                    oldActiveValues = delegator.findByAnd("ContentAssoc", UtilMisc.toMap("contentId", targContentId, "contentIdTo", contentId, "contentAssocTypeId", "PUBLISH_LINK", "thruDate", null));
                     for(GenericValue cAssoc : oldActiveValues) {
                         cAssoc.set("thruDate", nowTimestamp);
                         cAssoc.store();

@@ -18,17 +18,17 @@ under the License.
 -->
 
 <#macro renderSurveyQuestionText surveyQuestionAndAppl>
-  <div>${surveyQuestionAndAppl.question?if_exists}</div>
+  <div class="tabletext">${surveyQuestionAndAppl.question?if_exists}</div>
   <#if surveyQuestionAndAppl.hint?has_content>
-    <div>${surveyQuestionAndAppl.hint}</div>
+    <div class="tabletext">${surveyQuestionAndAppl.hint}</div>
   </#if>
 </#macro>
 
 <#macro renderSurveyQuestionRequired surveyQuestionAndAppl>
   <#if surveyQuestionAndAppl.requiredField?default("N") == "Y">
-    <span>*[required]</span>
+    <span class="tabletext">*[required]</span>
   <#else/>
-    <span>[optional]</span>
+    <span class="tabletext">[optional]</span>
   </#if>
 </#macro>
 
@@ -68,12 +68,12 @@ under the License.
     <input type="password" size="30" class="textBox" name="${questionFieldName}" value="${(answer.textResponse)?default(defValue?if_exists)}" />
   <#elseif surveyQuestionAndAppl.surveyQuestionTypeId == "CONTENT"/>
      <#if (answer.contentId)?has_content>
-      <#assign content = answer.getRelatedOne("Content", false)>
+      <#assign content = answer.getRelatedOne("Content")>
       <a href="/content/control/img?imgId=${content.dataResourceId}" class="buttontext">${answer.contentId}</a>&nbsp;-&nbsp;${content.contentName?if_exists}&nbsp;&nbsp;&nbsp;
     </#if>
     <input type="file" size="15" name="${questionFieldName}" class="inputBox"/>
   <#elseif surveyQuestionAndAppl.surveyQuestionTypeId == "OPTION"/>
-    <#assign options = surveyQuestionAndAppl.getRelated("SurveyQuestionOption", null, sequenceSort, false)?if_exists/>
+    <#assign options = surveyQuestionAndAppl.getRelated("SurveyQuestionOption", sequenceSort)?if_exists/>
     <#assign selectedOption = (answer.surveyOptionSeqId)?default("_NA_")/>
     <select name="${questionFieldName}">
       <#if surveyQuestionAndAppl.requiredField?default("N") != "Y">
@@ -90,7 +90,7 @@ under the License.
   <#elseif surveyQuestionAndAppl.surveyQuestionTypeId == "ENUMERATION"/>
     <select name="${questionFieldName}">
     <#assign formatString = surveyQuestionAndAppl.get("formatString")?if_exists/>
-    <#assign enums = surveyQuestionAndAppl.getRelated("Enumeration", null, null, false)/>
+    <#assign enums = surveyQuestionAndAppl.getRelated("Enumeration")/>
     <#list enums as enum>
         <#assign selected = ''/>
         <#if (((answer.textResponse)?has_content && answer.textResponse == enum.enumId) || (defValue == enum.enumId))>
@@ -134,7 +134,7 @@ under the License.
       ${screens.render("component://common/widget/CommonScreens.xml#countries")}
     </select>
   <#else/>
-    <div>Unsupported question type : ${surveyQuestionAndAppl.surveyQuestionTypeId}</div>
+    <div class="tabletext">Unsupported question type : ${surveyQuestionAndAppl.surveyQuestionTypeId}</div>
   </#if>
 </#macro>
 
@@ -161,7 +161,7 @@ under the License.
 <br />
 
 <#if survey.comments?has_content>
-<div>${survey.comments}</div>
+<div class="tabletext">${survey.comments}</div>
 <br />
 </#if>
 
@@ -174,9 +174,9 @@ under the License.
     <#-- Get and setup MultiResp info for this question -->
     <#assign openMultiRespHeader = false/>
     <#assign closeMultiRespHeader = false/>
-    <#assign surveyMultiResp = surveyQuestionAndAppl.getRelatedOne("SurveyMultiResp", true)?if_exists/>
+    <#assign surveyMultiResp = surveyQuestionAndAppl.getRelatedOneCache("SurveyMultiResp")?if_exists/>
     <#if surveyMultiResp?has_content>
-      <#assign surveyMultiRespColumnList = surveyMultiResp.getRelated("SurveyMultiRespColumn", null, Static["org.ofbiz.base.util.UtilMisc"].toList("sequenceNum"), true)/>
+      <#assign surveyMultiRespColumnList = surveyMultiResp.getRelatedCache("SurveyMultiRespColumn", Static["org.ofbiz.base.util.UtilMisc"].toList("sequenceNum"))/>
 
       <#if lastSurveyMultiRespId == "">
         <#assign openMultiRespHeader = true/>
@@ -269,7 +269,7 @@ under the License.
     <#if surveyQuestionAndAppl?exists && surveyQuestionAndAppl.surveyQuestionTypeId?has_content>
       <#-- seperator options -->
       <#if surveyQuestionAndAppl.surveyQuestionTypeId == "SEPERATOR_TEXT">
-        <td colspan="5"><div>${surveyQuestionAndAppl.question?if_exists}</div></td>
+        <td colspan="5"><div class="tabletext">${surveyQuestionAndAppl.question?if_exists}</div></td>
       <#elseif surveyQuestionAndAppl.surveyQuestionTypeId == "SEPERATOR_LINE"/>
         <td colspan="5"><hr /></td>
       <#else/>

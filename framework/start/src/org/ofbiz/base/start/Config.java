@@ -25,10 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -40,22 +38,24 @@ public class Config {
         if (command == null || command.trim().length() == 0) {
             command = "start";
         }
+        // strip off the leading dash
+        if (command.startsWith("-")) {
+            command = command.substring(1);
+        }
+        // shutdown & status hack
+        if (command.equalsIgnoreCase("shutdown")) {
+            command = "start";
+        } else if (command.equalsIgnoreCase("status")) {
+            command = "start";
+        }
         return "org/ofbiz/base/start/" + command + ".properties";
     }
 
     public static Config getInstance(String[] args) throws IOException {
         String firstArg = args.length > 0 ? args[0] : "";
-        // Needed when portoffset is used with these commands, start.properties fits for all of them
-        if ("start-batch".equalsIgnoreCase(firstArg) 
-                || "start-debug".equalsIgnoreCase(firstArg) 
-                || "stop".equalsIgnoreCase(firstArg) 
-                || "-shutdown".equalsIgnoreCase(firstArg) // shutdown & status hack (was pre-existing to portoffset introduction, also useful with it) 
-                || "-status".equalsIgnoreCase(firstArg)) {
-            firstArg = "start";
-        }
         String configFileName = getConfigFileName(firstArg);
         Config result = new Config();
-        result.readConfig(configFileName, args);
+        result.readConfig(configFileName);
         return result;
     }
 
@@ -71,7 +71,7 @@ public class Config {
     public String containerConfig;
     public String instrumenterClassName;
     public String instrumenterFile;
-    public List<Map<String, String>> loaders;
+    public List<String> loaders;
     public String logDir;
     public String ofbizHome;
     public boolean requireCommJar = false;
@@ -209,6 +209,8 @@ public class Config {
                     fis = new FileInputStream(propsFile);
                     if (fis != null) {
                         props.load(fis);
+                    } else {
+                        throw new FileNotFoundException();
                     }
                 } catch (FileNotFoundException e2) {
                     // do nothing; we will see empty props below
@@ -281,7 +283,7 @@ public class Config {
         }
     }
 
-    public void readConfig(String config, String[] args) throws IOException {
+    public void readConfig(String config) throws IOException {
         // check the java_version
         String javaVersion = System.getProperty("java.version");
         String javaVendor = System.getProperty("java.vendor");
@@ -350,17 +352,8 @@ public class Config {
         // parse the port number
         try {
             adminPort = Integer.parseInt(adminPortStr);
-            if (args.length > 0) {
-                for (String arg : args) {
-                    if (arg.toLowerCase().contains("portoffset=") && !arg.toLowerCase().contains("${portoffset}")) {
-                        adminPort = adminPort != 0 ? adminPort : 10523; // This is necessary because the ASF machines don't allow ports 1 to 3, see  INFRA-6790
-                        adminPort += Integer.parseInt(arg.split("=")[1]);
-                    }
-                }
-            }
         } catch (Exception e) {
-            System.out.println("Error while parsing admin port number (so default to 10523) = " + e);
-            adminPort = 10523;
+            adminPort = 0;
         }
 
         // set the Derby system home
@@ -403,16 +396,16 @@ public class Config {
         // set the default locale
         String localeString = props.getProperty("ofbiz.locale.default");
         if (localeString != null && localeString.length() > 0) {
-            String locales[] = localeString.split("_");
-            switch (locales.length) {
+            String args[] = localeString.split("_");
+            switch (args.length) {
                 case 1:
-                    Locale.setDefault(new Locale(locales[0]));
+                    Locale.setDefault(new Locale(args[0]));
                     break;
                 case 2:
-                    Locale.setDefault(new Locale(locales[0], locales[1]));
+                    Locale.setDefault(new Locale(args[0], args[1]));
                     break;
                 case 3:
-                    Locale.setDefault(new Locale(locales[0], locales[1], args[2]));
+                    Locale.setDefault(new Locale(args[0], args[1], args[2]));
             }
             System.setProperty("user.language", localeString);
         }
@@ -427,18 +420,14 @@ public class Config {
         instrumenterFile = getProp(props, "ofbiz.instrumenterFile", null);
 
         // loader classes
-        loaders = new ArrayList<Map<String, String>>();
+        loaders = new ArrayList<String>();
         int currentPosition = 1;
-        Map<String, String> loader = null;
         while (true) {
-            loader = new HashMap<String, String>();
             String loaderClass = props.getProperty("ofbiz.start.loader" + currentPosition);
             if (loaderClass == null || loaderClass.length() == 0) {
                 break;
             } else {
-                loader.put("class", loaderClass);
-                loader.put("profiles", props.getProperty("ofbiz.start.loader" + currentPosition + ".loaders"));
-                loaders.add(loader);
+                loaders.add(loaderClass);
                 currentPosition++;
             }
         }

@@ -20,12 +20,12 @@
 import org.ofbiz.entity.*
 import org.ofbiz.base.util.*
 
-allSequenceNums = delegator.findByAnd("ProductContent", ["productId":parameters.productId, "productContentTypeId":"IMAGE"], ["sequenceNum"], false)
-nullSequenceNums = delegator.findByAnd("ProductContent", ["productId":parameters.productId, "productContentTypeId":"IMAGE", "sequenceNum":null], null, false)
+allSequenceNums = delegator.findByAnd("ProductContent", ["productId":parameters.productId, "productContentTypeId":"IMAGE"], ["sequenceNum"])
+nullSequenceNums = delegator.findByAnd("ProductContent", ["productId":parameters.productId, "productContentTypeId":"IMAGE", "sequenceNum":null])
 productContents = allSequenceNums - nullSequenceNums
 def duplicate = 0
 if(parameters.sequenceNum){
-    findExisted = delegator.findByAnd("ProductContent", ["productId":parameters.productId, "productContentTypeId":"IMAGE", "sequenceNum":(Long)parameters.sequenceNum], null, false)
+    findExisted = delegator.findByAnd("ProductContent", ["productId":parameters.productId, "productContentTypeId":"IMAGE", "sequenceNum":(Long)parameters.sequenceNum])
     duplicate = findExisted.size()
 }
 if(duplicate > 1){

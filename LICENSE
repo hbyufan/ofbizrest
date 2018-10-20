@@ -7,66 +7,63 @@ Other licenses used by libraries distributed with Apache OFBiz are listed
 below. This file includes a list of all libraries distributed with Apache
 OFBiz and the full text of the license used for each.
 
-For additional details, see the NOTICE file.
+For additional details, see the NOTICE file and:
+http://cwiki.apache.org/confluence/display/OFBADMIN/Libraries+Included+in+OFBiz
 =========================================================================
 The following libraries are licensed under the Apache License Version 2.0:
-framework/base/lib/ant-1.9.0-ant-launcher.jar
-framework/base/lib/ant-1.9.0-ant.jar
-framework/base/lib/ant-1.9.0-ant-junit.jar
-framework/base/lib/ant/ant-1.9.0-ant-apache-bsf.jar
+framework/base/lib/ant-launcher-1.8.3.jar
+framework/base/lib/ant-1.8.3.jar
+framework/base/lib/ant-junit-1.8.3.jar
+framework/base/lib/ant-trax-1.8.0.jar
+framework/base/lib/ant/ant-apache-bsf-1.8.3.jar
 framework/base/lib/ant/ant-nodeps-1.8.1.jar
 framework/base/lib/avalon-framework-4.2.0.jar
+framework/base/lib/avalon-util-exception-1.0.0.jar
 framework/base/lib/batik-all-1.7.jar
-framework/base/lib/barcode4j-2.1-barcode4j-fop-ext-complete.jar
+framework/base/lib/barcode4j-fop-ext-complete-2.0.jar
 framework/base/lib/clhm-release-1.0-lru.jar
-framework/base/lib/freemarker-2.3.22.jar
-framework/base/lib/httpclient-4.3.6.jar
-framework/base/lib/httpclient-cache-4.3.6.jar
-framework/base/lib/httpcore-4.3.3.jar
-framework/base/lib/httpmime-4.2.1.jar
+framework/base/lib/httpclient-4.1.1.jar
+framework/base/lib/httpclient-cache-4.1.1.jar
+framework/base/lib/httpcore-4.1.jar
+framework/base/lib/httpmime-4.1.1.jar
 framework/base/lib/ivy-2.2.0.jar
 framework/base/lib/jakarta-regexp-1.5.jar
 framework/base/lib/jpim-0.1.jar
-framework/base/lib/juel-impl-2.2.7.jar
-framework/base/lib/juel-spi-2.2.7.jar
-framework/base/lib/log4j-1.2-api-2.3.jar
-framework/base/lib/log4j-api-2.3.jar
-framework/base/lib/log4j-core-2.3.jar
-framework/base/lib/log4j-nosql-2.3.jar
-framework/base/lib/log4j-slf4j-impl-2.3.jar
+framework/base/lib/juel-2.2.1.jar
 framework/base/lib/mx4j-3.0.1.jar
 framework/base/lib/mx4j-remote-3.0.1.jar
-framework/base/lib/nekohtml-1.9.16.jar
+framework/base/lib/nekohtml.jar
 framework/base/lib/resolver-2.9.1.jar
 framework/base/lib/serializer-2.9.1.jar
 framework/base/lib/ws-commons-java5-1.0.1.jar
 framework/base/lib/ws-commons-util-1.0.2.jar
 framework/base/lib/xercesImpl-2.9.1.jar
 framework/base/lib/xml-apis-2.9.1.jar
-framework/base/lib/xml-apis-ext-1.3.04.jar
-framework/base/lib/commons/commons-beanutils-core-1.8.3.jar
-framework/base/lib/commons/commons-codec-1.10.jar
+framework/base/lib/commons/commons-beanutils-1.7.0.jar
+framework/base/lib/commons/commons-cli-1.0.jar
+framework/base/lib/commons/commons-codec-1.4.jar
 framework/base/lib/commons/commons-collections-3.2.2.jar
-framework/base/lib/commons/commons-compress-1.4.1.jar
-framework/base/lib/commons/commons-csv-1.1.jar
-framework/base/lib/commons/commons-digester3-3.2.jar
+framework/base/lib/commons/commons-compress-1.4.jar
+framework/base/lib/commons/commons-digester-1.8.jar
 framework/base/lib/commons/commons-discovery-0.4.jar
 framework/base/lib/commons/commons-el-1.0.jar
 framework/base/lib/commons/commons-fileupload-1.3.jar
-framework/base/lib/commons/commons-io-2.4.jar
-framework/base/lib/commons/commons-lang-2.6.jar
-framework/base/lib/commons/commons-logging-1.2.jar
-framework/base/lib/commons/commons-modeler-2.0.1.jar
-framework/base/lib/commons/commons-net-3.3.jar
+framework/base/lib/commons/commons-io-1.3.1.jar
+framework/base/lib/commons/commons-lang-2.4.jar
+framework/base/lib/commons/commons-logging-1.1.jar
+framework/base/lib/commons/commons-modeler-2.0.jar
+framework/base/lib/commons/commons-net-1.4.1.jar
 framework/base/lib/commons/commons-pool-1.5.7.jar
 framework/base/lib/commons/commons-primitives-1.0.jar
-framework/base/lib/commons/commons-validator-1.4.1.jar
+framework/base/lib/commons/commons-validator-1.3.1
+framework/base/lib/commons/commons-vfs-20070730.jar
 framework/base/lib/j2eespecs/geronimo-activation_1.0.2_spec-1.0.jar
-framework/base/lib/j2eespecs/geronimo-j2ee-connector_1.5_spec-2.0.0.jar
+framework/base/lib/j2eespecs/geronimo-j2ee-connector_1.5_spec-1.0.jar
 framework/base/lib/j2eespecs/geronimo-jaxr_1.0_spec-1.0.jar
 framework/base/lib/j2eespecs/geronimo-jaxrpc_1.1_spec-1.0.jar
-framework/base/lib/j2eespecs/geronimo-jms_1.1_spec-1.1.1.jar
+framework/base/lib/j2eespecs/geronimo-jms_1.1_spec-1.0.jar
 framework/base/lib/j2eespecs/geronimo-jta_1.1_spec-1.1.1.jar
+framework/base/lib/j2eespecs/geronimo-qname_1.1_spec-1.0.jar
 framework/base/lib/j2eespecs/geronimo-saaj_1.3_spec-1.1.jar
 framework/base/lib/j2eespecs/annotations-api-3.0.jar
 framework/base/lib/j2eespecs/el-api-2.2.jar
@@ -79,48 +76,51 @@ framework/base/lib/scripting/jansi-1.2.1.jar
 framework/base/lib/xmlrpc-client-3.1.2.jar
 framework/base/lib/xmlrpc-common-3.1.2.jar
 framework/base/lib/xmlrpc-server-3.1.2.jar
-framework/catalina/lib/tomcat-7.0.68-catalina-ha.jar
-framework/catalina/lib/tomcat-7.0.68-catalina-tribes.jar
-framework/catalina/lib/tomcat-7.0.68-catalina.jar
-framework/catalina/lib/tomcat-7.0.68-jasper.jar
-framework/catalina/lib/tomcat-7.0.68-tomcat-api.jar
-framework/catalina/lib/tomcat-7.0.68-tomcat-coyote.jar
-framework/catalina/lib/tomcat-7.0.68-tomcat-util.jar
-framework/catalina/lib/tomcat-extras-7.0.68-tomcat-juli.jar
-framework/catalina/lib/tomcat-extras-7.0.68-tomcat-juli-adapters.jar
+framework/catalina/lib/tomcat-7.0.59-catalina-ha.jar
+framework/catalina/lib/tomcat-7.0.59-catalina-tribes.jar
+framework/catalina/lib/tomcat-7.0.59-catalina.jar
+framework/catalina/lib/tomcat-7.0.59-jasper.jar
+framework/catalina/lib/tomcat-7.0.59-tomcat-api.jar
+framework/catalina/lib/tomcat-7.0.59-tomcat-coyote.jar
+framework/catalina/lib/tomcat-7.0.59-tomcat-util.jar
+framework/catalina/lib/tomcat-extras-7.0.59-tomcat-juli.jar
+framework/catalina/lib/tomcat-extras-7.0.59-tomcat-juli-adapters.jar
 framework/entity/lib/commons-dbcp-1.4.jar
 framework/entity/lib/jdbc/derby-10.8.2.2.jar
 framework/entity/lib/jdbc/derbytools-10.8.2.2.jar
-framework/geronimo/lib/geronimo-connector-3.1.1.jar
-framework/geronimo/lib/geronimo-transaction-3.1.1.jar
-framework/images/webapp/images/date/timezones*
-framework/resources/fonts/NotoSans/*
-framework/service/lib/axiom-api-1.2.17.jar
-framework/service/lib/axiom-impl-1.2.17.jar
-framework/service/lib/axis2-kernel-1.7.1.jar
-framework/service/lib/axis2-transport-http-1.7.1.jar
-framework/service/lib/axis2-transport-local-1.7.3.jar1
-framework/service/lib/neethi-3.0.3.jar
-framework/service/lib/woden-core-1.0M10.jar
-framework/service/lib/xmlschema-core-2.2.1.jar
+framework/service/lib/axis-ant-1.4.jar
+framework/service/lib/axis-1.4.jar
+framework/service/lib/axiom-api-1.2.14.jar
+framework/service/lib/axiom-impl-1.2.14.jar
+framework/service/lib/axis2-kernel-1.5.2.jar
+framework/service/lib/axis2-transport-http-1.5.2.jar
+framework/service/lib/axis2-transport-local-1.5.2.jar
+framework/service/lib/commons-httpclient-3.1.jar
+framework/service/lib/neethi-3.0.2.jar
+framework/service/lib/XmlSchema-1.4.3.jar
+framework/testtools/lib/selenium-java-client-driver.jar
 framework/testtools/lib/spring-core-4.2.3.jar
 framework/testtools/lib/spring-test-4.2.3.jar
-framework/webapp/lib/fop-1.1.jar
+framework/webapp/lib/fop-1.0.jar
 framework/webapp/lib/velocity-1.6.1.jar
-framework/webapp/lib/xmlgraphics-commons-1.5.jar
+framework/webapp/lib/xmlgraphics-commons-1.4.jar
 framework/webapp/lib/json-lib-2.2.3-jdk15.jar
 framework/webapp/lib/ezmorph-0.9.1.jar
 framework/webapp/lib/rome-0.9.jar
 framework/webapp/lib/serializer-2.7.0.jar
 framework/webapp/lib/xalan-2.7.1.jar
-applications/content/lib/fontbox-1.7.1.jar
-applications/content/lib/jempbox-1.7.1.jar
-applications/content/lib/pdfbox-1.7.1.jar
+framework/geronimo/lib/geronimo-connector-3.1.1.jar
+framework/geronimo/lib/geronimo-transaction-3.1.1.jar
+applications/content/lib/fontbox-1.4.0.jar
+applications/content/lib/jempbox-1.4.0.jar
+applications/content/lib/lucene-core-3.5.0.jar
+applications/content/lib/pdfbox-1.4.0.jar
 applications/content/lib/poi-3.13-20150929.jar
 applications/content/lib/tika-core-1.0.jar
 applications/content/lib/tika-parsers-1.0.jar
 applications/product/lib/dozer-4.2.1.jar
 applications/product/lib/watermarker-0.0.4.jar
+specialpurpose/googlecheckout/lib/checkout-sdk-0.8.8.jar
 =========================================================================
                                  Apache License
                            Version 2.0, January 2004
@@ -449,6 +449,7 @@ BSD License:
 applications/content/lib/dom4j-1.6.1.jar
 framework/base/lib/antisamy-bin.1.2.jar
 framework/base/lib/bsh-engine-modified.jar
+framework/base/lib/freemarker-2.3.19.jar
 framework/base/lib/hamcrest-all-1.2.jar
 framework/base/lib/httpunit-1.7.jar
 framework/base/lib/ical4j-1.0-rc2.jar
@@ -464,6 +465,8 @@ framework/base/lib/scripting/asm-tree-3.2.jar
 framework/base/lib/scripting/asm-util-3.2.jar
 framework/base/lib/scripting/janino-2.5.15.jar
 framework/base/lib/scripting/jline-0.9.94.jar
+specialpurpose/ldap/lib/cas-server-core-3.3.jar
+specialpurpose/pos/lib/looks-2.0.2.jar
 
 =========================================================================
 The BSD License
@@ -520,6 +523,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =========================================================================
 The following libraries distributed with Apache OFBiz are licensed under the
 Mozilla Public License Version 1.1:
+specialpurpose/pos/lib/XuiCoreSwing-v3.2rc2b.jar
+specialpurpose/pos/lib/XuiOptional-v3.2rc2b.jar
 framework/webapp/lib/iText-2.1.7.jar
 =========================================================================
                           MOZILLA PUBLIC LICENSE
@@ -821,7 +826,7 @@ framework/webapp/lib/iText-2.1.7.jar
      "MPL", "NPL" or any confusingly similar phrase do not appear in your
      license (except to note that your license differs from this License)
      and (b) otherwise make it clear that Your version of the license
-     contains terms which differ from thella Public License and
+     contains terms which differ from the Mozilla Public License and
      Netscape Public License. (Filling in the name of the Initial
      Developer, Original Code or Contributor in the notice described in
      Exhibit A shall not of themselves be deemed to be modifications of
@@ -995,6 +1000,8 @@ EXHIBIT A -Mozilla Public License.
 =========================================================================
 The following libraries distributed with Apache OFBiz are licensed under the
 Common Public License:
+specialpurpose/pos/lib/jcl.jar
+specialpurpose/pos/lib/jpos18-controls.jar
 framework/service/lib/wsdl4j-1.6.2.jar
 framework/base/lib/junit-dep-4.10.jar
 =========================================================================
@@ -1215,11 +1222,14 @@ any resulting litigation.
 =========================================================================
 The following libraries distributed with Apache OFBiz are licensed under the
 MIT/X License:
-framework/base/lib/icu4j-52_1.jar
+framework/base/libicu4j-52_1.jar
 framework/base/lib/jcl-over-slf4j-1.6.4.jar
+framework/entity/lib/ofbiz-minerva.jar
 framework/base/lib/slf4j-api-1.6.4.jar
+framework/base/lib/slf4j-simple-1.6.4.jar
 framework/images/webapp/images/jquery/*
-framework/images/webapp/images/date/date.format-1.2.3*.js
+specialpurpose/webpos/webapp/webpos/images/js/jquery.hotkeys-0.7.9.min.js
+specialpurpose/webpos/webapp/webpos/images/js/WebPosHotkeys.js
 =========================================================================
 The MIT License
 
@@ -1242,6 +1252,59 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+=========================================================================
+The following libraries distributed with Apache OFBiz are licensed under the
+W3C License:
+framework/base/lib/Tidy.jar
+=========================================================================
+W3C¨ SOFTWARE NOTICE AND LICENSE
+
+ Copyright © 1994-2001 World Wide Web Consortium, (Massachusetts Institute of
+ Technology, Institut National de Recherche en Informatique et en Automatique,
+ Keio University). All Rights Reserved. http://www.w3.org/Consortium/Legal/
+
+ This W3C work (including software, documents, or other related items) is
+ being provided by the copyright holders under the following license. By
+ obtaining, using and/or copying this work, you (the licensee) agree that you
+ have read, understood, and will comply with the following terms and
+ conditions:
+
+ Permission to use, copy, modify, and distribute this software and its
+ documentation, with or without modification,  for any purpose and without fee
+ or royalty is hereby granted, provided that you include the following on ALL
+ copies of the software and documentation or portions thereof, including
+ modifications, that you make:
+
+   1. The full text of this NOTICE in a location viewable to users of the
+   redistributed or derivative work.
+
+   2. Any pre-existing intellectual property disclaimers, notices, or terms and
+   conditions. If none exist, a short notice of the following form (hypertext is
+   preferred, text is permitted) should be used within the body of any
+   redistributed or derivative code: "Copyright © [$date-of-software] World Wide
+   Web Consortium, (Massachusetts Institute of Technology, Institut National de
+   Recherche en Informatique et en Automatique, Keio University). All Rights
+   Reserved. http://www.w3.org/Consortium/Legal/"
+
+   3. Notice of any changes or modifications to the W3C files, including the
+   date changes were made. (We recommend you provide URIs to the location from
+   which the code is derived.)
+
+ THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS," AND COPYRIGHT HOLDERS
+ MAKE NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ LIMITED TO, WARRANTIES OF MERCHANTABILITY OR FITNESS FOR ANY PARTICULAR PURPOSE
+ OR THAT THE USE OF THE SOFTWARE OR DOCUMENTATION WILL NOT INFRINGE ANY THIRD
+ PARTY PATENTS, COPYRIGHTS, TRADEMARKS OR OTHER RIGHTS.
+
+ COPYRIGHT HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR
+ CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE SOFTWARE OR
+ DOCUMENTATION.
+
+ The name and trademarks of copyright holders may NOT be used in advertising
+ or publicity pertaining to the software without specific, written prior
+ permission. Title to copyright in this software and any associated
+ documentation will at all times remain with copyright holders.
 
 =========================================================================
 The following libraries distributed with Apache OFBiz are licensed under the
@@ -1900,6 +1963,14 @@ The following library distributed with Apache OFBiz is licensed under the
 COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL):
 framework/base/lib/juel-2.1.1.jar (contains the javax.el package)
 framework/base/lib/mail-1.5.1.jar
+framework/jetty/lib/com.sun.el-2.2.0.v201108011116.jar
+framework/jetty/lib/javax.servlet.jsp.jstl-1.2.0.v201105211821.jar
+framework/jetty/lib/org.apache.jasper.glassfish-2.2.2.v201112011158.jar
+framework/jetty/lib/org.apache.taglibs.standard.glassfish-1.2.0.v201112081803.jar
+specialpurpose/ebaystore/lib/attributes.jar
+specialpurpose/ebaystore/lib/ebaysdkcore.jar
+specialpurpose/ebaystore/lib/helper.jar
+specialpurpose/ebaystore/lib/ebaycalls.jar
 =========================================================================
 COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0 1.
 
@@ -2189,9 +2260,104 @@ Courts of the Northern District of California and the state courts of the State
 of California, with venue lying in Santa Clara County, California.
 
 =========================================================================
+Apache OFBiz includes the XML Schema files from the Open Applications Group, Inc
+NOTE: these files and the license are for an older version of the OAGIS
+specification, namely version 7.2.1.
+specialpurpose/oagis/dtd/002_confirm_bod_004.xsd
+specialpurpose/oagis/dtd/068_sync_inventory_005.xsd
+specialpurpose/oagis/dtd/161_show_shipment_005.xsd
+specialpurpose/oagis/dtd/161B_process_shipment_001.xsd
+specialpurpose/oagis/dtd/196_acknowledge_delivery_001.xsd
+specialpurpose/oagis/dtd/197_receive_delivery_001.xsd
+specialpurpose/oagis/dtd/oagis_fields.xsd
+specialpurpose/oagis/dtd/oagis_segments.xsd
+Open Applications Group Xml Schema is licensed as follows:
+=========================================================================
+Copyright (c) 1998-2001 Open Applications Group, Inc. All Rights Reserved
+
+Documents and resource files on the Open Applications Group, Inc. Internet site are
+provided under the following license.  By obtaining, using, and/or copying this file,
+or any related file obtained from this site, you agree that you have read, understood,
+and will comply with the following terms and conditions:
+
+Permissions to use, copy, and distribute the contents of this file, in any medium
+for any purpose and without fee or royalty is hereby granted, provided that you
+include the following on ALL copies of the file that you use:
+
+1. A reference to the original Open Applications Group resource
+2. A notice of the form "Copyright (c) Open Applications Group. All Rights Reserved
+
+When space permits, inclusion of the full text of this NOTICE should be provided.
+Attribution is requested to be provided in any software, documentation, or other items
+or products that you create related to the implementation of the contents of this file.
+
+THIS RESOURCE IS PROVIDED AS IS, AND THE COPYRIGHT HOLDER MAKES NO REPRESENTATIONS
+OR WARRANTIES, EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, OR TITLE; THAT
+THE CONTENTS OF THE DOCUMENT ARE SUITABLE FOR ANY PURPOSE; NOR THAT THE IMPLEMENTATION
+OF SUCH CONTENTS WILL NOT INFRINGE ANY THIRD PARTY PATENTS, COPYRIGHTS, TRADEMARKS OR
+OTHER RIGHTS.
+THE COPYRIGHT HOLDER WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR
+CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE DOCUMENT OR THE PERFORMANCE OR
+IMPLEMENTATION OF THE CONTENTS THEREOF.
+
+The name and trademarks of copyright holder may NOT be used in advertising or publicity
+pertaining to this file or its contents without specific, written prior permission.
+
+Title to copyright in this document will at all times remain with copyright holders.
+
+Please Note: This file is a work in process, and may be modified or enhanced, at the
+discretion of the Open Applications Group without notice, at any time.
+Please contact the Open Applications Group at www.openapplications.org with any
+questions or comments regarding the usage of this material.
+
+=========================================================================
 The following libraries distributed with Apache OFBiz are licensed under the
 Eclipse Public License - v 1.0:
-framework/catalina/lib/ecj-4.4.2.jar
+framework/catalina/lib/ecj-4.4.jar
+framework/birt/lib/flute.jar
+framework/birt/lib/jaxrpc.jar
+framework/birt/lib/js.jar
+framework/birt/lib/org.apache.xml.resolver_1.2.0.v201005080400.jar
+framework/birt/lib/org.apache.xml.serializer_2.7.1.v201005080400.jar
+framework/birt/lib/org.eclipse.birt.runtime_4.3.1.v20130918-1142.jar
+framework/birt/lib/org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar
+framework/birt/lib/org.eclipse.core.expressions_3.4.500.v20130515-1343.jar
+framework/birt/lib/org.eclipse.core.filesystem_1.4.0.v20130514-1240.jar
+framework/birt/lib/org.eclipse.core.jobs_3.5.300.v20130429-1813.jar
+framework/birt/lib/org.eclipse.core.resources_3.8.101.v20130717-0806.jar
+framework/birt/lib/org.eclipse.core.runtime_3.9.0.v20130326-1255.jar
+framework/birt/lib/org.eclipse.datatools.connectivity.oda_3.4.1.v201308160907.jar
+framework/birt/lib/org.eclipse.emf_2.6.0.v20130902-0605.jar
+framework/birt/lib/org.eclipse.emf.common_2.9.1.v20130827-0309.jar
+framework/birt/lib/org.eclipse.emf.ecore_2.9.1.v20130827-0309.jar
+framework/birt/lib/org.eclipse.emf.ecore.change_2.9.0.v20130827-0309.jar
+framework/birt/lib/org.eclipse.emf.ecore.xmi_2.9.1.v20130827-0309.jar
+framework/birt/lib/org.eclipse.equinox.app_1.3.100.v20130327-1442.jar
+framework/birt/lib/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar
+framework/birt/lib/org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar
+framework/birt/lib/org.eclipse.equinox.registry_3.5.301.v20130717-1549.jar
+framework/birt/lib/org.eclipse.osgi_3.9.1.v20130814-1242.jar
+framework/birt/lib/org.eclipse.osgi.services_3.3.100.v20130513-1956.jar
+framework/birt/lib/org.eclipse.update.configurator_3.3.200.v20130326-1319.jar
+framework/birt/lib/org.w3c.css.sac_1.3.0.v200805290154.jar
+framework/birt/lib/org.w3c.dom.smil_1.0.0.v200806040011.jar
+framework/birt/lib/org.w3c.dom.svg_1.1.0.v201011041433.jar
+framework/birt/lib/saaj.jar
+framework/birt/lib/Tidy.jar
+framework/birt/lib/viewservlets.jar
+framework/catalina/lib/ecj-P20140317-1600.jar
+framework/jetty/lib/jetty-ajp-8.1.2.v20120308.jar
+framework/jetty/lib/jetty-continuation-8.1.2.v20120308.jar
+framework/jetty/lib/jetty-http-8.1.2.v20120308.jar
+framework/jetty/lib/jetty-io-8.1.2.v20120308.jar
+framework/jetty/lib/jetty-security-8.1.2.v20120308.jar
+framework/jetty/lib/jetty-server-8.1.2.v20120308.jar
+framework/jetty/lib/jetty-servlet-8.1.2.v20120308.jar
+framework/jetty/lib/jetty-util-8.1.2.v20120308.jar
+framework/jetty/lib/jetty-webapp-8.1.2.v20120308.jar
+framework/jetty/lib/jetty-xml-8.1.2.v20120308.jar
+framework/jetty/lib/org.eclipse.jdt.core-3.7.1.jar
 =========================================================================
 Eclipse Public License - v 1.0
 
@@ -2405,9 +2571,56 @@ after the cause of action arose. Each party waives its rights to a jury trial in
 any resulting litigation.
 
 =========================================================================
+Apache Ofbiz includes docbook templates in the /applications/content/template/docbook
+directory with the following licence:
+Copyright
+---------
+Copyright (C) 1999-2007 Norman Walsh
+Copyright (C) 2003 Jiří Kosek
+Copyright (C) 2004-2007 Steve Ball
+Copyright (C) 2005-2008 The DocBook Project
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the ``Software''), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+Except as contained in this notice, the names of individuals
+credited with contribution to this software shall not be used in
+advertising or otherwise to promote the sale, use or other
+dealings in this Software without prior written authorization
+from the individuals in question.
+
+Any stylesheet derived from this Software that is publically
+distributed will be identified with a different name and the
+version strings in any derived Software will be changed so that
+no possibility of confusion between the derived package and this
+Software will exist.
+
+Warranty
+--------
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT.  IN NO EVENT SHALL NORMAN WALSH OR ANY OTHER
+CONTRIBUTOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+Contacting the Author
+---------------------
 The DocBook XSL stylesheets are maintained by Norman Walsh,
 <ndw@nwalsh.com>, and members of the DocBook Project,
 <docbook-developers@sf.net>
+=========================================================================
 The docbook schemas in the files docbook.xsd, docbook.dtd xlink.xsd
 and xml.xsd are distributed under the GNU Free Documentation License
 GNU Free Documentation License
@@ -2415,13 +2628,10 @@ It was allowed by the author to use the docbook files within the
 Apache OFBiz system in an email to H.Bakker from N.Walsh dd
 Tue, 25 Aug 2009 07:27:51 -0400 (18:27 ICT)
 =========================================================================
-The following libraries are licensed under the Creative Commons Attribution
-2.5 License:
-jcip-annotations-1.0.jar
-
-Apache Ofbiz includes images in the ofbiz/framework/images/webapp/images/icons
+Apache Ofbiz includes images in the framework/images/webapp/images/icons
 directory with the following licence: Creative Commons Attribution 2.5 License
 and condition :
+
 
 =========================================================================
 Creative Commons Attribution 2.5 License.
@@ -2633,50 +2843,4 @@ OF SUCH DAMAGES.
      Licensor shall not be bound by any additional provisions that may appear
      in any communication from You. This License may not be modified without
      the mutual written agreement of the Licensor and You.
-=========================================================================
-Web-based Help from DocBook XML license
-David Cramer <dcramer AT motive DOT com><david AT thingbag DOT net>
-Kasun Gajasinghe <kasunbg AT gmail DOT com>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-and associated documentation files (the Software), to deal in the Software without restriction,
-including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-    * The above copyright notice and this permission notice shall be included in all copies or substantial
-    portions of the Software.
-    * Except as contained in this notice, the names of individuals credited with contribution to this software
-    shall not be used in advertising or otherwise to promote the sale, use or other dealings in this Software
-    without prior written authorization from the individuals in question.
-    * Any stylesheet derived from this Software that is publicly distributed will be identified with a different
-    name and the version strings in any derived Software will be changed so that no possibility of confusion
-    between the derived package and this Software will exist.
-
-Warranty: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
-AND NONINFRINGEMENT. IN NO EVENT SHALL DAVID CRAMER, KASUN GAJASINGHE, OR ANY OTHER CONTRIBUTOR
-BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-This package is maintained by Kasun Gajasinghe, <kasunbg AT gmail DOT com> and David Cramer, <david AT thingbag DOT net>.
-
-This package also includes the following software written and copyrighted by others:
-
-This package also includes the following software written and copyrighted by others:
-    * Files in template/common/jquery are copyrighted by JQuery under the MIT License.
-      The file jquery.cookie.js Copyright (c) 2006 Klaus Hartl under the MIT license.
-    * Some files in the template/content/search and indexer directories were originally
-      part of N. Quaine's htmlsearch DITA plugin. The htmlsearch DITA plugin is
-      available from the files page of the DITA-users yahoogroup.
-      The htmlsearch plugin was released under a BSD-style license.
-      See indexer/license.txt for details.
-    * Stemmers from the Snowball project released under a BSD license.
-    * Code from the Apache Lucene search engine provides support for tokenizing Chinese,
-      Japanese, and Korean content released under the Apache 2.0 license.
-    * Code that provides weighted search results and some other improvements was graciously
-      donated by SyncRO Soft Ltd., the publishers of the oXygen XML Editor.
-    * Cosmetic improvements provided by OpenStack.
-
-Webhelp for DocBook was developed as a Google Summer of Code project. August 2010
 

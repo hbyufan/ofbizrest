@@ -172,14 +172,14 @@ public class OrderChangeHelper {
             Delegator delegator = dispatcher.getDelegator();
             GenericValue orderHeader = null;
             try {
-                orderHeader = delegator.findOne("OrderHeader", UtilMisc.toMap("orderId", orderId), false);
+                orderHeader = delegator.findByPrimaryKey("OrderHeader", UtilMisc.toMap("orderId", orderId));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "ERROR: Unable to get OrderHeader for OrderID : " + orderId, module);
             }
             if (orderHeader != null) {
                 List<GenericValue> orderItems = null;
                 try {
-                    orderItems = orderHeader.getRelated("OrderItem", null, null, false);
+                    orderItems = orderHeader.getRelated("OrderItem");
                 } catch (GenericEntityException e) {
                     Debug.logError(e, "ERROR: Unable to get OrderItem records for OrderHeader : " + orderId, module);
                 }
@@ -189,14 +189,14 @@ public class OrderChangeHelper {
                         GenericValue product = null;
 
                         try {
-                            product = orderItem.getRelatedOne("Product", false);
+                            product = orderItem.getRelatedOne("Product");
                         } catch (GenericEntityException e) {
                             Debug.logError(e, "ERROR: Unable to get Product record for OrderItem : " + orderId + "/" + orderItemSeqId, module);
                         }
                         if (product != null) {
                             GenericValue productType = null;
                             try {
-                                productType = product.getRelatedOne("ProductType", false);
+                                productType = product.getRelatedOne("ProductType");
                             } catch (GenericEntityException e) {
                                 Debug.logError(e, "ERROR: Unable to get ProductType from Product : " + product, module);
                             }
@@ -248,7 +248,7 @@ public class OrderChangeHelper {
     public static void createReceivedPayments(LocalDispatcher dispatcher, GenericValue userLogin, String orderId) throws GenericEntityException, GenericServiceException {
         GenericValue orderHeader = null;
         try {
-            orderHeader = dispatcher.getDelegator().findOne("OrderHeader", UtilMisc.toMap("orderId", orderId), false);
+            orderHeader = dispatcher.getDelegator().findByPrimaryKey("OrderHeader", UtilMisc.toMap("orderId", orderId));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -281,7 +281,7 @@ public class OrderChangeHelper {
     public static void createOrderInvoice(LocalDispatcher dispatcher, GenericValue userLogin, String orderId) throws GenericServiceException {
         GenericValue orderHeader = null;
         try {
-            orderHeader = dispatcher.getDelegator().findOne("OrderHeader", UtilMisc.toMap("orderId", orderId), false);
+            orderHeader = dispatcher.getDelegator().findByPrimaryKey("OrderHeader", UtilMisc.toMap("orderId", orderId));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }

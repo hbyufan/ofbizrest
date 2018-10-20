@@ -80,7 +80,7 @@ public class PreferenceServices {
 
         Map<String, Object> userPrefMap = null;
         try {
-            GenericValue preference = EntityUtil.getFirst(delegator.findByAnd("UserPreference", fieldMap, null, true));
+            GenericValue preference = EntityUtil.getFirst(delegator.findByAndCache("UserPreference", fieldMap));
             if (preference != null) {
                 userPrefMap = PreferenceWorker.createUserPrefMap(preference);
             }
@@ -129,10 +129,10 @@ public class PreferenceServices {
         Map<String, Object> userPrefMap = null;
         try {
             Map<String, String> fieldMap = UtilMisc.toMap("userLoginId", "_NA_", "userPrefGroupTypeId", userPrefGroupTypeId);
-            userPrefMap = PreferenceWorker.createUserPrefMap(delegator.findByAnd("UserPreference", fieldMap, null, true));
+            userPrefMap = PreferenceWorker.createUserPrefMap(delegator.findByAndCache("UserPreference", fieldMap));
             if (userLoginId != null) {
                 fieldMap.put("userLoginId", userLoginId);
-                userPrefMap.putAll(PreferenceWorker.createUserPrefMap(delegator.findByAnd("UserPreference", fieldMap, null, true)));
+                userPrefMap.putAll(PreferenceWorker.createUserPrefMap(delegator.findByAndCache("UserPreference", fieldMap)));
             }
         } catch (GenericEntityException e) {
             Debug.logWarning(e.getMessage(), module);
@@ -242,7 +242,7 @@ public class PreferenceServices {
 
         try {
             for (Map.Entry<String, Object> mapEntry: userPrefMap.entrySet()) {
-                GenericValue rec = delegator.makeValidValue("UserPreference", PreferenceWorker.toFieldMap(userLoginId, mapEntry.getKey(), userPrefGroupTypeId, mapEntry.getValue()));
+                GenericValue rec = delegator.makeValidValue("UserPreference", PreferenceWorker.toFieldMap(userLoginId, mapEntry.getKey(), userPrefGroupTypeId, (String) mapEntry.getValue()));
                 delegator.createOrStore(rec);
             }
         } catch (GenericEntityException e) {
@@ -278,7 +278,7 @@ public class PreferenceServices {
 
         try {
             Map<String, String> fieldMap = UtilMisc.toMap("userLoginId", fromUserLoginId, "userPrefGroupTypeId", userPrefGroupTypeId);
-            List<GenericValue> resultList = delegator.findByAnd("UserPreference", fieldMap, null, false);
+            List<GenericValue> resultList = delegator.findByAnd("UserPreference", fieldMap);
             if (resultList != null) {
                 for (GenericValue preference: resultList) {
                     preference.set("userLoginId", userLoginId);

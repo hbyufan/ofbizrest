@@ -20,6 +20,7 @@ package org.ofbiz.webapp.control;
 
 import static org.ofbiz.base.util.UtilGenerics.checkMap;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -36,7 +37,6 @@ import javax.servlet.http.HttpSession;
 
 import javolution.util.FastMap;
 
-import org.ofbiz.base.container.ClassLoaderContainer;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.SSLUtil;
 import org.ofbiz.base.util.StringUtil;
@@ -50,7 +50,6 @@ import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
-import org.ofbiz.entity.util.EntityUtilProperties;
 import org.ofbiz.webapp.event.EventFactory;
 import org.ofbiz.webapp.event.EventHandler;
 import org.ofbiz.webapp.event.EventHandlerException;
@@ -67,9 +66,7 @@ import org.owasp.esapi.errors.EncodingException;
 public class RequestHandler {
 
     public static final String module = RequestHandler.class.getName();
-    private boolean throwRequestHandlerExceptionOnMissingLocalRequest = UtilProperties.propertyValueEqualsIgnoreCase(
-            "requestHandler.properties", "throwRequestHandlerExceptionOnMissingLocalRequest", "Y");
-    private String statusCodeString = UtilProperties.getPropertyValue("requestHandler.properties", "status-code", "302");
+
     public static RequestHandler getRequestHandler(ServletContext servletContext) {
         RequestHandler rh = (RequestHandler) servletContext.getAttribute("_REQUEST_HANDLER_");
         if (rh == null) {
@@ -100,7 +97,7 @@ public class RequestHandler {
         return ConfigXMLReader.getControllerConfig(this.controllerConfigURL);
     }
 
-    public void doRequest(HttpServletRequest request, HttpServletResponse response, String requestUri) throws RequestHandlerException, RequestHandlerExceptionAllowExternalRequests {
+    public void doRequest(HttpServletRequest request, HttpServletResponse response, String requestUri) throws RequestHandlerException {
         HttpSession session = request.getSession();
         Delegator delegator = (Delegator) request.getAttribute("delegator");
         GenericValue userLogin = (GenericValue) session.getAttribute("userLogin");
@@ -108,17 +105,13 @@ public class RequestHandler {
     }
 
     public void doRequest(HttpServletRequest request, HttpServletResponse response, String chain,
-            GenericValue userLogin, Delegator delegator) throws RequestHandlerException, RequestHandlerExceptionAllowExternalRequests {
+            GenericValue userLogin, Delegator delegator) throws RequestHandlerException {
 
-        long startTime = System.currentTimeMillis();
         HttpSession session = request.getSession();
 
         // get the controllerConfig once for this method so we don't have to get it over and over inside the method
         ConfigXMLReader.ControllerConfig controllerConfig = this.getControllerConfig();
         Map<String, ConfigXMLReader.RequestMap> requestMapMap = controllerConfig.getRequestMapMap();
-        String controllerStatusCodeString = controllerConfig.getStatusCode();
-        if(UtilValidate.isNotEmpty(controllerStatusCodeString != null)) 
-            statusCodeString = controllerStatusCodeString;
 
         // workaround if we are in the root webapp
         String cname = UtilHttp.getApplicationName(request);
@@ -159,20 +152,12 @@ public class RequestHandler {
             }
         }
 
-        // if no matching request is found in the controller, depending on throwRequestHandlerExceptionOnMissingLocalRequest
-        //  we throw a RequestHandlerException or RequestHandlerExceptionAllowExternalRequests
+        // still not found so stop
         if (requestMap == null) {
-            if (throwRequestHandlerExceptionOnMissingLocalRequest) throw new RequestHandlerException(requestMissingErrorMessage);
-            else throw new RequestHandlerExceptionAllowExternalRequests();
-         }
+            throw new RequestHandlerException(requestMissingErrorMessage);
+        }
 
         String eventReturn = null;
-        if (requestMap.metrics != null && requestMap.metrics.getThreshold() != 0.0 && requestMap.metrics.getTotalEvents() > 3 && requestMap.metrics.getThreshold() < requestMap.metrics.getServiceRate()) {
-            eventReturn = "threshold-exceeded";
-        }
-        ConfigXMLReader.RequestMap originalRequestMap = requestMap; // Save this so we can update the correct performance metrics.
-
-
         boolean interruptRequest = false;
 
         // Check for chained request.
@@ -227,7 +212,7 @@ public class RequestHandler {
                     String webSiteId = WebSiteWorker.getWebSiteId(request);
                     if (webSiteId != null) {
                         try {
-                            GenericValue webSite = delegator.findOne("WebSite", UtilMisc.toMap("webSiteId", webSiteId), true);
+                            GenericValue webSite = delegator.findByPrimaryKeyCache("WebSite", UtilMisc.toMap("webSiteId", webSiteId));
                             if (webSite != null) enableHttps = webSite.getBoolean("enableHttps");
                         } catch (GenericEntityException e) {
                             Debug.logWarning(e, "Problems with WebSite entity; using global defaults", module);
@@ -251,7 +236,7 @@ public class RequestHandler {
                     String newUrl = RequestHandler.makeUrl(request, response, urlBuf.toString());
                     if (newUrl.toUpperCase().startsWith("HTTPS")) {
                         // if we are supposed to be secure, redirect secure.
-                        callRedirect(newUrl, response, request, statusCodeString);
+                        callRedirect(newUrl, response, request);
                         return;
                     }
                 }
@@ -266,7 +251,7 @@ public class RequestHandler {
                 }
                 String newUrl = RequestHandler.makeUrl(request, response, urlBuf.toString(), true, false, false);
                 if (newUrl.toUpperCase().startsWith("HTTP")) {
-                    callRedirect(newUrl, response, request, statusCodeString);
+                    callRedirect(newUrl, response, request);
                     return;
                 }
             }
@@ -313,10 +298,10 @@ public class RequestHandler {
                 for (ConfigXMLReader.Event event: controllerConfig.getFirstVisitEventList().values()) {
                     try {
                         String returnString = this.runEvent(request, response, event, null, "firstvisit");
-                        if (returnString == null || "none".equalsIgnoreCase(returnString)) {
-                            interruptRequest = true;
-                        } else if (!returnString.equalsIgnoreCase("success")) {
+                        if (returnString != null && !returnString.equalsIgnoreCase("success")) {
                             throw new EventHandlerException("First-Visit event did not return 'success'.");
+                        } else if (returnString == null) {
+                            interruptRequest = true;
                         }
                     } catch (EventHandlerException e) {
                         Debug.logError(e, module);
@@ -328,9 +313,7 @@ public class RequestHandler {
             for (ConfigXMLReader.Event event: controllerConfig.getPreprocessorEventList().values()) {
                 try {
                     String returnString = this.runEvent(request, response, event, null, "preprocessor");
-                    if (returnString == null || "none".equalsIgnoreCase(returnString)) {
-                        interruptRequest = true;
-                    } else if (!returnString.equalsIgnoreCase("success")) {
+                    if (returnString != null && !returnString.equalsIgnoreCase("success")) {
                         if (!returnString.contains(":_protect_:")) {
                             throw new EventHandlerException("Pre-Processor event [" + event.invoke + "] did not return 'success'.");
                         } else { // protect the view normally rendered and redirect to error response view
@@ -353,6 +336,8 @@ public class RequestHandler {
                                 }
                             }
                         }
+                    } else if (returnString == null) {
+                        interruptRequest = true;
                     }
                 } catch (EventHandlerException e) {
                     Debug.logError(e, module);
@@ -419,10 +404,6 @@ public class RequestHandler {
 
                     // run the request event
                     eventReturn = this.runEvent(request, response, requestMap.event, requestMap, "request");
-                                        
-                    if (requestMap.event.metrics != null) {
-                        requestMap.event.metrics.recordServiceRate(1, System.currentTimeMillis() - startTime);
-                    }                    
 
                     // save the server hit for the request event
                     if (this.trackStats(request)) {
@@ -450,15 +431,7 @@ public class RequestHandler {
 
         // Process the eventReturn
         // at this point eventReturnString is finalized, so get the RequestResponse
-        ConfigXMLReader.RequestResponse eventReturnBasedRequestResponse;
-        if (eventReturn == null) {
-            eventReturnBasedRequestResponse = null;
-        } else {
-            eventReturnBasedRequestResponse = requestMap.requestResponseMap.get(eventReturn);
-            if (eventReturnBasedRequestResponse == null && eventReturn.equals("none")) {
-                eventReturnBasedRequestResponse = ConfigXMLReader.emptyNoneRequestResponse;
-            }
-        }
+        ConfigXMLReader.RequestResponse eventReturnBasedRequestResponse = eventReturn == null ? null : requestMap.requestResponseMap.get(eventReturn);
         if (eventReturnBasedRequestResponse != null) {
             //String eventReturnBasedResponse = requestResponse.value;
             if (Debug.verboseOn()) Debug.logVerbose("[Response Qualified]: " + eventReturnBasedRequestResponse.name + ", " + eventReturnBasedRequestResponse.type + ":" + eventReturnBasedRequestResponse.value + " sessionId=" + UtilHttp.getSessionId(request), module);
@@ -525,8 +498,7 @@ public class RequestHandler {
                 if (UtilValidate.isNotEmpty(queryString)) {
                     redirectTarget += "?" + queryString;
                 }
-                
-                callRedirect(makeLink(request, response, redirectTarget), response, request, statusCodeString);
+                callRedirect(makeLink(request, response, redirectTarget), response, request);
 
                 // the old/uglier way: doRequest(request, response, previousRequest, userLogin, delegator);
 
@@ -588,25 +560,20 @@ public class RequestHandler {
                 }
             }
 
-            String responseStatusCode  = nextRequestResponse.statusCode;
-            if(UtilValidate.isNotEmpty(responseStatusCode))
-                statusCodeString = responseStatusCode;            
-            
-            
             if ("url".equals(nextRequestResponse.type)) {
                 if (Debug.verboseOn()) Debug.logVerbose("[RequestHandler.doRequest]: Response is a URL redirect." + " sessionId=" + UtilHttp.getSessionId(request), module);
-                callRedirect(nextRequestResponse.value, response, request, statusCodeString);
+                callRedirect(nextRequestResponse.value, response, request);
             } else if ("cross-redirect".equals(nextRequestResponse.type)) {
                 // check for a cross-application redirect
                 if (Debug.verboseOn()) Debug.logVerbose("[RequestHandler.doRequest]: Response is a Cross-Application redirect." + " sessionId=" + UtilHttp.getSessionId(request), module);
                 String url = nextRequestResponse.value.startsWith("/") ? nextRequestResponse.value : "/" + nextRequestResponse.value;
-                callRedirect(url + this.makeQueryString(request, nextRequestResponse), response, request, statusCodeString);
+                callRedirect(url + this.makeQueryString(request, nextRequestResponse), response, request);
             } else if ("request-redirect".equals(nextRequestResponse.type)) {
                 if (Debug.verboseOn()) Debug.logVerbose("[RequestHandler.doRequest]: Response is a Request redirect." + " sessionId=" + UtilHttp.getSessionId(request), module);
-                callRedirect(makeLinkWithQueryString(request, response, "/" + nextRequestResponse.value, nextRequestResponse), response, request, statusCodeString);
+                callRedirect(makeLinkWithQueryString(request, response, "/" + nextRequestResponse.value, nextRequestResponse), response, request);
             } else if ("request-redirect-noparam".equals(nextRequestResponse.type)) {
                 if (Debug.verboseOn()) Debug.logVerbose("[RequestHandler.doRequest]: Response is a Request redirect with no parameters." + " sessionId=" + UtilHttp.getSessionId(request), module);
-                callRedirect(makeLink(request, response, nextRequestResponse.value), response, request, statusCodeString);
+                callRedirect(makeLink(request, response, nextRequestResponse.value), response, request);
             } else if ("view".equals(nextRequestResponse.type)) {
                 if (Debug.verboseOn()) Debug.logVerbose("[RequestHandler.doRequest]: Response is a view." + " sessionId=" + UtilHttp.getSessionId(request), module);
 
@@ -684,9 +651,6 @@ public class RequestHandler {
                 if (Debug.verboseOn()) Debug.logVerbose("[RequestHandler.doRequest]: Response is handled by the event." + " sessionId=" + UtilHttp.getSessionId(request), module);
             }
         }
-        if (originalRequestMap.metrics != null) {
-            originalRequestMap.metrics.recordServiceRate(1, System.currentTimeMillis() - startTime);
-        }
     }
 
     /** Find the event handler and invoke an event. */
@@ -703,13 +667,6 @@ public class RequestHandler {
         String errorpage = getControllerConfig().getErrorpage();
         if (UtilValidate.isNotEmpty(errorpage)) return errorpage;
         return "/error/error.jsp";
-    }
-
-    /** Returns the default status-code for this request. */
-    public String getStatusCode(HttpServletRequest request) {
-        String statusCode = getControllerConfig().getStatusCode();
-        if (UtilValidate.isNotEmpty(statusCode)) return statusCode;
-        return null;
     }
 
     /** Returns the ServletContext Object. */
@@ -759,17 +716,11 @@ public class RequestHandler {
         return nextPage;
     }
 
-    private void callRedirect(String url, HttpServletResponse resp, HttpServletRequest req, String statusCodeString) throws RequestHandlerException {
+    private void callRedirect(String url, HttpServletResponse resp, HttpServletRequest req) throws RequestHandlerException {
         if (Debug.infoOn()) Debug.logInfo("Sending redirect to: [" + url + "], sessionId=" + UtilHttp.getSessionId(req), module);
         // set the attributes in the session so we can access it.
         Enumeration<String> attributeNameEnum = UtilGenerics.cast(req.getAttributeNames());
         Map<String, Object> reqAttrMap = FastMap.newInstance();
-        Integer statusCode;
-        try {
-            statusCode = Integer.valueOf(statusCodeString);
-        } catch (NumberFormatException e) {
-            statusCode = 303;
-        } 
         while (attributeNameEnum.hasMoreElements()) {
             String name = attributeNameEnum.nextElement();
             Object obj = req.getAttribute(name);
@@ -786,10 +737,10 @@ public class RequestHandler {
         }
 
         // send the redirect
-        try {            
-            resp.setStatus(statusCode);
-            resp.setHeader("Location", url);
-            resp.setHeader("Connection", "close");
+        try {
+            resp.sendRedirect(url);
+        } catch (IOException ioe) {
+            throw new RequestHandlerException(ioe.getMessage(), ioe);
         } catch (IllegalStateException ise) {
             throw new RequestHandlerException(ise.getMessage(), ise);
         }
@@ -925,11 +876,14 @@ public class RequestHandler {
         try {
             resp.flushBuffer();
         } catch (java.io.IOException e) {
-            /* If any request gets aborted before completing, i.e if a user requests a page and cancels that request before the page is rendered and returned
-               or if request is an ajax request and user calls abort() method for on ajax request then its showing broken pipe exception on console,
-               skip throwing of RequestHandlerException. JIRA Ticket - OFBIZ-254
-            */
-            if (Debug.verboseOn()) Debug.logVerbose("Skip Request Handler Exception that is caused due to aborted requests. " + e.getMessage(), module);
+            /*If request is an ajax request and user calls abort() method for on ajax request then skip throwing of RequestHandlerException .
+             Specially its done for async ajax auto completer call, if we call abort() method on ajax request then its showing broken pipe exception on console,
+             because request is aborted by client (browser).*/
+            if (!"XMLHttpRequest".equals(req.getHeader("X-Requested-With"))) {
+                throw new RequestHandlerException("Error flushing response buffer", e);
+            } else {
+                if (Debug.verboseOn()) Debug.logVerbose("Skip Request Handler Exception for ajax request.", module);
+            }
         }
 
         String vname = (String) req.getAttribute("_CURRENT_VIEW_");
@@ -941,22 +895,12 @@ public class RequestHandler {
     }
 
     public static String getDefaultServerRootUrl(HttpServletRequest request, boolean secure) {
-        Delegator delegator = (Delegator) request.getAttribute("delegator");
-        String httpsPort = EntityUtilProperties.getPropertyValue("url.properties", "port.https", "443", delegator);
-        String httpsServer = EntityUtilProperties.getPropertyValue("url.properties", "force.https.host", delegator);
-        String httpPort = EntityUtilProperties.getPropertyValue("url.properties", "port.http", "80", delegator);
-        String httpServer = EntityUtilProperties.getPropertyValue("url.properties", "force.http.host", delegator);
-        boolean useHttps = EntityUtilProperties.propertyValueEqualsIgnoreCase("url.properties", "port.https.enabled", "Y", delegator);
+        String httpsPort = UtilProperties.getPropertyValue("url.properties", "port.https", "443");
+        String httpsServer = UtilProperties.getPropertyValue("url.properties", "force.https.host");
+        String httpPort = UtilProperties.getPropertyValue("url.properties", "port.http", "80");
+        String httpServer = UtilProperties.getPropertyValue("url.properties", "force.http.host");
+        boolean useHttps = UtilProperties.propertyValueEqualsIgnoreCase("url.properties", "port.https.enabled", "Y");
 
-        if (ClassLoaderContainer.portOffset != 0) {
-            Integer httpPortValue = Integer.valueOf(httpPort);
-            httpPortValue += ClassLoaderContainer.portOffset;
-            httpPort = httpPortValue.toString();
-            Integer httpsPortValue = Integer.valueOf(httpsPort);
-            httpsPortValue += ClassLoaderContainer.portOffset;
-            httpsPort = httpsPortValue.toString();
-        }
-        
         StringBuilder newURL = new StringBuilder();
 
         if (secure && useHttps) {
@@ -1017,14 +961,12 @@ public class RequestHandler {
 
                 addNameValuePairToQueryString(queryString, name, (String) value);
             }
-
             for (Map.Entry<String, String> entry: requestResponse.redirectParameterValueMap.entrySet()) {
                 String name = entry.getKey();
                 String value = entry.getValue();
 
-                addNameValuePairToQueryString(queryString, name, value);
+                addNameValuePairToQueryString(queryString, name, (String) value);
             }
-
             return queryString.toString();
         }
     }
@@ -1069,7 +1011,7 @@ public class RequestHandler {
         GenericValue webSite;
         if (webSiteId != null) {
             try {
-                webSite = delegator.findOne("WebSite", UtilMisc.toMap("webSiteId", webSiteId), true);
+                webSite = delegator.findByPrimaryKeyCache("WebSite", UtilMisc.toMap("webSiteId", webSiteId));
                 if (webSite != null) {
                     httpsPort = webSite.getString("httpsPort");
                     httpsServer = webSite.getString("httpsHost");
@@ -1084,30 +1026,21 @@ public class RequestHandler {
 
         // fill in any missing properties with fields from the global file
         if (UtilValidate.isEmpty(httpsPort)) {
-            httpsPort = EntityUtilProperties.getPropertyValue("url.properties", "port.https", "443", delegator);
+            httpsPort = UtilProperties.getPropertyValue("url.properties", "port.https", "443");
         }
         if (UtilValidate.isEmpty(httpsServer)) {
-            httpsServer = EntityUtilProperties.getPropertyValue("url.properties", "force.https.host", delegator);
+            httpsServer = UtilProperties.getPropertyValue("url.properties", "force.https.host");
         }
         if (UtilValidate.isEmpty(httpPort)) {
-            httpPort = EntityUtilProperties.getPropertyValue("url.properties", "port.http", "80", delegator);
+            httpPort = UtilProperties.getPropertyValue("url.properties", "port.http", "80");
         }
         if (UtilValidate.isEmpty(httpServer)) {
-            httpServer = EntityUtilProperties.getPropertyValue("url.properties", "force.http.host", delegator);
+            httpServer = UtilProperties.getPropertyValue("url.properties", "force.http.host");
         }
         if (enableHttps == null) {
-            enableHttps = EntityUtilProperties.propertyValueEqualsIgnoreCase("url.properties", "port.https.enabled", "Y", delegator);
+            enableHttps = UtilProperties.propertyValueEqualsIgnoreCase("url.properties", "port.https.enabled", "Y");
         }
 
-        if (ClassLoaderContainer.portOffset != 0) {
-            Integer httpPortValue = Integer.valueOf(httpPort);
-            httpPortValue += ClassLoaderContainer.portOffset;
-            httpPort = httpPortValue.toString();
-            Integer httpsPortValue = Integer.valueOf(httpsPort);
-            httpsPortValue += ClassLoaderContainer.portOffset;
-            httpsPort = httpsPortValue.toString();
-        }
-        
         // create the path the the control servlet
         String controlPath = (String) request.getAttribute("_CONTROL_PATH_");
 
@@ -1196,7 +1129,7 @@ public class RequestHandler {
                 if (response != null) {
                     encodedUrl = response.encodeURL(newURL.toString());
                 } else {
-                    encodedUrl = newURL.toString();
+                    encodedUrl = newURL.toString();    
                 }
             }
         } else {

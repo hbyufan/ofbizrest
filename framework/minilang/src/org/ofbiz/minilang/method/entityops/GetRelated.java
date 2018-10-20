@@ -78,7 +78,11 @@ public final class GetRelated extends MethodOperation {
         List<String> orderByNames = orderByListFma.get(methodContext.getEnvMap());
         Map<String, ? extends Object> constraintMap = mapFma.get(methodContext.getEnvMap());
         try {
-            listFma.put(methodContext.getEnvMap(), value.getRelated(relationName, constraintMap, orderByNames, useCache));
+            if (useCache) {
+                listFma.put(methodContext.getEnvMap(), value.getRelatedCache(relationName, constraintMap, orderByNames));
+            } else {
+                listFma.put(methodContext.getEnvMap(), value.getRelated(relationName, constraintMap, orderByNames));
+            }
         } catch (GenericEntityException e) {
             String errMsg = "Exception thrown while finding related values: " + e.getMessage();
             Debug.logWarning(e, errMsg, module);

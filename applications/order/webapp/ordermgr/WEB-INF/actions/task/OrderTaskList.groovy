@@ -51,12 +51,12 @@ context.partyTasks = partyTasks;
 // Build a map of orderId and currency
 orderCurrencyMap = [:];
 partyTasks.each { ptItem ->
-    orderHeader = delegator.findOne("OrderHeader", [orderId : ptItem.orderId], false);
+    orderHeader = delegator.findByPrimaryKey("OrderHeader", [orderId : ptItem.orderId]);
     orderCurrencyMap[ptItem.orderId] = orderHeader.currencyUom;
 }
 
 // get this user's roles
-partyRoles = delegator.findByAnd("PartyRole", [partyId : userLogin.partyId], null, false);
+partyRoles = delegator.findByAnd("PartyRole", [partyId : userLogin.partyId]);
 
 // build the role list
 pRolesList = [];
@@ -81,7 +81,7 @@ context.roleTasks = roleTasks;
 
 // Add to the map of orderId and currency
 roleTasks.each { rtItem ->
-    orderHeader = delegator.findOne("OrderHeader", [orderId : rtItem.orderId], false);
+    orderHeader = delegator.findByPrimaryKey("OrderHeader", [orderId : rtItem.orderId]);
     orderCurrencyMap[rtItem.orderId] = orderHeader.currencyUom;
 }
 context.orderCurrencyMap = orderCurrencyMap;
@@ -89,7 +89,7 @@ context.orderCurrencyMap = orderCurrencyMap;
 context.now = nowTimestamp;
 
 // purchase order schedule
-poList = delegator.findByAnd("OrderHeaderAndRoles", [partyId : userLogin.partyId, orderTypeId : "PURCHASE_ORDER"], null, false);
+poList = delegator.findByAnd("OrderHeaderAndRoles", [partyId : userLogin.partyId, orderTypeId : "PURCHASE_ORDER"]);
 poIter = poList.iterator();
 listedPoIds = new HashSet();
 while (poIter.hasNext()) {

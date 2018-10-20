@@ -19,8 +19,9 @@
 package org.ofbiz.minilang.method.envops;
 
 import java.text.MessageFormat;
-import java.util.LinkedList;
 import java.util.List;
+
+import javolution.util.FastList;
 
 import org.ofbiz.base.util.MessageString;
 import org.ofbiz.base.util.UtilValidate;
@@ -80,7 +81,7 @@ public final class StringToList extends MethodOperation {
         }
         List<Object> toList = listFma.get(methodContext.getEnvMap());
         if (toList == null) {
-            toList = new LinkedList<Object>();
+            toList = FastList.newInstance();
             listFma.put(methodContext.getEnvMap(), toList);
         }
         toList.add(value);

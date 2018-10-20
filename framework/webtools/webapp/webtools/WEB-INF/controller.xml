@@ -24,9 +24,9 @@ under the License.
     <include location="component://common/webcommon/WEB-INF/portal-controller.xml"/>
     <include location="component://common/webcommon/WEB-INF/security-controller.xml"/>
     <include location="component://common/webcommon/WEB-INF/tempexpr-controller.xml"/>
+    <include location="component://testtools/webapp/testtools/WEB-INF/controller.xml"/>
     <description>WebTools Site Configuration File</description>
-
-    <handler name="ftl" type="view" class="org.ofbiz.webapp.ftl.FreeMarkerViewHandler"/>
+    
     <handler name="datavision" type="view" class="org.ofbiz.webapp.view.DataVisionViewHandler"/>
 
     <!-- Events to run on every request before security (chains exempt) -->
@@ -226,22 +226,20 @@ under the License.
         <security https="true" auth="true"/>
         <response name="success" type="view" value="StatBinsHistory"/>
     </request-map>
-    <request-map uri="ViewMetrics">
-        <security https="true" auth="true"/>
-        <metric name="URL: webtools/ViewMetrics" /><!-- Here for demonstration -->
-        <response name="success" type="view" value="ViewMetrics"/>
-    </request-map>
-    <request-map uri="ResetMetric">
-        <security https="true" auth="true"/>
-        <event type="service" invoke="resetMetric"/>
-        <response name="success" type="view" value="ViewMetrics"/>
-        <response name="error" type="view" value="ViewMetrics"/>
-    </request-map>
-
 
     <!-- Loggin Setup -->
     <request-map uri="LogConfiguration">
         <security https="true" auth="true"/>
+        <response name="success" type="view" value="LogConfiguration"/>
+    </request-map>
+    <request-map uri="AddLogger">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="addOrUpdateLogger"/>
+        <response name="success" type="view" value="LogConfiguration"/>
+    </request-map>
+    <request-map uri="UpdateLogger">
+        <security https="true" auth="true"/>
+        <event type="service-multi" invoke="addOrUpdateLogger"/>
         <response name="success" type="view" value="LogConfiguration"/>
     </request-map>
     <request-map uri="AdjustDebugLevels">
@@ -271,10 +269,6 @@ under the License.
     <request-map uri="FindJob">
         <security https="true" auth="true"/>
         <response name="success" type="view" value="FindJob"/>
-    </request-map>
-    <request-map uri="JobDetails">
-        <security https="true" auth="true"/>
-        <response name="success" type="view" value="JobDetails"/>
     </request-map>
     <request-map uri="cancelJob">
         <security https="true" auth="true"/>
@@ -357,11 +351,6 @@ under the License.
     <request-map uri="EntitySQLProcessor">
         <security https="true" auth="true"/>
         <response name="success" type="view" value="EntitySQLProcessor"/>
-    </request-map>
-
-    <request-map uri="ConnectionPoolStatus">
-        <security https="true" auth="true"/>
-        <response name="success" type="view" value="ConnectionPoolStatus"/>
     </request-map>
 
     <!-- Entity Export/Import requests -->
@@ -641,14 +630,12 @@ under the License.
 
     <view-map name="StatsSinceStart" type="screen" page="component://webtools/widget/StatsScreens.xml#StatsSinceStart"/>
     <view-map name="StatBinsHistory" type="screen" page="component://webtools/widget/StatsScreens.xml#StatBinsHistory"/>
-    <view-map name="ViewMetrics" type="screen" page="component://webtools/widget/StatsScreens.xml#ViewMetrics"/>
 
     <view-map name="EntityPerformanceTest" type="screen" page="component://webtools/widget/EntityScreens.xml#EntityPerformanceTest"/>
 
     <view-map name="ServiceLog" type="screen" page="component://webtools/widget/LogScreens.xml#ServiceLog"/>
     <view-map name="ServiceList" type="screen" page="component://webtools/widget/ServiceScreens.xml#ServiceList"/>
     <view-map name="FindJob" type="screen" page="component://webtools/widget/ServiceScreens.xml#FindJob"/>
-    <view-map name="JobDetails" type="screen" page="component://webtools/widget/ServiceScreens.xml#JobDetails"/>
     <view-map name="serviceResult" type="screen" page="component://webtools/widget/ServiceScreens.xml#ServiceResult"/>
     <view-map name="threadList" type="screen" page="component://webtools/widget/ServiceScreens.xml#ThreadList"/>
     <view-map name="scheduleJob" type="screen" page="component://webtools/widget/ServiceScreens.xml#ScheduleJob"/>
@@ -664,13 +651,13 @@ under the License.
 
     <view-map name="EntitySyncStatus" page="component://webtools/widget/EntitySyncScreens.xml#EntitySyncStatus" type="screen"/>
     <view-map name="EntitySQLProcessor" page="component://webtools/widget/EntityScreens.xml#EntitySQLProcessor" type="screen"/>
-    <view-map name="ConnectionPoolStatus" page="component://webtools/widget/EntityScreens.xml#ConnectionPoolStatus" type="screen"/>
     <view-map name="EntityExportAll" page="component://webtools/widget/EntityScreens.xml#EntityExportAll" type="screen"/>
     <view-map name="EntityImportDir" page="component://webtools/widget/EntityScreens.xml#EntityImportDir" type="screen"/>
     <view-map name="EntityImport" page="component://webtools/widget/EntityScreens.xml#EntityImport" type="screen"/>
     <view-map name="EntityImportReaders" page="component://webtools/widget/EntityScreens.xml#EntityImportReaders" type="screen"/>
 
     <view-map name="ViewComponents" page="component://webtools/widget/MiscScreens.xml#ViewComponents" type="screen"/>
+    <view-map name="minervaobjects" page="component://webtools/widget/EntityScreens.xml#minervaobjects" type="screen"/>
 
     <!-- cert views -->
     <view-map name="viewbrowsercerts" type="screen" page="component://webtools/widget/CommonScreens.xml#browsercerts"/>

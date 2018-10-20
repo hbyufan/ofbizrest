@@ -37,7 +37,6 @@ import org.ofbiz.product.product.ProductWorker;
 import org.ofbiz.product.catalog.*;
 import org.ofbiz.product.store.*;
 import org.ofbiz.webapp.stats.VisitHandler;
-import org.ofbiz.webapp.website.WebSiteWorker
 import org.ofbiz.order.shoppingcart.ShoppingCartEvents;
 import org.ofbiz.order.shoppingcart.ShoppingCart;
 
@@ -166,7 +165,7 @@ if (product) {
     // get the product price
     catalogId = CatalogWorker.getCurrentCatalogId(request);
     currentCatalogId = catalogId;
-    webSiteId = WebSiteWorker.getWebSiteId(request);
+    webSiteId = CatalogWorker.getWebSiteId(request);
     autoUserLogin = request.getSession().getAttribute("autoUserLogin");
     if (cart.isSalesOrder()) {
         // sales order: run the "calculateProductPrice" service
@@ -194,7 +193,7 @@ if (product) {
     if (cart.isSalesOrder()) {
         reviewByAnd.productStoreId = productStoreId;
     }
-    reviews = product.getRelated("ProductReview", reviewByAnd, ["-postedDateTime"], true);
+    reviews = product.getRelatedCache("ProductReview", reviewByAnd, ["-postedDateTime"]);
     context.productReviews = reviews;
     // get the average rating
     if (reviews) {
@@ -210,18 +209,18 @@ if (product) {
     if (cart.isSalesOrder()) {
         facilityId = productStore.inventoryFacilityId;
         /*
-        productFacility = delegator.findOne("ProductFacility", [productId : productId, facilityId : facilityId, true);
+        productFacility = delegator.findByPrimaryKeyCache("ProductFacility", [productId : productId, facilityId : facilityId);
         context.daysToShip = productFacility?.daysToShip
         */
 
         resultOutput = dispatcher.runSync("getInventoryAvailableByFacility", [productId : productId, facilityId : facilityId, useCache : false]);
         totalAvailableToPromise = resultOutput.availableToPromiseTotal;
         if (totalAvailableToPromise) {
-            productFacility = delegator.findOne("ProductFacility", [productId : productId, facilityId : facilityId], true);
+            productFacility = delegator.findByPrimaryKeyCache("ProductFacility", [productId : productId, facilityId : facilityId]);
             context.daysToShip = productFacility?.daysToShip
         }
     } else {
-       supplierProducts = delegator.findByAnd("SupplierProduct", [productId : productId], ["-availableFromDate"], true);
+       supplierProducts = delegator.findByAndCache("SupplierProduct", [productId : productId], ["-availableFromDate"]);
        supplierProduct = EntityUtil.getFirst(supplierProducts);
        if (supplierProduct?.standardLeadTimeDays) {
            standardLeadTimeDays = supplierProduct.standardLeadTimeDays;
@@ -236,7 +235,7 @@ if (product) {
     context.disFeatureList = disFeatureList;
 
     // an example of getting features of a certain type to show
-    sizeProductFeatureAndAppls = delegator.findByAnd("ProductFeatureAndAppl", [productId : productId, productFeatureTypeId : "SIZE"], ["sequenceNum", "defaultSequenceNum"], false);
+    sizeProductFeatureAndAppls = delegator.findByAnd("ProductFeatureAndAppl", [productId : productId, productFeatureTypeId : "SIZE"], ["sequenceNum", "defaultSequenceNum"]);
     context.sizeProductFeatureAndAppls = sizeProductFeatureAndAppls;
     
     // get product variant for Box/Case/Each
@@ -244,12 +243,12 @@ if (product) {
     boolean isAlternativePacking = ProductWorker.isAlternativePacking(delegator, product.productId, null);
     mainProducts = [];
     if(isAlternativePacking){
-        productVirtualVariants = delegator.findByAnd("ProductAssoc", UtilMisc.toMap("productIdTo", product.productId , "productAssocTypeId", "ALTERNATIVE_PACKAGE"), null, true);
+        productVirtualVariants = delegator.findByAndCache("ProductAssoc", UtilMisc.toMap("productIdTo", product.productId , "productAssocTypeId", "ALTERNATIVE_PACKAGE"));
         if(productVirtualVariants){
             productVirtualVariants.each { virtualVariantKey ->
                 mainProductMap = [:];
-                mainProduct = virtualVariantKey.getRelatedOne("MainProduct", true);
-                quantityUom = mainProduct.getRelatedOne("QuantityUom", true);
+                mainProduct = virtualVariantKey.getRelatedOneCache("MainProduct");
+                quantityUom = mainProduct.getRelatedOneCache("QuantityUom");
                 mainProductMap.productId = mainProduct.productId;
                 mainProductMap.piecesIncluded = mainProduct.piecesIncluded;
                 mainProductMap.uomDesc = quantityUom.description;
@@ -295,7 +294,7 @@ if (product) {
                 if (variantTree) {
                     featureOrder = new LinkedList(featureSet);
                     featureOrder.each { featureKey ->
-                        featureValue = delegator.findOne("ProductFeatureType", [productFeatureTypeId : featureKey], true);
+                        featureValue = delegator.findByPrimaryKeyCache("ProductFeatureType", [productFeatureTypeId : featureKey]);
                         fValue = featureValue.get("description") ?: featureValue.productFeatureTypeId;
                         featureTypes[featureKey] = fValue;
                     }
@@ -405,7 +404,7 @@ if (product) {
                         }
                         numberFormat = NumberFormat.getCurrencyInstance(locale);
                         variants.each { variantAssoc ->
-                            variant = variantAssoc.getRelatedOne("AssocProduct", false);
+                            variant = variantAssoc.getRelatedOne("AssocProduct");
                             // Get the price for each variant. Reuse the priceContext already setup for virtual product above and replace the product
                             priceContext.product = variant;
                             if (cart.isSalesOrder()) {
@@ -449,7 +448,7 @@ if (product) {
                             
                             if(virtualVariants){
                                 virtualVariants.each { virtualAssoc ->
-                                    virtual = virtualAssoc.getRelatedOne("MainProduct", false);
+                                    virtual = virtualAssoc.getRelatedOne("MainProduct");
                                     // Get price from a virtual product
                                     priceContext.product = virtual;
                                     if (cart.isSalesOrder()) {
@@ -527,7 +526,7 @@ if (product) {
                 variantPriceJS.append("function getVariantPrice(sku) { ");
                 
                 virtualVariants.each { virtualAssoc ->
-                    virtual = virtualAssoc.getRelatedOne("MainProduct", false);
+                    virtual = virtualAssoc.getRelatedOne("MainProduct");
                     // Get price from a virtual product
                     priceContext.product = virtual;
                     if (cart.isSalesOrder()) {
@@ -598,7 +597,7 @@ if (product) {
     // get other cross-sell information: product with a common feature
     commonProductFeatureId = "SYMPTOM";
     // does this product have that feature?
-    commonProductFeatureAndAppls = delegator.findByAnd("ProductFeatureAndAppl", [productId : productId, productFeatureTypeId : commonProductFeatureId], ["sequenceNum", "defaultSequenceNum"], false);
+    commonProductFeatureAndAppls = delegator.findByAnd("ProductFeatureAndAppl", [productId : productId, productFeatureTypeId : commonProductFeatureId], ["sequenceNum", "defaultSequenceNum"]);
     if (commonProductFeatureAndAppls) {
         commonProductFeatureIds = EntityUtil.getFieldListFromEntityList(commonProductFeatureAndAppls, "productFeatureId", true);
 
@@ -623,7 +622,7 @@ if (product) {
                 continue;
             }
             // filter out all variants
-            commonProduct = delegator.findOne("Product", [productId : commonFeatureResultId], true);
+            commonProduct = delegator.findByPrimaryKeyCache("Product", [productId : commonFeatureResultId]);
             if ("Y".equals(commonProduct?.isVariant)) {
                 continue;
             }
@@ -636,7 +635,7 @@ if (product) {
     */
 
     // get the DIGITAL_DOWNLOAD related Content records to show the contentName/description
-    downloadProductContentAndInfoList = delegator.findByAnd("ProductContentAndInfo", [productId : productId, productContentTypeId : "DIGITAL_DOWNLOAD"], null, true);
+    downloadProductContentAndInfoList = delegator.findByAndCache("ProductContentAndInfo", [productId : productId, productContentTypeId : "DIGITAL_DOWNLOAD"]);
     context.downloadProductContentAndInfoList = downloadProductContentAndInfoList;
 
     // not the best to save info in an action, but this is probably the best place to count a view; it is done async
@@ -644,15 +643,15 @@ if (product) {
 
     //get product image from image management
     productImageList = [];
-    productContentAndInfoImageManamentList = delegator.findByAnd("ProductContentAndInfo", ["productId": productId, productContentTypeId : "IMAGE", "statusId" : "IM_APPROVED", "drIsPublic" : "Y"], ["sequenceNum"], false);
+    productContentAndInfoImageManamentList = delegator.findByAnd("ProductContentAndInfo", ["productId": productId, productContentTypeId : "IMAGE", "statusId" : "IM_APPROVED", "drIsPublic" : "Y"], ["sequenceNum"]);
     if(productContentAndInfoImageManamentList) {
         productContentAndInfoImageManamentList.each { productContentAndInfoImageManament ->
-            contentAssocThumbList = delegator.findByAnd("ContentAssoc", [contentId : productContentAndInfoImageManament.contentId, contentAssocTypeId : "IMAGE_THUMBNAIL"], null, false);
+            contentAssocThumbList = delegator.findByAnd("ContentAssoc", [contentId : productContentAndInfoImageManament.contentId, contentAssocTypeId : "IMAGE_THUMBNAIL"]);
             contentAssocThumb = EntityUtil.getFirst(contentAssocThumbList);
             if(contentAssocThumb) {
-                imageContentThumb = delegator.findOne("Content", [contentId : contentAssocThumb.contentIdTo], false);
+                imageContentThumb = delegator.findByPrimaryKey("Content", [contentId : contentAssocThumb.contentIdTo]);
                 if(imageContentThumb) {
-                    productImageThumb = delegator.findOne("ContentDataResourceView", [contentId : imageContentThumb.contentId, drDataResourceId : imageContentThumb.dataResourceId], false);
+                    productImageThumb = delegator.findByPrimaryKey("ContentDataResourceView", [contentId : imageContentThumb.contentId, drDataResourceId : imageContentThumb.dataResourceId]);
                     productImageMap = [:];
                     productImageMap.productImageThumb = productImageThumb.drObjectInfo;
                     productImageMap.productImage = productContentAndInfoImageManament.drObjectInfo;
@@ -669,7 +668,7 @@ if (product) {
     }
     
     // get product tags
-    productKeywords = delegator.findByAnd("ProductKeyword", ["productId": productId, "keywordTypeId" : "KWT_TAG", "statusId" : "KW_APPROVED"], null, false);
+    productKeywords = delegator.findByAnd("ProductKeyword", ["productId": productId, "keywordTypeId" : "KWT_TAG", "statusId" : "KW_APPROVED"]);
     keywordMap = [:];
     if (productKeywords) {
         for (productKeyword in productKeywords) {

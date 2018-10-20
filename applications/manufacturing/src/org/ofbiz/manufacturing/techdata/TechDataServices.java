@@ -20,6 +20,7 @@ package org.ofbiz.manufacturing.techdata;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -124,7 +125,7 @@ public class TechDataServices {
         List<GenericValue> listRoutingTaskAssoc = null;
 
         try {
-            listRoutingTaskAssoc = delegator.findByAnd("WorkEffortAssoc",UtilMisc.toMap("workEffortIdFrom", workEffortIdFrom,"sequenceNum",sequenceNum), UtilMisc.toList("fromDate"), false);
+            listRoutingTaskAssoc = delegator.findByAnd("WorkEffortAssoc",UtilMisc.toMap("workEffortIdFrom", workEffortIdFrom,"sequenceNum",sequenceNum), UtilMisc.toList("fromDate"));
         } catch (GenericEntityException e) {
             Debug.logWarning(e, module);
             return ServiceUtil.returnError(UtilProperties.getMessage(resource, "ManufacturingTechDataWorkEffortAssocNotExist", UtilMisc.toMap("errorString", e.toString()), locale));
@@ -171,23 +172,23 @@ public class TechDataServices {
     public static GenericValue getTechDataCalendar(GenericValue routingTask) {
         GenericValue machineGroup = null, techDataCalendar = null;
         try {
-            machineGroup = routingTask.getRelatedOne("FixedAsset", true);
+            machineGroup = routingTask.getRelatedOneCache("FixedAsset");
         } catch (GenericEntityException e) {
             Debug.logError("Pb reading FixedAsset associated with routingTask"+e.getMessage(), module);
         }
         if (machineGroup != null) {
             if (machineGroup.getString("calendarId") != null) {
                 try {
-                    techDataCalendar = machineGroup.getRelatedOne("TechDataCalendar", true);
+                    techDataCalendar = machineGroup.getRelatedOneCache("TechDataCalendar");
                 } catch (GenericEntityException e) {
                     Debug.logError("Pb reading TechDataCalendar associated with machineGroup"+e.getMessage(), module);
                 }
             } else {
                 try {
-                    List<GenericValue> machines = machineGroup.getRelated("ChildFixedAsset", null, null, true);
+                    List<GenericValue> machines = machineGroup.getRelatedCache("ChildFixedAsset");
                     if (machines != null && machines.size()>0) {
                         GenericValue machine = EntityUtil.getFirst(machines);
-                        techDataCalendar = machine.getRelatedOne("TechDataCalendar", true);
+                        techDataCalendar = machine.getRelatedOneCache("TechDataCalendar");
                     }
                 } catch (GenericEntityException e) {
                     Debug.logError("Pb reading machine child from machineGroup"+e.getMessage(), module);
@@ -197,7 +198,7 @@ public class TechDataServices {
         if (techDataCalendar == null) {
             try {
                 Delegator delegator = routingTask.getDelegator();
-                techDataCalendar = delegator.findOne("TechDataCalendar",UtilMisc.toMap("calendarId","DEFAULT"), false);
+                techDataCalendar = delegator.findByPrimaryKey("TechDataCalendar",UtilMisc.toMap("calendarId","DEFAULT"));
             } catch (GenericEntityException e) {
                 Debug.logError("Pb reading TechDataCalendar DEFAULT"+e.getMessage(), module);
             }
@@ -269,7 +270,7 @@ public class TechDataServices {
         GenericValue techDataCalendarWeek = null;
         // TODO read TechDataCalendarExcWeek to manage execption week (maybe it's needed to refactor the entity definition
         try {
-            techDataCalendarWeek = techDataCalendar.getRelatedOne("TechDataCalendarWeek", true);
+            techDataCalendarWeek = techDataCalendar.getRelatedOneCache("TechDataCalendarWeek");
         } catch (GenericEntityException e) {
             Debug.logError("Pb reading Calendar Week associated with calendar"+e.getMessage(), module);
             return 0;
@@ -301,7 +302,7 @@ public class TechDataServices {
         GenericValue techDataCalendarWeek = null;
         // TODO read TechDataCalendarExcWeek to manage execption week (maybe it's needed to refactor the entity definition
         try {
-            techDataCalendarWeek = techDataCalendar.getRelatedOne("TechDataCalendarWeek", true);
+            techDataCalendarWeek = techDataCalendar.getRelatedOneCache("TechDataCalendarWeek");
         } catch (GenericEntityException e) {
             Debug.logError("Pb reading Calendar Week associated with calendar"+e.getMessage(), module);
             return ServiceUtil.returnError("Pb reading Calendar Week associated with calendar");
@@ -423,7 +424,7 @@ public class TechDataServices {
         GenericValue techDataCalendarWeek = null;
         // TODO read TechDataCalendarExcWeek to manage exception week (maybe it's needed to refactor the entity definition
         try {
-            techDataCalendarWeek = techDataCalendar.getRelatedOne("TechDataCalendarWeek", true);
+            techDataCalendarWeek = techDataCalendar.getRelatedOneCache("TechDataCalendarWeek");
         } catch (GenericEntityException e) {
             Debug.logError("Pb reading Calendar Week associated with calendar"+e.getMessage(), module);
             return 0;
@@ -455,7 +456,7 @@ public class TechDataServices {
         GenericValue techDataCalendarWeek = null;
         // TODO read TechDataCalendarExcWeek to manage exception week (maybe it's needed to refactor the entity definition
         try {
-            techDataCalendarWeek = techDataCalendar.getRelatedOne("TechDataCalendarWeek", true);
+            techDataCalendarWeek = techDataCalendar.getRelatedOneCache("TechDataCalendarWeek");
         } catch (GenericEntityException e) {
             Debug.logError("Pb reading Calendar Week associated with calendar"+e.getMessage(), module);
             return ServiceUtil.returnError("Pb reading Calendar Week associated with calendar");

@@ -23,9 +23,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +34,9 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import javolution.util.FastList;
+import javolution.util.FastMap;
+
 import org.ofbiz.base.concurrent.ExecutionPool;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralRuntimeException;
@@ -44,14 +45,13 @@ import org.ofbiz.base.util.UtilFormatOut;
 import org.ofbiz.base.util.UtilGenerics;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilObject;
-import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.base.util.UtilXml;
 import org.ofbiz.entity.cache.Cache;
 import org.ofbiz.entity.condition.EntityCondition;
+import org.ofbiz.entity.config.DatasourceInfo;
+import org.ofbiz.entity.config.DelegatorInfo;
 import org.ofbiz.entity.config.EntityConfigUtil;
-import org.ofbiz.entity.config.model.Datasource;
-import org.ofbiz.entity.config.model.DelegatorElement;
 import org.ofbiz.entity.datasource.GenericHelper;
 import org.ofbiz.entity.datasource.GenericHelperFactory;
 import org.ofbiz.entity.datasource.GenericHelperInfo;
@@ -69,12 +69,14 @@ import org.ofbiz.entity.model.ModelRelation;
 import org.ofbiz.entity.model.ModelViewEntity;
 import org.ofbiz.entity.serialize.SerializeException;
 import org.ofbiz.entity.serialize.XmlSerializer;
+import org.ofbiz.entity.transaction.GenericTransactionException;
 import org.ofbiz.entity.transaction.TransactionUtil;
 import org.ofbiz.entity.util.DistributedCacheClear;
 import org.ofbiz.entity.util.EntityCrypto;
 import org.ofbiz.entity.util.EntityFindOptions;
 import org.ofbiz.entity.util.EntityListIterator;
 import org.ofbiz.entity.util.SequenceUtil;
+//import org.ofbiz.service.ServiceDispatcher;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -98,12 +100,15 @@ public class GenericDelegator implements Delegator {
     protected String delegatorTenantId = null;
     private String originalDelegatorName = null;
 
-    protected DelegatorElement delegatorInfo = null;
+    protected DelegatorInfo delegatorInfo = null;
 
     protected Cache cache = null;
 
+    /** keeps a list of field key sets used in the by and cache, a Set (of Sets of fieldNames) for each entityName */
+    protected Map<?,?> andCacheFieldSets = FastMap.newInstance();
+
     protected DistributedCacheClear distributedCacheClear = null;
-    protected boolean warnNoEcaHandler = false;
+    protected boolean enableJMS = true;
     protected EntityEcaHandler<?> entityEcaHandler = null;
     protected SequenceUtil sequencer = null;
     protected EntityCrypto crypto = null;
@@ -117,6 +122,7 @@ public class GenericDelegator implements Delegator {
     private boolean testRollbackInProgress = false;
     private static final AtomicReferenceFieldUpdater<GenericDelegator, LinkedBlockingDeque<?>> testOperationsUpdater = UtilGenerics.cast(AtomicReferenceFieldUpdater.newUpdater(GenericDelegator.class, LinkedBlockingDeque.class, "testOperations"));
     private volatile LinkedBlockingDeque<TestOperation> testOperations = null;
+    private enum OperationType {INSERT, UPDATE, DELETE}
 
     /** @deprecated Use Delegator delegator = DelegatorFactory.getDelegator(delegatorName);
      * @param delegatorName
@@ -130,7 +136,7 @@ public class GenericDelegator implements Delegator {
     protected static List<String> getUserIdentifierStack() {
         List<String> curValList = userIdentifierStack.get();
         if (curValList == null) {
-            curValList = new LinkedList<String>();
+            curValList = FastList.newInstance();
             userIdentifierStack.set(curValList);
         }
         return curValList;
@@ -166,7 +172,7 @@ public class GenericDelegator implements Delegator {
     protected static List<String> getSessionIdentifierStack() {
         List<String> curValList = sessionIdentifierStack.get();
         if (curValList == null) {
-            curValList = new LinkedList<String>();
+            curValList = FastList.newInstance();
             sessionIdentifierStack.set(curValList);
         }
         return curValList;
@@ -206,9 +212,7 @@ public class GenericDelegator implements Delegator {
     protected GenericDelegator(String delegatorFullName) throws GenericEntityException {
         //if (Debug.infoOn()) Debug.logInfo("Creating new Delegator with name \"" + delegatorFullName + "\".", module);
         this.setDelegatorNames(delegatorFullName);
-        this.delegatorInfo = EntityConfigUtil.getDelegator(delegatorBaseName);
 
-        String kekText;
         // before continuing, if there is a tenantId use the base delegator to see if it is valid
         if (UtilValidate.isNotEmpty(this.delegatorTenantId)) {
             Delegator baseDelegator = DelegatorFactory.getDelegator(this.delegatorBaseName);
@@ -218,14 +222,6 @@ public class GenericDelegator implements Delegator {
             } else if ("Y".equals(tenant.getString("disabled"))) {
                 throw new GenericEntityException("No Tenant record found for delegator [" + this.delegatorFullName + "] with tenantId [" + this.delegatorTenantId + "]");
             }
-            GenericValue kekValue = baseDelegator.findOne("TenantKeyEncryptingKey", true, "tenantId", getDelegatorTenantId());
-            if (kekValue != null) {
-                kekText = kekValue.getString("kekText");
-            } else {
-                kekText = this.delegatorInfo.getKeyEncryptingKey();
-            }
-        } else {
-            kekText = this.delegatorInfo.getKeyEncryptingKey();
         }
 
         this.modelReader = ModelReader.getModelReader(delegatorBaseName);
@@ -234,7 +230,7 @@ public class GenericDelegator implements Delegator {
         cache = new Cache(delegatorFullName);
 
         // do the entity model check
-        List<String> warningList = new LinkedList<String>();
+        List<String> warningList = FastList.newInstance();
         Debug.logImportant("Doing entity definition check...", module);
         ModelEntityChecker.checkEntities(this, warningList);
         if (warningList.size() > 0) {
@@ -246,7 +242,7 @@ public class GenericDelegator implements Delegator {
 
         // initialize helpers by group
         Set<String> groupNames = getModelGroupReader().getGroupNames(delegatorBaseName);
-        List<Future<Void>> futures = new LinkedList<Future<Void>>();
+        List<Future<Void>> futures = FastList.newInstance();
         for (String groupName: groupNames) {
             futures.add(ExecutionPool.GLOBAL_EXECUTOR.submit(createHelperCallable(groupName)));
         }
@@ -255,17 +251,11 @@ public class GenericDelegator implements Delegator {
         // NOTE: doing some things before the ECAs and such to make sure it is in place just in case it is used in a service engine startup thing or something
 
         // setup the crypto class; this also after the delegator is in the cache otherwise we get infinite recursion
-        this.crypto = new EntityCrypto(this, kekText);
+        this.crypto = new EntityCrypto(this);
     }
 
     private void initializeOneGenericHelper(String groupName) {
         GenericHelperInfo helperInfo = this.getGroupHelperInfo(groupName);
-        if (helperInfo == null) {
-            if (Debug.infoOn()) {
-                Debug.logInfo("Delegator \"" + delegatorFullName + "\" NOT initializing helper for entity group \"" + groupName + "\" because the group is not associated to this delegator.", module);
-            }
-            return;
-        }
         String helperBaseName = helperInfo.getHelperBaseName();
 
         if (Debug.infoOn()) {
@@ -277,16 +267,16 @@ public class GenericDelegator implements Delegator {
             // get the helper and if configured, do the datasource check
             GenericHelper helper = GenericHelperFactory.getHelper(helperInfo);
 
-            try {
-                Datasource datasource = EntityConfigUtil.getDatasource(helperBaseName);
-                if (datasource.getCheckOnStart()) {
-                    if (Debug.infoOn()) {
-                        Debug.logInfo("Doing database check as requested in entityengine.xml with addMissing=" + datasource.getAddMissingOnStart(), module);
-                    }
-                    helper.checkDataSource(this.getModelEntityMapByGroup(groupName), null, datasource.getAddMissingOnStart());
+            DatasourceInfo datasourceInfo = EntityConfigUtil.getDatasourceInfo(helperBaseName);
+            if (datasourceInfo.checkOnStart) {
+                if (Debug.infoOn()) {
+                    Debug.logInfo("Doing database check as requested in entityengine.xml with addMissing=" + datasourceInfo.addMissingOnStart, module);
                 }
-            } catch (GenericEntityException e) {
-                Debug.logWarning(e, e.getMessage(), module);
+                try {
+                    helper.checkDataSource(this.getModelEntityMapByGroup(groupName), null, datasourceInfo.addMissingOnStart);
+                } catch (GenericEntityException e) {
+                    Debug.logWarning(e, e.getMessage(), module);
+                }
             }
         }
     }
@@ -317,15 +307,15 @@ public class GenericDelegator implements Delegator {
      */
     public synchronized void initEntityEcaHandler() {
         // Nothing to do if already assigned: the class loader has already been called, the class instantiated and casted to EntityEcaHandler
-        if (this.entityEcaHandler != null || this.warnNoEcaHandler) {
+        if (this.entityEcaHandler != null) {
             return;
         }
         // If useEntityEca is false do nothing: the entityEcaHandler member field with a null value would cause its code to do nothing
-        if (this.delegatorInfo.getEntityEcaEnabled()) {
+        if (getDelegatorInfo().useEntityEca) {
             //time to do some tricks with manual class loading that resolves circular dependencies, like calling services
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
             // initialize the entity eca handler
-            String entityEcaHandlerClassName = this.delegatorInfo.getEntityEcaHandlerClassName();
+            String entityEcaHandlerClassName = getDelegatorInfo().entityEcaHandlerClassName;
 
             try {
                 Class<?> eecahClass = loader.loadClass(entityEcaHandlerClassName);
@@ -340,9 +330,8 @@ public class GenericDelegator implements Delegator {
             } catch (ClassCastException e) {
                 Debug.logWarning(e, "EntityEcaHandler class with name " + entityEcaHandlerClassName + " does not implement the EntityEcaHandler interface, Entity ECA Rules will be disabled", module);
             }
-        } else if (!this.warnNoEcaHandler) {
+        } else {
             Debug.logInfo("Entity ECA Handler disabled for delegator [" + delegatorFullName + "]", module);
-            this.warnNoEcaHandler = true;
         }
     }
 
@@ -372,6 +361,13 @@ public class GenericDelegator implements Delegator {
      */
     public String getOriginalDelegatorName() {
         return this.originalDelegatorName == null ? this.delegatorFullName : this.originalDelegatorName;
+    }
+
+    protected DelegatorInfo getDelegatorInfo() {
+        if (this.delegatorInfo == null) {
+            this.delegatorInfo = EntityConfigUtil.getDelegatorInfo(this.delegatorBaseName);
+        }
+        return this.delegatorInfo;
     }
 
     /* (non-Javadoc)
@@ -413,17 +409,17 @@ public class GenericDelegator implements Delegator {
     public Map<String, ModelEntity> getModelEntityMapByGroup(String groupName) throws GenericEntityException {
         Set<String> entityNameSet = getModelGroupReader().getEntityNamesByGroup(groupName);
 
-        if (this.delegatorInfo.getDefaultGroupName().equals(groupName)) {
+        if (this.getDelegatorInfo().defaultGroupName.equals(groupName)) {
             // add all entities with no group name to the Set
             Set<String> allEntityNames = this.getModelReader().getEntityNames();
             for (String entityName: allEntityNames) {
-                if (this.delegatorInfo.getDefaultGroupName().equals(getModelGroupReader().getEntityGroupName(entityName, this.delegatorBaseName))) {
+                if (this.getDelegatorInfo().defaultGroupName.equals(getModelGroupReader().getEntityGroupName(entityName, this.delegatorBaseName))) {
                     entityNameSet.add(entityName);
                 }
             }
         }
 
-        Map<String, ModelEntity> entities = new HashMap<String, ModelEntity>();
+        Map<String, ModelEntity> entities = FastMap.newInstance();
         if (UtilValidate.isEmpty(entityNameSet)) {
             return entities;
         }
@@ -454,7 +450,7 @@ public class GenericDelegator implements Delegator {
      * @see org.ofbiz.entity.Delegator#getGroupHelperName(java.lang.String)
      */
     public String getGroupHelperName(String groupName) {
-        return this.delegatorInfo.getGroupDataSource(groupName);
+        return this.getDelegatorInfo().groupMap.get(groupName);
     }
 
     public GenericHelperInfo getGroupHelperInfo(String entityGroupName) {
@@ -468,7 +464,9 @@ public class GenericDelegator implements Delegator {
         GenericHelperInfo helperInfo = new GenericHelperInfo(entityGroupName, helperBaseName);
 
         // to avoid infinite recursion, and to behave right for shared org.ofbiz.tenant entities, do nothing with the tenantId if the entityGroupName=org.ofbiz.tenant
-        if (UtilValidate.isNotEmpty(this.delegatorTenantId)) {
+        if (UtilValidate.isNotEmpty(this.delegatorTenantId) && !"org.ofbiz.tenant".equals(entityGroupName)) {
+            helperInfo.setTenantId(this.delegatorTenantId);
+
             // get the JDBC parameters from the DB for the entityGroupName and tenantId
             try {
                 // NOTE: instead of caching the GenericHelpInfo object do a cached query here and create a new object each time, will avoid issues when the database data changes during run time
@@ -476,12 +474,15 @@ public class GenericDelegator implements Delegator {
                 Delegator baseDelegator = DelegatorFactory.getDelegator(this.delegatorBaseName);
                 GenericValue tenantDataSource = baseDelegator.findOne("TenantDataSource", true, "tenantId", this.delegatorTenantId, "entityGroupName", entityGroupName);
                 if (tenantDataSource != null) {
-                    helperInfo.setTenantId(this.delegatorTenantId);
                     helperInfo.setOverrideJdbcUri(tenantDataSource.getString("jdbcUri"));
                     helperInfo.setOverrideUsername(tenantDataSource.getString("jdbcUsername"));
                     helperInfo.setOverridePassword(tenantDataSource.getString("jdbcPassword"));
                 } else {
-                    return null;
+                    /* don't log this, happens too many times:
+                    if (Debug.warningOn()) {
+                        Debug.logWarning("Could not find TenantDataSource information for tenantId=[" + this.delegatorTenantId + "] and entityGroupName=[" + entityGroupName + "] in delegator [" + this.delegatorFullName + "]; will be defaulting to settings for the base delegator name [" + this.delegatorBaseName + "]", module);
+                    }
+                    */
                 }
             } catch (GenericEntityException e) {
                 // don't complain about this too much, just log the error if there is one
@@ -522,7 +523,7 @@ public class GenericDelegator implements Delegator {
         if (helperInfo != null) {
             return GenericHelperFactory.getHelper(helperInfo);
         } else {
-            throw new GenericEntityException("There is no datasource (Helper) configured for the entity-group [" + this.getEntityGroupName(entityName) + "]; was trying to find datasource (helper) for entity [" + entityName + "]");
+            throw new GenericEntityException("There is no datasource (Helper) configured for the entity-group [" + this.getEntityGroupName(entityName) + "]; was trying to find datesource (helper) for entity [" + entityName + "]");
         }
     }
 
@@ -631,7 +632,8 @@ public class GenericDelegator implements Delegator {
         }
         GenericValue value = GenericValue.create(entity);
         value.setDelegator(this);
-        value.setAllFields(fields, true, null, null);
+        value.setPKFields(fields, true);
+        value.setNonPKFields(fields, true);
         return value;
     }
 
@@ -815,13 +817,22 @@ public class GenericDelegator implements Delegator {
             }
 
             ecaRunner.evalRules(EntityEcaHandler.EV_RETURN, EntityEcaHandler.OP_CREATE, value, false);
-            TransactionUtil.commit(beganTransaction);
+
             return value;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in createSetNextSeqId operation for entity [" + value.getEntityName() + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -874,13 +885,22 @@ public class GenericDelegator implements Delegator {
             }
 
             ecaRunner.evalRules(EntityEcaHandler.EV_RETURN, EntityEcaHandler.OP_CREATE, value, false);
-            TransactionUtil.commit(beganTransaction);
+
             return value;
-        } catch (Exception e) {
-            String errMsg = "Failure in create operation for entity [" + (value != null ? value.getEntityName() : "null") + "]: " + e.toString() + ". Rolling back transaction.";
+        } catch (GenericEntityException e) {
+            String errMsg = "Failure in create operation for entity [" + (value != null ? value.getEntityName() : "null")  + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -905,13 +925,22 @@ public class GenericDelegator implements Delegator {
             if (value.lockEnabled()) {
                 this.refresh(value);
             }
-            TransactionUtil.commit(beganTransaction);
+
             return value;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in createOrStore operation for entity [" + value.getEntityName() + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -1002,13 +1031,22 @@ public class GenericDelegator implements Delegator {
             }
 
             ecaRunner.evalRules(EntityEcaHandler.EV_RETURN, EntityEcaHandler.OP_REMOVE, primaryKey, false);
-            TransactionUtil.commit(beganTransaction);
+
             return num;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in removeByPrimaryKey operation for entity [" + primaryKey.getEntityName() + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -1067,13 +1105,22 @@ public class GenericDelegator implements Delegator {
             this.saveEntitySyncRemoveInfo(value.getPrimaryKey());
 
             ecaRunner.evalRules(EntityEcaHandler.EV_RETURN, EntityEcaHandler.OP_REMOVE, value, false);
-            TransactionUtil.commit(beganTransaction);
+
             return num;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in removeValue operation for entity [" + value.getEntityName() + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -1129,6 +1176,10 @@ public class GenericDelegator implements Delegator {
                 beganTransaction = TransactionUtil.begin();
             }
 
+            if (doCacheClear) {
+                // always clear cache before the operation
+                this.clearCacheLineByCondition(entityName, condition);
+            }
             ModelEntity modelEntity = getModelReader().getModelEntity(entityName);
             GenericHelper helper = getEntityHelper(entityName);
 
@@ -1138,22 +1189,28 @@ public class GenericDelegator implements Delegator {
             }
 
             int rowsAffected = helper.removeByCondition(modelEntity, condition);
-            if (rowsAffected > 0 && doCacheClear) {
-                this.clearCacheLine(entityName);
-            }
 
             if (testMode) {
                 for (GenericValue entity : removedEntities) {
                     storeForTestRollback(new TestOperation(OperationType.DELETE, entity));
                 }
             }
-            TransactionUtil.commit(beganTransaction);
+
             return rowsAffected;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in removeByCondition operation for entity [" + entityName + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -1177,8 +1234,9 @@ public class GenericDelegator implements Delegator {
             throw new GenericModelException("Could not find relation for relationName: " + relationName + " for value " + value);
         }
 
-        Map<String, Object> fields = new HashMap<String, Object>();
-        for (ModelKeyMap keyMap : relation.getKeyMaps()) {
+        Map<String, Object> fields = FastMap.newInstance();
+        for (int i = 0; i < relation.getKeyMapsSize(); i++) {
+            ModelKeyMap keyMap = relation.getKeyMap(i);
             fields.put(keyMap.getRelFieldName(), value.get(keyMap.getFieldName()));
         }
 
@@ -1235,6 +1293,10 @@ public class GenericDelegator implements Delegator {
                 beganTransaction = TransactionUtil.begin();
             }
 
+            if (doCacheClear) {
+                // always clear cache before the operation
+                this.clearCacheLineByCondition(entityName, condition);
+            }
             ModelEntity modelEntity = getModelReader().getModelEntity(entityName);
             GenericHelper helper = getEntityHelper(entityName);
 
@@ -1244,22 +1306,28 @@ public class GenericDelegator implements Delegator {
             }
 
             int rowsAffected =  helper.storeByCondition(modelEntity, fieldsToSet, condition);
-            if (rowsAffected > 0 && doCacheClear) {
-                this.clearCacheLine(entityName);
-            }
 
             if (testMode) {
                 for (GenericValue entity : updatedEntities) {
                     storeForTestRollback(new TestOperation(OperationType.UPDATE, entity));
                 }
             }
-            TransactionUtil.commit(beganTransaction);
+
             return rowsAffected;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in storeByCondition operation for entity [" + entityName + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -1315,13 +1383,22 @@ public class GenericDelegator implements Delegator {
             }
 
             ecaRunner.evalRules(EntityEcaHandler.EV_RETURN, EntityEcaHandler.OP_STORE, value, false);
-            TransactionUtil.commit(beganTransaction);
+
             return retVal;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in store operation for entity [" + value.getEntityName() + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -1408,13 +1485,22 @@ public class GenericDelegator implements Delegator {
                     }
                 }
             }
-            TransactionUtil.commit(beganTransaction);
+
             return numberChanged;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in storeAll operation: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -1453,13 +1539,22 @@ public class GenericDelegator implements Delegator {
                     numRemoved += this.removeByAnd(value.getEntityName(), value.getAllFields(), doCacheClear);
                 }
             }
-            TransactionUtil.commit(beganTransaction);
+
             return numRemoved;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in removeAll operation: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -1479,16 +1574,11 @@ public class GenericDelegator implements Delegator {
      */
     public GenericValue findOne(String entityName, Map<String, ? extends Object> fields, boolean useCache) throws GenericEntityException {
         GenericPK primaryKey = this.makePK(entityName, fields);
-        if (!primaryKey.isPrimaryKey()) {
-            throw new GenericModelException("[GenericDelegator.findOne] Passed primary key is not a valid primary key: " + primaryKey);
-        }
         EntityEcaRuleRunner<?> ecaRunner = this.getEcaRuleRunner(entityName);
         if (useCache) {
             ecaRunner.evalRules(EntityEcaHandler.EV_CACHE_CHECK, EntityEcaHandler.OP_FIND, primaryKey, false);
-            GenericValue value = cache.get(primaryKey);
-            if (value == GenericValue.NULL_VALUE) {
-                return null;
-            }
+
+            GenericValue value = this.getFromPrimaryKeyCache(primaryKey);
             if (value != null) {
                 return value;
             }
@@ -1505,6 +1595,9 @@ public class GenericDelegator implements Delegator {
             GenericHelper helper = getEntityHelper(entityName);
             GenericValue value = null;
 
+            if (!primaryKey.isPrimaryKey()) {
+                throw new GenericModelException("[GenericDelegator.findOne] Passed primary key is not a valid primary key: " + primaryKey);
+            }
             ecaRunner.evalRules(EntityEcaHandler.EV_RUN, EntityEcaHandler.OP_FIND, primaryKey, false);
             try {
                 value = helper.findByPrimaryKey(primaryKey);
@@ -1525,39 +1618,41 @@ public class GenericDelegator implements Delegator {
             }
 
             ecaRunner.evalRules(EntityEcaHandler.EV_RETURN, EntityEcaHandler.OP_FIND, (value == null ? primaryKey : value), false);
-            TransactionUtil.commit(beganTransaction);
             return value;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in findOne operation for entity [" + entityName + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
     /* (non-Javadoc)
      * @see org.ofbiz.entity.Delegator#findByPrimaryKey(java.lang.String, java.util.Map)
-     * @deprecated use {@link #findOne(String, Map, boolean)}
      */
-    @Deprecated
     public GenericValue findByPrimaryKey(String entityName, Map<String, ? extends Object> fields) throws GenericEntityException {
         return findOne(entityName, fields, false);
     }
 
     /* (non-Javadoc)
      * @see org.ofbiz.entity.Delegator#findByPrimaryKeyCache(java.lang.String, java.lang.Object)
-     * @deprecated use {@link #findOne(String, boolean, Object...)}
      */
-    @Deprecated
     public GenericValue findByPrimaryKeyCache(String entityName, Object... fields) throws GenericEntityException {
         return findByPrimaryKeyCache(entityName, UtilMisc.<String, Object>toMap(fields));
     }
 
     /* (non-Javadoc)
      * @see org.ofbiz.entity.Delegator#findByPrimaryKeyCache(java.lang.String, java.util.Map)
-     * @deprecated use {@link #findOne(String, Map, boolean)}
      */
-    @Deprecated
     public GenericValue findByPrimaryKeyCache(String entityName, Map<String, ? extends Object> fields) throws GenericEntityException {
         return findOne(entityName, fields, true);
     }
@@ -1590,31 +1685,34 @@ public class GenericDelegator implements Delegator {
             if (value != null) value.setDelegator(this);
 
             ecaRunner.evalRules(EntityEcaHandler.EV_RETURN, EntityEcaHandler.OP_FIND, primaryKey, false);
-            TransactionUtil.commit(beganTransaction);
             return value;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in findByPrimaryKeyPartial operation for entity [" + primaryKey.getEntityName() + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
     /* (non-Javadoc)
      * @see org.ofbiz.entity.Delegator#findByAnd(java.lang.String, java.lang.Object)
-     * @deprecated use {@link #findByAnd(String, Map, List, boolean)}
      */
-    @Deprecated
     public List<GenericValue> findByAnd(String entityName, Object... fields) throws GenericEntityException {
-        EntityCondition ecl = EntityCondition.makeCondition(UtilMisc.<String, Object>toMap(fields));
-        return this.findList(entityName, ecl, null, null, null, false);
+        return findByAnd(entityName, UtilMisc.<String, Object>toMap(fields));
     }
 
     /* (non-Javadoc)
      * @see org.ofbiz.entity.Delegator#findByAnd(java.lang.String, java.util.Map)
-     * @deprecated use {@link #findByAnd(String, Map, List, boolean)}
      */
-    @Deprecated
     public List<GenericValue> findByAnd(String entityName, Map<String, ? extends Object> fields) throws GenericEntityException {
         EntityCondition ecl = EntityCondition.makeCondition(fields);
         return this.findList(entityName, ecl, null, null, null, false);
@@ -1622,9 +1720,7 @@ public class GenericDelegator implements Delegator {
 
     /* (non-Javadoc)
      * @see org.ofbiz.entity.Delegator#findByAnd(java.lang.String, java.util.Map, java.util.List)
-     * @deprecated use {@link #findByAnd(String, Map, List, boolean)}
      */
-    @Deprecated
     public List<GenericValue> findByAnd(String entityName, Map<String, ? extends Object> fields, List<String> orderBy) throws GenericEntityException {
         EntityCondition ecl = EntityCondition.makeCondition(fields);
         return this.findList(entityName, ecl, null, orderBy, null, false);
@@ -1632,27 +1728,16 @@ public class GenericDelegator implements Delegator {
 
     /* (non-Javadoc)
      * @see org.ofbiz.entity.Delegator#findByAndCache(java.lang.String, java.util.Map)
-     * @deprecated use {@link #findByAnd(String, Map, List, boolean)}
      */
-    @Deprecated
     public List<GenericValue> findByAndCache(String entityName, Map<String, ? extends Object> fields) throws GenericEntityException {
         return this.findList(entityName, EntityCondition.makeCondition(fields), null, null, null, true);
     }
 
     /* (non-Javadoc)
      * @see org.ofbiz.entity.Delegator#findByAndCache(java.lang.String, java.util.Map, java.util.List)
-     * @deprecated use {@link #findByAnd(String, Map, List, boolean)}
      */
-    @Deprecated
     public List<GenericValue> findByAndCache(String entityName, Map<String, ? extends Object> fields, List<String> orderBy) throws GenericEntityException {
         return this.findList(entityName, EntityCondition.makeCondition(fields), null, orderBy, null, true);
-    }
-
-    /* (non-Javadoc)
-     * @see org.ofbiz.entity.Delegator#findByAnd(java.lang.String, java.util.Map, java.util.List, boolean)
-     */
-    public List<GenericValue> findByAnd(String entityName, Map<String, ? extends Object> fields, List<String> orderBy, boolean useCache) throws GenericEntityException {
-        return this.findList(entityName, EntityCondition.makeCondition(fields), null, orderBy, null, useCache);
     }
 
     /* (non-Javadoc)
@@ -1734,13 +1819,21 @@ public class GenericDelegator implements Delegator {
                 ecaRunner.evalRules(EntityEcaHandler.EV_CACHE_PUT, EntityEcaHandler.OP_FIND, dummyValue, false);
                 this.cache.put(entityName, entityCondition, orderBy, list);
             }
-            TransactionUtil.commit(beganTransaction);
             return list;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in findByCondition operation for entity [" + entityName + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -1801,13 +1894,21 @@ public class GenericDelegator implements Delegator {
             long count = helper.findCountByCondition(modelEntity, whereEntityCondition, havingEntityCondition, findOptions);
 
             ecaRunner.evalRules(EntityEcaHandler.EV_RETURN, EntityEcaHandler.OP_FIND, dummyValue, false);
-            TransactionUtil.commit(beganTransaction);
             return count;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in findListIteratorByCondition operation for entity [DynamicView]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -1830,14 +1931,22 @@ public class GenericDelegator implements Delegator {
             ModelEntity modelEntityTwo = getModelEntity(modelRelationTwo.getRelEntityName());
 
             GenericHelper helper = getEntityHelper(modelEntity);
-            List<GenericValue> result = helper.findByMultiRelation(value, modelRelationOne, modelEntityOne, modelRelationTwo, modelEntityTwo, orderBy);
-            TransactionUtil.commit(beganTransaction);
-            return result;
-        } catch (Exception e) {
+
+            return helper.findByMultiRelation(value, modelRelationOne, modelEntityOne, modelRelationTwo, modelEntityTwo, orderBy);
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in getMultiRelation operation for entity [" + value.getEntityName() + "]: " + e.toString() + ". Rolling back transaction.";
             Debug.logError(e, errMsg, module);
-            TransactionUtil.rollback(beganTransaction, errMsg, e);
-            throw new GenericEntityException(e);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // after rolling back, rethrow the exception
+            throw e;
+        } finally {
+            // only commit the transaction if we started one... this will throw an exception if it fails
+            TransactionUtil.commit(beganTransaction);
         }
     }
 
@@ -1845,15 +1954,7 @@ public class GenericDelegator implements Delegator {
      * @see org.ofbiz.entity.Delegator#getRelated(java.lang.String, java.util.Map, java.util.List, org.ofbiz.entity.GenericValue)
      * @deprecated use {@link #getRelated(String, Map, List, GenericValue, boolean)}
      */
-    @Deprecated
     public List<GenericValue> getRelated(String relationName, Map<String, ? extends Object> byAndFields, List<String> orderBy, GenericValue value) throws GenericEntityException {
-        return getRelated(relationName, byAndFields, orderBy, value, false);
-    }
-
-    /* (non-Javadoc)
-     * @see org.ofbiz.entity.Delegator#getRelated(java.lang.String, java.util.Map, java.util.List, org.ofbiz.entity.GenericValue, boolean)
-     */
-    public List<GenericValue> getRelated(String relationName, Map<String, ? extends Object> byAndFields, List<String> orderBy, GenericValue value, boolean useCache) throws GenericEntityException {
         ModelEntity modelEntity = value.getModelEntity();
         ModelRelation relation = modelEntity.getRelation(relationName);
 
@@ -1863,15 +1964,16 @@ public class GenericDelegator implements Delegator {
 
         // put the byAndFields (if not null) into the hash map first,
         // they will be overridden by value's fields if over-specified this is important for security and cleanliness
-        Map<String, Object> fields = new HashMap<String, Object>();
+        Map<String, Object> fields = FastMap.newInstance();
         if (byAndFields != null) {
             fields.putAll(byAndFields);
         }
-        for (ModelKeyMap keyMap : relation.getKeyMaps()) {
+        for (int i = 0; i < relation.getKeyMapsSize(); i++) {
+            ModelKeyMap keyMap = relation.getKeyMap(i);
             fields.put(keyMap.getRelFieldName(), value.get(keyMap.getFieldName()));
         }
 
-        return this.findByAnd(relation.getRelEntityName(), fields, orderBy, useCache);
+        return this.findByAnd(relation.getRelEntityName(), fields, orderBy);
     }
 
     /* (non-Javadoc)
@@ -1888,11 +1990,12 @@ public class GenericDelegator implements Delegator {
 
         // put the byAndFields (if not null) into the hash map first,
         // they will be overridden by value's fields if over-specified this is important for security and cleanliness
-        Map<String, Object> fields = new HashMap<String, Object>();
+        Map<String, Object> fields = FastMap.newInstance();
         if (byAndFields != null) {
             fields.putAll(byAndFields);
         }
-        for (ModelKeyMap keyMap : relation.getKeyMaps()) {
+        for (int i = 0; i < relation.getKeyMapsSize(); i++) {
+            ModelKeyMap keyMap = relation.getKeyMap(i);
             fields.put(keyMap.getRelFieldName(), value.get(keyMap.getFieldName()));
         }
 
@@ -1903,33 +2006,28 @@ public class GenericDelegator implements Delegator {
      * @see org.ofbiz.entity.Delegator#getRelatedCache(java.lang.String, org.ofbiz.entity.GenericValue)
      * @deprecated use {@link #getRelated(String, Map, List, GenericValue, boolean)}
      */
-    @Deprecated
     public List<GenericValue> getRelatedCache(String relationName, GenericValue value) throws GenericEntityException {
-        return getRelated(relationName, null, null, value, true);
+        ModelEntity modelEntity = value.getModelEntity();
+        ModelRelation relation = modelEntity.getRelation(relationName);
+
+        if (relation == null) {
+            throw new GenericModelException("Could not find relation for relationName: " + relationName + " for value " + value);
+        }
+
+        Map<String, Object> fields = FastMap.newInstance();
+        for (int i = 0; i < relation.getKeyMapsSize(); i++) {
+            ModelKeyMap keyMap = relation.getKeyMap(i);
+            fields.put(keyMap.getRelFieldName(), value.get(keyMap.getFieldName()));
+        }
+
+        return this.findByAndCache(relation.getRelEntityName(), fields, null);
     }
 
     /* (non-Javadoc)
      * @see org.ofbiz.entity.Delegator#getRelatedOne(java.lang.String, org.ofbiz.entity.GenericValue, boolean)
      * @deprecated use {@link #getRelatedOne(String, GenericValue, boolean)}
      */
-    @Deprecated
     public GenericValue getRelatedOne(String relationName, GenericValue value) throws GenericEntityException {
-        return this.getRelatedOne(relationName, value, false);
-    }
-
-    /* (non-Javadoc)
-     * @see org.ofbiz.entity.Delegator#getRelatedOneCache(java.lang.String, org.ofbiz.entity.GenericValue, boolean)
-     * @deprecated use {@link #getRelatedOne(String, GenericValue, boolean)}
-     */
-    @Deprecated
-    public GenericValue getRelatedOneCache(String relationName, GenericValue value) throws GenericEntityException {
-        return this.getRelatedOne(relationName, value, true);
-    }
-
-    /* (non-Javadoc)
-     * @see org.ofbiz.entity.Delegator#getRelatedOne(java.lang.String, org.ofbiz.entity.GenericValue, boolean)
-     */
-    public GenericValue getRelatedOne(String relationName, GenericValue value, boolean useCache) throws GenericEntityException {
         ModelRelation relation = value.getModelEntity().getRelation(relationName);
 
         if (relation == null) {
@@ -1939,12 +2037,37 @@ public class GenericDelegator implements Delegator {
             throw new GenericModelException("Relation is not a 'one' or a 'one-nofk' relation: " + relationName + " of entity " + value.getEntityName());
         }
 
-        Map<String, Object> fields = new HashMap<String, Object>();
-        for (ModelKeyMap keyMap : relation.getKeyMaps()) {
+        Map<String, Object> fields = FastMap.newInstance();
+        for (int i = 0; i < relation.getKeyMapsSize(); i++) {
+            ModelKeyMap keyMap = relation.getKeyMap(i);
             fields.put(keyMap.getRelFieldName(), value.get(keyMap.getFieldName()));
         }
 
-        return this.findOne(relation.getRelEntityName(), fields, useCache);
+        return this.findByPrimaryKey(relation.getRelEntityName(), fields);
+    }
+
+    /* (non-Javadoc)
+     * @see org.ofbiz.entity.Delegator#getRelatedOneCache(java.lang.String, org.ofbiz.entity.GenericValue, boolean)
+     * @deprecated use {@link #getRelatedOne(String, GenericValue, boolean)}
+     */
+    public GenericValue getRelatedOneCache(String relationName, GenericValue value) throws GenericEntityException {
+        ModelEntity modelEntity = value.getModelEntity();
+        ModelRelation relation = modelEntity.getRelation(relationName);
+
+        if (relation == null) {
+            throw new GenericModelException("Could not find relation for relationName: " + relationName + " for value " + value);
+        }
+        if (!"one".equals(relation.getType()) && !"one-nofk".equals(relation.getType())) {
+            throw new GenericModelException("Relation is not a 'one' or a 'one-nofk' relation: " + relationName + " of entity " + value.getEntityName());
+        }
+
+        Map<String, Object> fields = FastMap.newInstance();
+        for (int i = 0; i < relation.getKeyMapsSize(); i++) {
+            ModelKeyMap keyMap = relation.getKeyMap(i);
+            fields.put(keyMap.getRelFieldName(), value.get(keyMap.getFieldName()));
+        }
+
+        return this.findByPrimaryKeyCache(relation.getRelEntityName(), fields);
     }
 
 
@@ -2203,7 +2326,7 @@ public class GenericDelegator implements Delegator {
         if (document == null) {
             return null;
         }
-        List<GenericValue> values = new LinkedList<GenericValue>();
+        List<GenericValue> values = FastList.newInstance();
 
         Element docElement = document.getDocumentElement();
 
@@ -2330,7 +2453,6 @@ public class GenericDelegator implements Delegator {
      */
     public <T> void setEntityEcaHandler(EntityEcaHandler<T> entityEcaHandler) {
         this.entityEcaHandler = entityEcaHandler;
-        this.warnNoEcaHandler = false;
     }
 
     /* (non-Javadoc)
@@ -2358,8 +2480,8 @@ public class GenericDelegator implements Delegator {
             throw new IllegalArgumentException("Could not get next sequenced ID for sequence name: " + seqName);
         }
 
-        if (UtilValidate.isNotEmpty(this.delegatorInfo.getSequencedIdPrefix())) {
-            return this.delegatorInfo.getSequencedIdPrefix() + nextSeqLong.toString();
+        if (UtilValidate.isNotEmpty(this.getDelegatorInfo().sequencedIdPrefix)) {
+            return this.getDelegatorInfo().sequencedIdPrefix + nextSeqLong.toString();
         } else {
             return nextSeqLong.toString();
         }
@@ -2376,13 +2498,17 @@ public class GenericDelegator implements Delegator {
      * @see org.ofbiz.entity.Delegator#getNextSeqIdLong(java.lang.String, long)
      */
     public Long getNextSeqIdLong(String seqName, long staggerMax) {
+        boolean beganTransaction = false;
         try {
-            // FIXME: Replace DCL code with AtomicReference
+            if (alwaysUseTransaction) {
+                beganTransaction = TransactionUtil.begin();
+            }
+
             if (sequencer == null) {
                 synchronized (this) {
                     if (sequencer == null) {
                         ModelEntity seqEntity = this.getModelEntity("SequenceValueItem");
-                        sequencer = new SequenceUtil(this.getEntityHelperInfo("SequenceValueItem"), seqEntity, "seqName", "seqId");
+                        sequencer = new SequenceUtil(this, this.getEntityHelperInfo("SequenceValueItem"), seqEntity, "seqName", "seqId");
                     }
                 }
             }
@@ -2393,11 +2519,25 @@ public class GenericDelegator implements Delegator {
                 Debug.logInfo("Entity definition not found for sequence name " + seqName, module);
             }
             Long newSeqId = sequencer == null ? null : sequencer.getNextSeqId(seqName, staggerMax, seqModelEntity);
+
             return newSeqId;
-        } catch (Exception e) {
+        } catch (GenericEntityException e) {
             String errMsg = "Failure in getNextSeqIdLong operation for seqName [" + seqName + "]: " + e.toString() + ". Rolling back transaction.";
-            Debug.logError(e, errMsg, module);
+            try {
+                // only rollback the transaction if we started one...
+                TransactionUtil.rollback(beganTransaction, errMsg, e);
+            } catch (GenericEntityException e2) {
+                Debug.logError(e2, "[GenericDelegator] Could not rollback transaction: " + e2.toString(), module);
+            }
+            // rather than logging the problem and returning null, thus hiding the problem, throw an exception
             throw new GeneralRuntimeException(errMsg, e);
+        } finally {
+            try {
+                // only commit the transaction if we started one...
+                TransactionUtil.commit(beganTransaction);
+            } catch (GenericTransactionException e1) {
+                Debug.logError(e1, "[GenericDelegator] Could not commit transaction: " + e1.toString(), module);
+            }
         }
     }
 
@@ -2421,7 +2561,7 @@ public class GenericDelegator implements Delegator {
      */
     public void setNextSubSeqId(GenericValue value, String seqFieldName, int numericPadding, int incrementBy) {
         if (value != null && UtilValidate.isEmpty(value.getString(seqFieldName))) {
-            String sequencedIdPrefix = this.delegatorInfo.getSequencedIdPrefix();
+            String sequencedIdPrefix = this.getDelegatorInfo().sequencedIdPrefix;
 
             value.remove(seqFieldName);
             GenericValue lookupValue = this.makeValue(value.getEntityName());
@@ -2434,7 +2574,7 @@ public class GenericDelegator implements Delegator {
                 }
 
                 // get values in whatever order, we will go through all of them to find the highest value
-                List<GenericValue> allValues = this.findByAnd(value.getEntityName(), lookupValue, null, false);
+                List<GenericValue> allValues = this.findByAnd(value.getEntityName(), lookupValue, null);
                 //Debug.logInfo("Get existing values from entity " + value.getEntityName() + " with lookupValue: " + lookupValue + ", and the seqFieldName: " + seqFieldName + ", and the results are: " + allValues, module);
                 Integer highestSeqVal = null;
                 for (GenericValue curValue: allValues) {
@@ -2552,10 +2692,10 @@ public class GenericDelegator implements Delegator {
                     keyName = modelView.getAliasedEntity(modelView.getAlias(field.getName()).getEntityAlias(), modelReader).getEntityName();
                 }
 
-                String encValue = (String) entity.get(field.getName());
-                if (UtilValidate.isNotEmpty(encValue)) {
+                String encHex = (String) entity.get(field.getName());
+                if (UtilValidate.isNotEmpty(encHex)) {
                     try {
-                        entity.dangerousSetNoCheckButFast(field, crypto.decrypt(keyName, encValue));
+                        entity.dangerousSetNoCheckButFast(field, crypto.decrypt(keyName, encHex));
                     } catch (EntityCryptoException e) {
                         // not fatal -- allow returning of the encrypted value
                         Debug.logWarning(e, "Problem decrypting field [" + entityName + " / " + field.getName() + "]", module);
@@ -2675,6 +2815,7 @@ public class GenericDelegator implements Delegator {
         newDelegator.delegatorBaseName = this.delegatorBaseName;
         newDelegator.delegatorInfo = this.delegatorInfo;
         newDelegator.cache = this.cache;
+        newDelegator.andCacheFieldSets = this.andCacheFieldSets;
         newDelegator.distributedCacheClear = this.distributedCacheClear;
         newDelegator.originalDelegatorName = getOriginalDelegatorName();
         newDelegator.entityEcaHandler = this.entityEcaHandler;
@@ -2786,12 +2927,12 @@ public class GenericDelegator implements Delegator {
             //time to do some tricks with manual class loading that resolves circular dependencies, like calling services
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
             // initialize the distributedCacheClear mechanism
-            String distributedCacheClearClassName = this.delegatorInfo.getDistributedCacheClearClassName();
+            String distributedCacheClearClassName = getDelegatorInfo().distributedCacheClearClassName;
 
             try {
                 Class<?> dccClass = loader.loadClass(distributedCacheClearClassName);
                 this.distributedCacheClear = UtilGenerics.cast(dccClass.newInstance());
-                this.distributedCacheClear.setDelegator(this, this.delegatorInfo.getDistributedCacheClearUserLoginId());
+                this.distributedCacheClear.setDelegator(this, getDelegatorInfo().distributedCacheClearUserLoginId);
             } catch (ClassNotFoundException e) {
                 Debug.logWarning(e, "DistributedCacheClear class with name " + distributedCacheClearClassName + " was not found, distributed cache clearing will be disabled", module);
             } catch (InstantiationException e) {
@@ -2806,8 +2947,11 @@ public class GenericDelegator implements Delegator {
         }
     }
     
+    /* (non-Javadoc)
+     * @see org.ofbiz.entity.Delegator#getEnableJMS()
+     */
     public boolean useDistributedCacheClear() {
-        return this.delegatorInfo.getDistributedCacheClearEnabled();
+        return this.getDelegatorInfo().useDistributedCacheClear;
     }
     
 }

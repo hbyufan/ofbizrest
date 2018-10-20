@@ -72,7 +72,7 @@ public class InventoryServices {
         Locale locale = (Locale) context.get("locale");
 
         try {
-            inventoryItem = delegator.findOne("InventoryItem", UtilMisc.toMap("inventoryItemId", inventoryItemId), false);
+            inventoryItem = delegator.findByPrimaryKey("InventoryItem", UtilMisc.toMap("inventoryItemId", inventoryItemId));
         } catch (GenericEntityException e) {
             return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
                     "ProductNotFindInventoryItemWithId", locale) + inventoryItemId);
@@ -224,10 +224,10 @@ public class InventoryServices {
         Locale locale = (Locale) context.get("locale");
 
         try {
-            inventoryTransfer = delegator.findOne("InventoryTransfer",
-                    UtilMisc.toMap("inventoryTransferId", inventoryTransferId), false);
-            inventoryItem = inventoryTransfer.getRelatedOne("InventoryItem", false);
-            destinationFacility = inventoryTransfer.getRelatedOne("ToFacility", false);
+            inventoryTransfer = delegator.findByPrimaryKey("InventoryTransfer",
+                    UtilMisc.toMap("inventoryTransferId", inventoryTransferId));
+            inventoryItem = inventoryTransfer.getRelatedOne("InventoryItem");
+            destinationFacility = inventoryTransfer.getRelatedOne("ToFacility");
         } catch (GenericEntityException e) {
             return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
                     "ProductInventoryItemLookupProblem", 
@@ -337,14 +337,14 @@ public class InventoryServices {
         Locale locale = (Locale) context.get("locale");
 
         try {
-            inventoryTransfer = delegator.findOne("InventoryTransfer",
-                    UtilMisc.toMap("inventoryTransferId", inventoryTransferId), false);
+            inventoryTransfer = delegator.findByPrimaryKey("InventoryTransfer",
+                    UtilMisc.toMap("inventoryTransferId", inventoryTransferId));
             if (UtilValidate.isEmpty(inventoryTransfer)) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
                         "ProductInventoryItemTransferNotFound", 
                         UtilMisc.toMap("inventoryTransferId", inventoryTransferId), locale));
             }
-            inventoryItem = inventoryTransfer.getRelatedOne("InventoryItem", false);
+            inventoryItem = inventoryTransfer.getRelatedOne("InventoryItem");
         } catch (GenericEntityException e) {
             return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
                     "ProductInventoryItemLookupProblem", 
@@ -463,7 +463,7 @@ public class InventoryServices {
             // get the reservations in order of newest first
             List<GenericValue> reservations = null;
             try {
-                reservations = inventoryItem.getRelated("OrderItemShipGrpInvRes", null, UtilMisc.toList("-reservedDatetime"), false);
+                reservations = inventoryItem.getRelated("OrderItemShipGrpInvRes", null, UtilMisc.toList("-reservedDatetime"));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Problem getting related reservations", module);
                 return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
@@ -592,7 +592,7 @@ public class InventoryServices {
             List<GenericValue> orderItemShipGroups = null;
             try {
                 orderItemShipGroups= delegator.findByAnd("OrderItemShipGroup",
-                        UtilMisc.toMap("orderId", orderId), null, false);
+                        UtilMisc.toMap("orderId", orderId));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Cannot get OrderItemShipGroups from orderId" + orderId, module);
             }
@@ -606,10 +606,10 @@ public class InventoryServices {
                                 UtilMisc.toMap("shipGroupSeqId",
                                         orderItemShipGroup.get("shipGroupSeqId"),
                                         "orderId",
-                                        orderId), null, false);
+                                        orderId));
 
                     for (GenericValue assoc: orderItemShipGroupAssoc) {
-                        GenericValue orderItem = assoc.getRelatedOne("OrderItem", false);
+                        GenericValue orderItem = assoc.getRelatedOne("OrderItem");
                         if (orderItem != null) {
                             orderItems.add(orderItem);
                         }
@@ -782,7 +782,7 @@ public class InventoryServices {
         List<GenericValue> facilities = null;
         try {
             if (facilityId != null) {
-                facilities = delegator.findByAnd("Facility", UtilMisc.toMap("facilityId", facilityId), null, false);
+                facilities = delegator.findByAnd("Facility", UtilMisc.toMap("facilityId", facilityId));
             } else {
                 facilities = delegator.findList("Facility", null, null, null, null, false);
             }
@@ -800,7 +800,7 @@ public class InventoryServices {
 
             GenericValue product = null;
             try {
-                product = orderItem.getRelatedOne("Product", true);
+                product = orderItem.getRelatedOneCache("Product");
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Couldn't get product.", module);
                 return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
@@ -874,7 +874,7 @@ public class InventoryServices {
         Map<String, String> contextInput = UtilMisc.toMap("productId", productId, "facilityId", facilityId, "statusId", statusId);
         GenericValue product = null;
         try {
-            product = delegator.findOne("Product", UtilMisc.toMap("productId", productId), false);
+            product = delegator.findByPrimaryKey("Product", UtilMisc.toMap("productId", productId));
         } catch (GenericEntityException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -919,7 +919,7 @@ public class InventoryServices {
 
         List<GenericValue> productPrices = null;
         try {
-            productPrices = delegator.findByAnd("ProductPrice", UtilMisc.toMap("productId",productId), UtilMisc.toList("-fromDate"), true);
+            productPrices = delegator.findByAndCache("ProductPrice", UtilMisc.toMap("productId",productId), UtilMisc.toList("-fromDate"));
         } catch (GenericEntityException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -927,13 +927,13 @@ public class InventoryServices {
         //change this for product price
         for (GenericValue onePrice: productPrices) {
             if (onePrice.getString("productPriceTypeId").equals("DEFAULT_PRICE")) { //defaultPrice
-                result.put("defaultPrice", onePrice.getBigDecimal("price"));
+                result.put("defultPrice", onePrice.getBigDecimal("price"));
             } else if (onePrice.getString("productPriceTypeId").equals("WHOLESALE_PRICE")) {//
                 result.put("wholeSalePrice", onePrice.getBigDecimal("price"));
             } else if (onePrice.getString("productPriceTypeId").equals("LIST_PRICE")) {//listPrice
                 result.put("listPrice", onePrice.getBigDecimal("price"));
             } else {
-                result.put("defaultPrice", onePrice.getBigDecimal("price"));
+                result.put("defultPrice", onePrice.getBigDecimal("price"));
                 result.put("listPrice", onePrice.getBigDecimal("price"));
                 result.put("wholeSalePrice", onePrice.getBigDecimal("price"));
             }

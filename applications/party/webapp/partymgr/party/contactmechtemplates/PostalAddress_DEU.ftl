@@ -23,7 +23,7 @@ under the License.
     <#if postalAddress.address2?has_content>${postalAddress.address2}<br /></#if>
     ${postalAddress.postalCode?if_exists} ${postalAddress.city?if_exists}
     <#if postalAddress.countryGeoId?has_content><br />
-      <#assign country = postalAddress.getRelatedOne("CountryGeo", true)>
+      <#assign country = postalAddress.getRelatedOneCache("CountryGeo")>
       ${country.get("geoName", locale)?default(country.geoId)}
     </#if>
   </div>

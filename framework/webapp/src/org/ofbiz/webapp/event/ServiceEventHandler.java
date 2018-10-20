@@ -124,38 +124,35 @@ public class ServiceEventHandler implements EventHandler {
             throw new EventHandlerException("Problems getting the service model");
         }
 
-        if (Debug.verboseOn()) {
-            Debug.logVerbose("[Processing]: SERVICE Event", module);
-            Debug.logVerbose("[Using delegator]: " + dispatcher.getDelegator().getDelegatorName(), module);
-        }
+        if (Debug.verboseOn()) Debug.logVerbose("[Processing]: SERVICE Event", module);
+        if (Debug.verboseOn()) Debug.logVerbose("[Using delegator]: " + dispatcher.getDelegator().getDelegatorName(), module);
 
+        // get the http upload configuration
+        String maxSizeStr = EntityUtilProperties.getPropertyValue("general.properties", "http.upload.max.size", "-1", dctx.getDelegator());
+        long maxUploadSize = -1;
+        try {
+            maxUploadSize = Long.parseLong(maxSizeStr);
+        } catch (NumberFormatException e) {
+            Debug.logError(e, "Unable to obtain the max upload size from general.properties; using default -1", module);
+            maxUploadSize = -1;
+        }
+        // get the http size threshold configuration - files bigger than this will be
+        // temporarly stored on disk during upload
+        String sizeThresholdStr = EntityUtilProperties.getPropertyValue("general.properties", "http.upload.max.sizethreshold", "10240", dctx.getDelegator());
+        int sizeThreshold = 10240; // 10K
+        try {
+            sizeThreshold = Integer.parseInt(sizeThresholdStr);
+        } catch (NumberFormatException e) {
+            Debug.logError(e, "Unable to obtain the threshold size from general.properties; using default 10K", module);
+            sizeThreshold = -1;
+        }
+        // directory used to temporarily store files that are larger than the configured size threshold
+        String tmpUploadRepository = EntityUtilProperties.getPropertyValue("general.properties", "http.upload.tmprepository", "runtime/tmp", dctx.getDelegator());
+        String encoding = request.getCharacterEncoding();
+        // check for multipart content types which may have uploaded items
         boolean isMultiPart = ServletFileUpload.isMultipartContent(request);
         Map<String, Object> multiPartMap = FastMap.newInstance();
         if (isMultiPart) {
-            // get the http upload configuration
-            String maxSizeStr = EntityUtilProperties.getPropertyValue("general.properties", "http.upload.max.size", "-1", dctx.getDelegator());
-            long maxUploadSize = -1;
-            try {
-                maxUploadSize = Long.parseLong(maxSizeStr);
-            } catch (NumberFormatException e) {
-                Debug.logError(e, "Unable to obtain the max upload size from general.properties; using default -1", module);
-                maxUploadSize = -1;
-            }
-            // get the http size threshold configuration - files bigger than this will be
-            // temporarly stored on disk during upload
-            String sizeThresholdStr = EntityUtilProperties.getPropertyValue("general.properties", "http.upload.max.sizethreshold", "10240", dctx.getDelegator());
-            int sizeThreshold = 10240; // 10K
-            try {
-                sizeThreshold = Integer.parseInt(sizeThresholdStr);
-            } catch (NumberFormatException e) {
-                Debug.logError(e, "Unable to obtain the threshold size from general.properties; using default 10K", module);
-                sizeThreshold = -1;
-            }
-            // directory used to temporarily store files that are larger than the configured size threshold
-            String tmpUploadRepository = EntityUtilProperties.getPropertyValue("general.properties", "http.upload.tmprepository", "runtime/tmp", dctx.getDelegator());
-            String encoding = request.getCharacterEncoding();
-            // check for multipart content types which may have uploaded items
-
             ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory(sizeThreshold, new File(tmpUploadRepository)));
 
             // create the progress listener and add it to the session
@@ -260,7 +257,7 @@ public class ServiceEventHandler implements EventHandler {
 
                 // next check attributes; do this before parameters so that attribute which can be changed by code can override parameters which can't
                 if (UtilValidate.isEmpty(value)) {
-                    Object tempVal = request.getAttribute(UtilValidate.isEmpty(modelParam.requestAttributeName) ? name : modelParam.requestAttributeName);
+                    Object tempVal = request.getAttribute(name);
                     if (tempVal != null) {
                         value = tempVal;
                     }
@@ -286,7 +283,7 @@ public class ServiceEventHandler implements EventHandler {
 
                 // then session
                 if (UtilValidate.isEmpty(value)) {
-                    Object tempVal = request.getSession().getAttribute(UtilValidate.isEmpty(modelParam.sessionAttributeName) ? name : modelParam.sessionAttributeName);
+                    Object tempVal = request.getSession().getAttribute(name);
                     if (tempVal != null) {
                         value = tempVal;
                     }

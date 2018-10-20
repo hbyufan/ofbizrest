@@ -33,8 +33,6 @@ import javolution.util.FastMap;
 import javolution.util.FastSet;
 
 import org.ofbiz.base.location.FlexibleLocation;
-import org.ofbiz.base.metrics.Metrics;
-import org.ofbiz.base.metrics.MetricsFactory;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.FileUtil;
 import org.ofbiz.base.util.GeneralException;
@@ -54,8 +52,8 @@ public class ConfigXMLReader {
     public static final String module = ConfigXMLReader.class.getName();
     public static final String controllerXmlFileName = "/WEB-INF/controller.xml";
 
-    private static final UtilCache<URL, ControllerConfig> controllerCache = UtilCache.createUtilCache("webapp.ControllerConfig");
-    private static final UtilCache<String, List<ControllerConfig>> controllerSearchResultsCache = UtilCache.createUtilCache("webapp.ControllerSearchResults");
+    public static UtilCache<URL, ControllerConfig> controllerCache = UtilCache.createUtilCache("webapp.ControllerConfig");
+    public static UtilCache<String, List<ControllerConfig>> controllerSearchResultsCache = UtilCache.createUtilCache("webapp.ControllerSearchResults");
 
     public static URL getControllerConfigURL(ServletContext context) {
         try {
@@ -68,8 +66,15 @@ public class ConfigXMLReader {
 
     public static ControllerConfig getControllerConfig(URL url) {
         ControllerConfig controllerConfig = controllerCache.get(url);
-        if (controllerConfig == null) {
-            controllerConfig = controllerCache.putIfAbsentAndGet(url, new ControllerConfig(url));
+        if (controllerConfig == null) { // don't want to block here
+            synchronized (ConfigXMLReader.class) {
+                // must check if null again as one of the blocked threads can still enter
+                controllerConfig = controllerCache.get(url);
+                if (controllerConfig == null) {
+                    controllerConfig = new ControllerConfig(url);
+                    controllerCache.put(url, controllerConfig);
+                }
+            }
         }
         return controllerConfig;
     }
@@ -82,7 +87,6 @@ public class ConfigXMLReader {
         private String owner;
         private String securityClass;
         private String defaultRequest;
-        private String statusCode;
 
         private List<URL> includes = FastList.newInstance();
         private Map<String, Event> firstVisitEventList = FastMap.newInstance();
@@ -141,20 +145,6 @@ public class ConfigXMLReader {
                 String protectView = controllerConfig.getProtectView();
                 if (protectView != null) {
                     return protectView;
-                }
-            }
-            return null;
-        }
-
-        public String getStatusCode() {
-            if (statusCode != null) {
-                return statusCode;
-            }
-            for (URL includeLocation: includes) {
-                ControllerConfig controllerConfig = getControllerConfig(includeLocation);
-                String statusCode = controllerConfig.getStatusCode();
-                if (statusCode != null) {
-                    return statusCode;
                 }
             }
             return null;
@@ -312,7 +302,6 @@ public class ConfigXMLReader {
             }
 
             this.errorpage = UtilXml.childElementValue(rootElement, "errorpage");
-            this.statusCode = UtilXml.childElementValue(rootElement, "status-code");
             Element protectElement = UtilXml.firstChildElement(rootElement, "protect");
             if (protectElement != null) {
                 this.protectView = protectElement.getAttribute("view");
@@ -458,7 +447,7 @@ public class ConfigXMLReader {
                     controllerConfigs.add(cc);
                 }
 
-                controllerConfigs = controllerSearchResultsCache.putIfAbsentAndGet(cacheId, controllerConfigs);
+                controllerSearchResultsCache.put(cacheId, controllerConfigs);
             } catch (IOException e) {
                 throw new GeneralException("Error finding controller XML files to lookup request references: " + e.toString(), e);
             }
@@ -541,7 +530,6 @@ public class ConfigXMLReader {
         public boolean securityDirectRequest = true;
 
         public Map<String, RequestResponse> requestResponseMap = FastMap.newInstance();
-        public Metrics metrics = null;
 
         public RequestMap(Element requestMapElement) {
 
@@ -575,11 +563,6 @@ public class ConfigXMLReader {
                 RequestResponse response = new RequestResponse(responseElement);
                 requestResponseMap.put(response.name, response);
             }
-            // Get metrics.
-            Element metricsElement = UtilXml.firstChildElement(requestMapElement, "metric");
-            if (metricsElement != null) {
-                this.metrics = MetricsFactory.getInstance(metricsElement);
-            }
         }
     }
 
@@ -588,18 +571,12 @@ public class ConfigXMLReader {
         public String path;
         public String invoke;
         public boolean globalTransaction = true;
-        public Metrics metrics = null;
 
         public Event(Element eventElement) {
             this.type = eventElement.getAttribute("type");
             this.path = eventElement.getAttribute("path");
             this.invoke = eventElement.getAttribute("invoke");
             this.globalTransaction = !"false".equals(eventElement.getAttribute("global-transaction"));
-            // Get metrics.
-            Element metricsElement = UtilXml.firstChildElement(eventElement, "metric");
-            if (metricsElement != null) {
-                this.metrics = MetricsFactory.getInstance(metricsElement);
-            }
         }
 
         public Event(String type, String path, String invoke, boolean globalTransaction) {
@@ -615,7 +592,6 @@ public class ConfigXMLReader {
         public String name;
         public String type;
         public String value;
-        public String statusCode;
         public boolean saveLastView = false;
         public boolean saveCurrentView = false;
         public boolean saveHomeView = false;
@@ -626,7 +602,6 @@ public class ConfigXMLReader {
             this.name = responseElement.getAttribute("name");
             this.type = responseElement.getAttribute("type");
             this.value = responseElement.getAttribute("value");
-            this.statusCode = responseElement.getAttribute("status-code");
             this.saveLastView = "true".equals(responseElement.getAttribute("save-last-view"));
             this.saveCurrentView = "true".equals(responseElement.getAttribute("save-current-view"));
             this.saveHomeView = "true".equals(responseElement.getAttribute("save-home-view"));

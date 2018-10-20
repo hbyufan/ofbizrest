@@ -45,6 +45,6 @@ if (categoryId) {
             context[key] = value;
         }
     }
-    productCategory = delegator.findOne("ProductCategory", ["productCategoryId" : categoryId], false);
+    productCategory = delegator.findByPrimaryKey("ProductCategory", ["productCategoryId" : categoryId]);
     context.productCategory = productCategory;
 }

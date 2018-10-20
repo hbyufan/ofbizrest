@@ -8,14 +8,13 @@
 		minuteText: 'Minuta',
 		secondText: 'Sekunda',
 		millisecText: 'Milisekunda',
-		microsecText: 'Mikrosekunda',
 		timezoneText: 'Strefa czasowa',
 		currentText: 'Teraz',
 		closeText: 'Gotowe',
-		timeFormat: 'HH:mm',
+		timeFormat: 'hh:mm tt',
 		amNames: ['AM', 'A'],
 		pmNames: ['PM', 'P'],
-		isRTL: false
+		ampm: false
 	};
 	$.timepicker.setDefaults($.timepicker.regional['pl']);
 })(jQuery);

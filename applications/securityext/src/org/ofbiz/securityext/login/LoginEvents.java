@@ -215,7 +215,7 @@ public class LoginEvents {
                 if ("true".equals(UtilProperties.getPropertyValue("security.properties", "password.lowercase"))){
                     passwordToSend=passwordToSend.toLowerCase();
                 }
-                supposedUserLogin.set("currentPassword", HashCrypt.cryptUTF8(LoginServices.getHashType(), null, passwordToSend));
+                supposedUserLogin.set("currentPassword", HashCrypt.cryptPassword(LoginServices.getHashType(), passwordToSend));
                 supposedUserLogin.set("passwordHint", "Auto-Generated Password");
                 if ("true".equals(UtilProperties.getPropertyValue("security.properties", "password.email_password.require_password_change"))){
                     supposedUserLogin.set("requirePasswordChange", "Y");
@@ -235,7 +235,7 @@ public class LoginEvents {
         GenericValue party = null;
 
         try {
-            party = supposedUserLogin.getRelatedOne("Party", false);
+            party = supposedUserLogin.getRelatedOne("Party");
         } catch (GenericEntityException e) {
             Debug.logWarning(e, "", module);
             party = null;

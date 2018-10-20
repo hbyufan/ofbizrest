@@ -872,7 +872,7 @@ under the License.
                             <widgets>
                                 <link target="EditProductSuppliers" style="buttontext" text="${uiLabelMap.ProductNewProductSupplier}">
                                     <parameter param-name="productId"/>
-                                </link>
+                                 </link>
                             </widgets>
                         </section>
                         <screenlet title="${uiLabelMap.PageTitleAddProductSupplier}">
@@ -1235,9 +1235,10 @@ under the License.
                 <decorator-screen name="CommonProductDecorator" location="${parameters.productDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="${uiLabelMap.PageTitleEditProductParties}">
-                            <include-form name="UpdateProductRole" location="component://product/widget/catalog/ProductForms.xml"/>
+                            <platform-specific>
+                                <html><html-template location="component://product/webapp/catalog/product/EditProductParties.ftl"/></html>
+                            </platform-specific>
                         </screenlet>
-                        
                         <screenlet title="${uiLabelMap.ProductAssociatePartyToProduct}">
                             <include-form name="AddProductRole" location="component://product/widget/catalog/ProductForms.xml"/>
                         </screenlet>

@@ -20,10 +20,11 @@ package org.ofbiz.minilang;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import javolution.util.FastMap;
 
 import org.ofbiz.base.location.FlexibleLocation;
 import org.ofbiz.base.util.UtilXml;
@@ -41,7 +42,7 @@ public class SimpleMapProcessor {
     private static final UtilCache<URL, Map<String, MapProcessor>> simpleMapProcessorsURLCache = UtilCache.createUtilCache("minilang.SimpleMapProcessorsURL", 0, 0);
 
     protected static Map<String, MapProcessor> getAllProcessors(URL xmlURL) throws MiniLangException {
-        Map<String, MapProcessor> mapProcessors = new HashMap<String, MapProcessor>();
+        Map<String, MapProcessor> mapProcessors = FastMap.newInstance();
         // read in the file
         Document document = null;
         try {
@@ -76,7 +77,8 @@ public class SimpleMapProcessor {
             if (xmlURL == null) {
                 throw new MiniLangException("Could not find SimpleMapProcessor XML document in resource: " + xmlResource);
             }
-            simpleMapProcessors = simpleMapProcessorsResourceCache.putIfAbsentAndGet(xmlResource, getAllProcessors(xmlURL));
+            simpleMapProcessorsResourceCache.putIfAbsent(xmlResource, getAllProcessors(xmlURL));
+            simpleMapProcessors = simpleMapProcessorsResourceCache.get(xmlResource);
         }
         return simpleMapProcessors;
     }
@@ -84,7 +86,8 @@ public class SimpleMapProcessor {
     protected static Map<String, MapProcessor> getProcessors(URL xmlURL, String name) throws MiniLangException {
         Map<String, MapProcessor> simpleMapProcessors = simpleMapProcessorsURLCache.get(xmlURL);
         if (simpleMapProcessors == null) {
-            simpleMapProcessors = simpleMapProcessorsURLCache.putIfAbsentAndGet(xmlURL, getAllProcessors(xmlURL));
+            simpleMapProcessorsURLCache.putIfAbsent(xmlURL, getAllProcessors(xmlURL));
+            simpleMapProcessors = simpleMapProcessorsURLCache.get(xmlURL);
         }
         return simpleMapProcessors;
     }

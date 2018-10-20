@@ -16,11 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import java.sql.Timestamp;
+import org.ofbiz.entity.condition.EntityCondition;
+import org.ofbiz.entity.condition.EntityOperator;
+import org.ofbiz.entity.util.EntityUtil;
 import org.ofbiz.base.util.UtilDateTime;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.base.util.UtilNumber;
 import org.ofbiz.accounting.util.UtilAccounting;
+import java.math.BigDecimal;
 import com.ibm.icu.util.Calendar;
 
 if (organizationPartyId) {
@@ -84,12 +87,12 @@ if (organizationPartyId) {
             acctgTransEntriesAndTransTotal.totalOfYearToDateCredit = totalOfYearToDateCredit.setScale(decimals, rounding);
 
             if (isDebitAccount) {
-                acctgTransEntriesAndTransTotal.balance = acctgTransEntriesAndTransTotal.debitCreditDifference;
+                balanceOfTheAcctgForYear = balanceOfTheAcctgForYear + acctgTransEntriesAndTransTotal.debitCreditDifference;
+                acctgTransEntriesAndTransTotal.balanceOfTheAcctgForYear = balanceOfTheAcctgForYear.setScale(decimals, rounding);
             } else {
-                acctgTransEntriesAndTransTotal.balance = -1 * acctgTransEntriesAndTransTotal.debitCreditDifference;
+                balanceOfTheAcctgForYear = balanceOfTheAcctgForYear + acctgTransEntriesAndTransTotal.debitCreditDifference;
+                acctgTransEntriesAndTransTotal.balanceOfTheAcctgForYear = balanceOfTheAcctgForYear.setScale(decimals, rounding);
             }
-            balanceOfTheAcctgForYear = balanceOfTheAcctgForYear + acctgTransEntriesAndTransTotal.balance;
-            acctgTransEntriesAndTransTotal.balanceOfTheAcctgForYear = balanceOfTheAcctgForYear.setScale(decimals, rounding);
 
             glAcctgTrialBalanceList.add(acctgTransEntriesAndTransTotal);
 

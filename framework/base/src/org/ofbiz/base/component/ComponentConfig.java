@@ -33,8 +33,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.ofbiz.base.container.ContainerConfig;
-import org.ofbiz.base.container.ContainerException;
 import org.ofbiz.base.location.FlexibleLocation;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.KeyStoreUtil;
@@ -226,20 +224,6 @@ public class ComponentConfig {
         return webappInfos;
     }
 
-    public static List<ContainerConfig.Container> getAllContainers() {
-        return getAllContainers(null);
-    }
-
-    public static List<ContainerConfig.Container> getAllContainers(String componentName) {
-        List<ContainerConfig.Container> containers = FastList.newInstance();
-        for (ComponentConfig cc: getAllComponents()) {
-            if (componentName == null || componentName.equals(cc.getComponentName())) {
-                containers.addAll(cc.getContainers());
-            }
-        }
-        return containers;
-    }
-
     public static boolean isFileResourceLoader(String componentName, String resourceLoaderName) throws ComponentException {
         ComponentConfig cc = ComponentConfig.getComponentConfig(componentName);
         if (cc == null) {
@@ -355,7 +339,6 @@ public class ComponentConfig {
     protected List<TestSuiteInfo> testSuiteInfos = FastList.newInstance();
     protected List<KeystoreInfo> keystoreInfos = FastList.newInstance();
     protected List<WebappInfo> webappInfos = FastList.newInstance();
-    protected List<ContainerConfig.Container> containers = FastList.newInstance();
 
     protected ComponentConfig() {}
 
@@ -368,10 +351,10 @@ public class ComponentConfig {
 
         File rootLocationDir = new File(rootLocation);
         if (!rootLocationDir.exists()) {
-            throw new ComponentException("The component root location does not exist: " + rootLocation);
+            throw new ComponentException("The given component root location is does not exist: " + rootLocation);
         }
         if (!rootLocationDir.isDirectory()) {
-            throw new ComponentException("The component root location is not a directory: " + rootLocation);
+            throw new ComponentException("The given component root location is not a directory: " + rootLocation);
         }
 
         String xmlFilename = rootLocation + "/" + OFBIZ_COMPONENT_XML_FILENAME;
@@ -438,13 +421,6 @@ public class ComponentConfig {
         for (Element curElement: UtilXml.childElementList(ofbizComponentElement, "webapp")) {
             WebappInfo webappInfo = new WebappInfo(this, curElement);
             this.webappInfos.add(webappInfo);
-        }
-
-        // containers
-        try {
-            this.containers.addAll(ContainerConfig.getContainers(xmlUrl));
-        } catch(ContainerException ce) {
-            throw new ComponentException("Error reading containers for component: " + this.globalName, ce);
         }
 
         if (Debug.verboseOn()) Debug.logVerbose("Read component config : [" + rootLocation + "]", module);
@@ -574,10 +550,6 @@ public class ComponentConfig {
 
     public List<WebappInfo> getWebappInfos() {
         return this.webappInfos;
-    }
-
-    public List<ContainerConfig.Container> getContainers() {
-        return this.containers;
     }
 
     public boolean enabled() {

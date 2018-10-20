@@ -135,7 +135,7 @@ public class EditRenderSubContentTransform implements TemplateTransformModel {
                 mimeTypeIdTemp = (String) subContentDataResourceView.get("mimeTypeId");
                 if (UtilValidate.isEmpty(mimeTypeIdTemp) && UtilValidate.isNotEmpty(contentId)) { // will need these below
                     try {
-                        parentContent = delegator.findOne("Content", UtilMisc.toMap("contentId", contentId), false);
+                        parentContent = delegator.findByPrimaryKey("Content", UtilMisc.toMap("contentId", contentId));
                         if (parentContent != null) {
                             mimeTypeIdTemp = (String) parentContent.get("mimeTypeId");
                         }

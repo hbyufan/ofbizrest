@@ -20,15 +20,14 @@ package org.ofbiz.entity.transaction;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicReference;
-
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 
 import org.ofbiz.base.util.Debug;
+import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.GenericEntityException;
+import org.ofbiz.entity.config.DatasourceInfo;
 import org.ofbiz.entity.config.EntityConfigUtil;
-import org.ofbiz.entity.config.model.Datasource;
 import org.ofbiz.entity.datasource.GenericHelperInfo;
 import org.ofbiz.entity.jdbc.CursorConnection;
 
@@ -38,32 +37,48 @@ import org.ofbiz.entity.jdbc.CursorConnection;
 public class TransactionFactory {
 
     public static final String module = TransactionFactory.class.getName();
-    private static final AtomicReference<TransactionFactoryInterface> txFactoryRef = new AtomicReference<TransactionFactoryInterface>(null);
+    public static TransactionFactoryInterface transactionFactory = null;
 
-    private static TransactionFactoryInterface createTransactionFactoryInterface() throws Exception {
-        String className = EntityConfigUtil.getTxFactoryClass();
-        if (className == null) {
-            throw new IllegalStateException("Could not find transaction factory class name definition");
-        }
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        Class<?> tfClass = loader.loadClass(className);
-        return (TransactionFactoryInterface) tfClass.newInstance();
-    }
+    public static TransactionFactoryInterface getTransactionFactory() {
+        if (transactionFactory == null) { // don't want to block here
+            synchronized (TransactionFactory.class) {
+                // must check if null again as one of the blocked threads can still enter
+                if (transactionFactory == null) {
+                    try {
+                        String className = EntityConfigUtil.getTxFactoryClass();
 
-    private static TransactionFactoryInterface getTransactionFactory() {
-        TransactionFactoryInterface instance = txFactoryRef.get();
-        if (instance == null) {
-            try {
-                instance = createTransactionFactoryInterface();
-                if (!txFactoryRef.compareAndSet(null, instance)) {
-                    instance = txFactoryRef.get();
+                        if (className == null) {
+                            throw new IllegalStateException("Could not find transaction factory class name definition");
+                        }
+                        Class<?> tfClass = null;
+
+                        if (UtilValidate.isNotEmpty(className)) {
+                            try {
+                                ClassLoader loader = Thread.currentThread().getContextClassLoader();
+                                tfClass = loader.loadClass(className);
+                            } catch (ClassNotFoundException e) {
+                                Debug.logWarning(e, module);
+                                throw new IllegalStateException("Error loading TransactionFactory class \"" + className + "\": " + e.getMessage());
+                            }
+                        }
+
+                        try {
+                            transactionFactory = (TransactionFactoryInterface) tfClass.newInstance();
+                        } catch (IllegalAccessException e) {
+                            Debug.logWarning(e, module);
+                            throw new IllegalStateException("Error loading TransactionFactory class \"" + className + "\": " + e.getMessage());
+                        } catch (InstantiationException e) {
+                            Debug.logWarning(e, module);
+                            throw new IllegalStateException("Error loading TransactionFactory class \"" + className + "\": " + e.getMessage());
+                        }
+                    } catch (SecurityException e) {
+                        Debug.logError(e, module);
+                        throw new IllegalStateException("Error loading TransactionFactory class: " + e.getMessage());
+                    }
                 }
-            } catch (Exception e) {
-                Debug.logError(e, "Exception thrown while creating TransactionFactoryInterface instance: ", module);
-                throw new IllegalStateException("Error loading TransactionFactory class: " + e);
             }
         }
-        return instance;
+        return transactionFactory;
     }
 
     public static TransactionManager getTransactionManager() {
@@ -87,14 +102,14 @@ public class TransactionFactory {
     }
 
     public static Connection getCursorConnection(GenericHelperInfo helperInfo, Connection con) {
-        Datasource datasourceInfo = EntityConfigUtil.getDatasource(helperInfo.getHelperBaseName());
+        DatasourceInfo datasourceInfo = EntityConfigUtil.getDatasourceInfo(helperInfo.getHelperBaseName());
         if (datasourceInfo == null) {
             Debug.logWarning("Could not find configuration for " + helperInfo.getHelperBaseName() + " datasource.", module);
             return con;
-        } else if (datasourceInfo.getUseProxyCursor()) {
+        } else if (datasourceInfo.useProxyCursor) {
             try {
-                if (datasourceInfo.getResultFetchSize() > 1)
-                    con = CursorConnection.newCursorConnection(con, datasourceInfo.getProxyCursorName(), datasourceInfo.getResultFetchSize());
+                if (datasourceInfo.resultFetchSize > 1)
+                    con = CursorConnection.newCursorConnection(con, datasourceInfo.cursorName, datasourceInfo.resultFetchSize);
             } catch (Exception ex) {
                 Debug.logWarning(ex, "Error creating the cursor connection proxy " + helperInfo.getHelperBaseName() + " datasource.", module);
             }

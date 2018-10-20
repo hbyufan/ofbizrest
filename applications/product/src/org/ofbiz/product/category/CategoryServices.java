@@ -35,7 +35,6 @@ import javolution.util.FastMap;
 import net.sf.json.JSONObject;
 
 import org.ofbiz.base.util.Debug;
-import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.UtilDateTime;
 import org.ofbiz.base.util.UtilGenerics;
 import org.ofbiz.base.util.UtilMisc;
@@ -51,9 +50,7 @@ import org.ofbiz.entity.util.EntityFindOptions;
 import org.ofbiz.entity.util.EntityListIterator;
 import org.ofbiz.entity.util.EntityUtil;
 import org.ofbiz.product.catalog.CatalogWorker;
-import org.ofbiz.product.product.ProductWorker;
 import org.ofbiz.service.DispatchContext;
-import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.service.ServiceUtil;
 
 /**
@@ -72,8 +69,8 @@ public class CategoryServices {
         List<GenericValue> members = null;
 
         try {
-            productCategory = delegator.findOne("ProductCategory", UtilMisc.toMap("productCategoryId", categoryId), true);
-            members = EntityUtil.filterByDate(productCategory.getRelated("ProductCategoryMember", null, UtilMisc.toList("sequenceNum"), true), true);
+            productCategory = delegator.findByPrimaryKeyCache("ProductCategory", UtilMisc.toMap("productCategoryId", categoryId));
+            members = EntityUtil.filterByDate(productCategory.getRelatedCache("ProductCategoryMember", null, UtilMisc.toList("sequenceNum")), true);
             if (Debug.verboseOn()) Debug.logVerbose("Category: " + productCategory + " Member Size: " + members.size() + " Members: " + members, module);
         } catch (GenericEntityException e) {
             Debug.logError(e, "Problem reading product categories: " + e.getMessage(), module);
@@ -108,8 +105,8 @@ public class CategoryServices {
         GenericValue productCategory;
         List<GenericValue> productCategoryMembers;
         try {
-            productCategory = delegator.findOne("ProductCategory", UtilMisc.toMap("productCategoryId", categoryId), true);
-            productCategoryMembers = delegator.findByAnd(entityName, UtilMisc.toMap("productCategoryId", categoryId), orderByFields, true);
+            productCategory = delegator.findByPrimaryKeyCache("ProductCategory", UtilMisc.toMap("productCategoryId", categoryId));
+            productCategoryMembers = delegator.findByAndCache(entityName, UtilMisc.toMap("productCategoryId", categoryId), orderByFields);
         } catch (GenericEntityException e) {
             Debug.logInfo(e, "Error finding previous/next product info: " + e.toString(), module);
             return ServiceUtil.returnFailure(UtilProperties.getMessage(resourceError, "categoryservices.error_find_next_products", UtilMisc.toMap("errMessage", e.getMessage()), locale));
@@ -215,7 +212,6 @@ public class CategoryServices {
 
     public static Map<String, Object> getProductCategoryAndLimitedMembers(DispatchContext dctx, Map<String, ? extends Object> context) {
         Delegator delegator = dctx.getDelegator();
-        LocalDispatcher dispatcher = dctx.getDispatcher();
         String productCategoryId = (String) context.get("productCategoryId");
         boolean limitView = ((Boolean) context.get("limitView")).booleanValue();
         int defaultViewSize = ((Integer) context.get("defaultViewSize")).intValue();
@@ -241,7 +237,7 @@ public class CategoryServices {
         }
 
         Timestamp nowTimestamp = UtilDateTime.nowTimestamp();
-        
+
         int viewIndex = 0;
         try {
             viewIndex = Integer.valueOf((String) context.get("viewIndexString")).intValue();
@@ -258,7 +254,7 @@ public class CategoryServices {
 
         GenericValue productCategory = null;
         try {
-            productCategory = delegator.findOne("ProductCategory", UtilMisc.toMap("productCategoryId", productCategoryId), true);
+            productCategory = delegator.findByPrimaryKeyCache("ProductCategory", UtilMisc.toMap("productCategoryId", productCategoryId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e.getMessage(), module);
             productCategory = null;
@@ -276,23 +272,12 @@ public class CategoryServices {
             lowIndex = 0;
             highIndex = 0;
         }
-        Boolean filterOutOfStock = false ;
-        try {
-            String productStoreId = (String) context.get("productStoreId");
-            if (UtilValidate.isNotEmpty(productStoreId)) {
-                GenericValue productStore = delegator.findOne("ProductStore", UtilMisc.toMap("productStoreId", productStoreId), false);
-                if (productStore != null && "N".equals(productStore.getString("showOutOfStockProducts"))) {
-                    filterOutOfStock = true;
-                }
-            }
-        } catch (GenericEntityException e) {
-            Debug.logWarning(e.getMessage(), module);
-        }
+
         List<GenericValue> productCategoryMembers = null;
         if (productCategory != null) {
             try {
                 if (useCacheForMembers) {
-                    productCategoryMembers = delegator.findByAnd(entityName, UtilMisc.toMap("productCategoryId", productCategoryId), orderByFields, true);
+                    productCategoryMembers = delegator.findByAndCache(entityName, UtilMisc.toMap("productCategoryId", productCategoryId), orderByFields);
                     if (activeOnly) {
                         productCategoryMembers = EntityUtil.filterByDate(productCategoryMembers, true);
                     }
@@ -308,16 +293,7 @@ public class CategoryServices {
                     if (!filterConditions.isEmpty()) {
                         productCategoryMembers = EntityUtil.filterByCondition(productCategoryMembers, EntityCondition.makeCondition(filterConditions, EntityOperator.AND));
                     }
-                    
-                    // filter out of stock products
-                    if (filterOutOfStock) {
-                        try {
-                            productCategoryMembers = ProductWorker.filterOutOfStockProducts(productCategoryMembers, dispatcher, delegator);
-                        } catch (GeneralException e) {
-                            Debug.logWarning("Problem filtering out of stock products :"+e.getMessage(), module);
-                        }
-                        
-                    }
+
                     // filter out the view allow before getting the sublist
                     if (UtilValidate.isNotEmpty(viewProductCategoryId)) {
                         productCategoryMembers = CategoryWorker.filterProductsInCategory(delegator, productCategoryMembers, viewProductCategoryId);
@@ -395,15 +371,7 @@ public class CategoryServices {
                         lowIndex = 1;
                         highIndex = listSize;
                     }
-                    // filter out of stock products
-                    if (filterOutOfStock) {
-                        try {
-                            productCategoryMembers = ProductWorker.filterOutOfStockProducts(productCategoryMembers, dispatcher, delegator);
-                            listSize = productCategoryMembers.size();
-                        } catch (GeneralException e) {
-                            Debug.logWarning("Problem filtering out of stock products :"+e.getMessage(), module);
-                        }
-                    }
+
                     // null safety
                     if (productCategoryMembers == null) {
                         productCategoryMembers = FastList.newInstance();
@@ -431,7 +399,7 @@ public class CategoryServices {
         if (productCategoryMembers != null) result.put("productCategoryMembers", productCategoryMembers);
         return result;
     }
-
+    
     // Please note : the structure of map in this function is according to the JSON data map of the jsTree
     @SuppressWarnings("unchecked")
     public static void getChildCategoryTree(HttpServletRequest request, HttpServletResponse response){
@@ -459,7 +427,7 @@ public class CategoryServices {
         List<String> sortList = org.ofbiz.base.util.UtilMisc.toList("sequenceNum", "title");
         
         try {
-            GenericValue category = delegator.findOne(entityName ,UtilMisc.toMap(primaryKeyName, productCategoryId), false);
+            GenericValue category = delegator.findByPrimaryKey(entityName ,UtilMisc.toMap(primaryKeyName, productCategoryId));
             if (UtilValidate.isNotEmpty(category)) {
                 if (isCatalog.equals("true") && isCategoryType.equals("false")) {
                     CategoryWorker.getRelatedCategories(request, "ChildCatalogList", CatalogWorker.getCatalogTopCategoryId(request, productCategoryId), true);
@@ -467,9 +435,9 @@ public class CategoryServices {
                     
                 } else if(isCatalog.equals("false") && isCategoryType.equals("false")){
                     childOfCats = EntityUtil.filterByDate(delegator.findByAnd("ProductCategoryRollupAndChild", UtilMisc.toMap(
-                            "parentProductCategoryId", productCategoryId ), null, false));
+                            "parentProductCategoryId", productCategoryId )));
                 } else {
-                    childOfCats = EntityUtil.filterByDate(delegator.findByAnd("ProdCatalogCategory", UtilMisc.toMap("prodCatalogId", productCategoryId), null, false));
+                    childOfCats = EntityUtil.filterByDate(delegator.findByAnd("ProdCatalogCategory", UtilMisc.toMap("prodCatalogId", productCategoryId)));
                 }
                 if (UtilValidate.isNotEmpty(childOfCats)) {
                         
@@ -486,10 +454,10 @@ public class CategoryServices {
                         
                         // Get the child list of chosen category
                         childList = EntityUtil.filterByDate(delegator.findByAnd("ProductCategoryRollup", UtilMisc.toMap(
-                                    "parentProductCategoryId", catId), null, false));
+                                    "parentProductCategoryId", catId)));
                         
                         // Get the chosen category information for the categoryContentWrapper
-                        GenericValue cate = delegator.findOne("ProductCategory" ,UtilMisc.toMap("productCategoryId",catId), false);
+                        GenericValue cate = delegator.findByPrimaryKey("ProductCategory" ,UtilMisc.toMap("productCategoryId",catId));
                         
                         // If chosen category's child exists, then put the arrow before category icon
                         if (UtilValidate.isNotEmpty(childList)) {

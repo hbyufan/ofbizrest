@@ -46,12 +46,12 @@ import java.util.WeakHashMap;
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.ofbiz.base.util.Debug;
-import org.ofbiz.base.util.StringUtil;
 import org.ofbiz.base.util.UtilGenerics;
 import org.ofbiz.base.util.UtilMisc;
-import org.ofbiz.base.util.UtilObject;
 import org.ofbiz.base.util.UtilXml;
+import org.ofbiz.base.util.Debug;
+import org.ofbiz.base.util.UtilObject;
+import org.ofbiz.base.util.StringUtil;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericPK;
 import org.ofbiz.entity.GenericValue;
@@ -264,8 +264,7 @@ public class XmlSerializer {
             } else {
                 String byteHex = StringUtil.toHexString(objBytes);
                 Element element = document.createElement("cus-obj");
-                // this is hex encoded so does not need to be in a CDATA block
-                element.appendChild(document.createTextNode(byteHex));
+                element.appendChild(document.createCDATASection(byteHex));
                 return element;
             }
         } else {

@@ -18,39 +18,10 @@
  *******************************************************************************/
 package org.ofbiz.order.shoppingcart;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.ofbiz.base.util.Debug;
-import org.ofbiz.base.util.GeneralException;
-import org.ofbiz.base.util.GeneralRuntimeException;
-import org.ofbiz.base.util.UtilDateTime;
-import org.ofbiz.base.util.UtilFormatOut;
-import org.ofbiz.base.util.UtilGenerics;
-import org.ofbiz.base.util.UtilMisc;
-import org.ofbiz.base.util.UtilNumber;
-import org.ofbiz.base.util.UtilProperties;
-import org.ofbiz.base.util.UtilValidate;
+import org.ofbiz.base.util.*;
 import org.ofbiz.common.DataModelConstants;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.DelegatorFactory;
@@ -75,6 +46,13 @@ import org.ofbiz.product.product.ProductWorker;
 import org.ofbiz.product.store.ProductStoreWorker;
 import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.service.ServiceUtil;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.sql.Timestamp;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Shopping Cart Object
@@ -237,7 +215,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         // clone the additionalPartyRoleMap
         this.additionalPartyRole = new HashMap<String, List<String>>();
         for (Map.Entry<String, List<String>> me : cart.additionalPartyRole.entrySet()) {
-            this.additionalPartyRole.put(me.getKey(), new LinkedList<String>(me.getValue()));
+            this.additionalPartyRole.put(me.getKey(), new LinkedList<String>((Collection<String>) me.getValue()));
         }
 
         // clone the groups
@@ -864,7 +842,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         for(ShoppingCartItem cartItem : this.cartLines) {
             GenericValue product = cartItem.getProduct();
             try {
-                GenericValue productType = product.getRelatedOne("ProductType", true);
+                GenericValue productType = product.getRelatedOneCache("ProductType");
                 if (productType == null || !"N".equals(productType.getString("isPhysical"))) {
                     return false;
                 }
@@ -886,7 +864,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         for (ShoppingCartItem cartItem: shipInfo.getShipItems()) {
             GenericValue product = cartItem.getProduct();
             try {
-                GenericValue productType = product.getRelatedOne("ProductType", true);
+                GenericValue productType = product.getRelatedOneCache("ProductType");
                 if (productType == null || !"N".equals(productType.getString("isPhysical"))) {
                     return false;
                 }
@@ -991,7 +969,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         String itemGroupNumber = itemGroupValue.getString("orderItemGroupSeqId");
         ShoppingCartItemGroup itemGroup = this.getItemGroupByNumber(itemGroupNumber);
         if (itemGroup == null) {
-            ShoppingCartItemGroup parentGroup = addItemGroup(itemGroupValue.getRelatedOne("ParentOrderItemGroup", true));
+            ShoppingCartItemGroup parentGroup = addItemGroup(itemGroupValue.getRelatedOneCache("ParentOrderItemGroup"));
             itemGroup = new ShoppingCartItemGroup(itemGroupNumber, itemGroupValue.getString("groupName"), parentGroup);
             int parsedGroupNumber = Integer.parseInt(itemGroupNumber);
             if (parsedGroupNumber > this.nextGroupNumber) {
@@ -1345,7 +1323,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             return null;
         }
         try {
-            GenericValue party = this.getDelegator().findOne("Party", UtilMisc.toMap("partyId", partyId), true);
+            GenericValue party = this.getDelegator().findByPrimaryKeyCache("Party", UtilMisc.toMap("partyId", partyId));
             if (party == null) {
                 return null;
             }
@@ -1520,7 +1498,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
 
     public String getPaymentMethodTypeId(String paymentMethodId) {
         try {
-            GenericValue pm = this.getDelegator().findOne("PaymentMethod", UtilMisc.toMap("paymentMethodId", paymentMethodId), false);
+            GenericValue pm = this.getDelegator().findByPrimaryKey("PaymentMethod", UtilMisc.toMap("paymentMethodId", paymentMethodId));
             if (pm != null) {
                 return pm.getString("paymentMethodTypeId");
             }
@@ -1742,7 +1720,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         String orderId = this.getOrderId();
         if (UtilValidate.isNotEmpty(orderId)) {
             try {
-                List<GenericValue> declinedPaymentMethods = delegator.findByAnd("OrderPaymentPreference", UtilMisc.toMap("orderId", orderId, "statusId", "PAYMENT_DECLINED"), null, false);
+                List<GenericValue> declinedPaymentMethods = delegator.findByAnd("OrderPaymentPreference", UtilMisc.toMap("orderId", orderId, "statusId", "PAYMENT_DECLINED"));
                 if (!UtilValidate.isEmpty(declinedPaymentMethods)) {
                     List<String> paymentMethodIdsToRemove = new ArrayList<String>();
                     for(GenericValue opp : declinedPaymentMethods) {
@@ -1766,7 +1744,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
 
             GenericValue paymentMethod = null;
             try {
-                paymentMethod = this.getDelegator().findOne("PaymentMethod", UtilMisc.toMap("paymentMethodId", inf.paymentMethodId), false);
+                paymentMethod = this.getDelegator().findByPrimaryKey("PaymentMethod", UtilMisc.toMap("paymentMethodId", inf.paymentMethodId));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "ERROR: Unable to get payment method record to expire : " + inf.paymentMethodId, module);
             }
@@ -1811,7 +1789,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         if (UtilValidate.isNotEmpty(paymentInfo)) {
             for(String paymentMethodId : getPaymentMethodIds()) {
                 try {
-                    GenericValue paymentMethod = this.getDelegator().findOne("PaymentMethod", UtilMisc.toMap("paymentMethodId", paymentMethodId), true);
+                    GenericValue paymentMethod = this.getDelegator().findByPrimaryKeyCache("PaymentMethod", UtilMisc.toMap("paymentMethodId", paymentMethodId));
                     if (paymentMethod != null) {
                         methods.add(paymentMethod);
                     } else {
@@ -1832,7 +1810,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         if (UtilValidate.isNotEmpty(paymentInfo)) {
             for(String id : getPaymentMethodIds()) {
                 try {
-                    types.add(this.getDelegator().findOne("PaymentMethodType", UtilMisc.toMap("paymentMethodTypeId", id), true));
+                    types.add(this.getDelegator().findByPrimaryKeyCache("PaymentMethodType", UtilMisc.toMap("paymentMethodTypeId", id)));
                 } catch (GenericEntityException e) {
                     Debug.logError(e, "Unable to get payment method type from the database", module);
                 }
@@ -1849,7 +1827,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             for(GenericValue pm : paymentMethods) {
                 if ("CREDIT_CARD".equals(pm.getString("paymentMethodTypeId"))) {
                     try {
-                        GenericValue cc = pm.getRelatedOne("CreditCard", false);
+                        GenericValue cc = pm.getRelatedOne("CreditCard");
                         creditCards.add(cc);
                     } catch (GenericEntityException e) {
                         Debug.logError(e, "Unable to get credit card record from payment method : " + pm, module);
@@ -1868,7 +1846,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             for(GenericValue pm : paymentMethods) {
                 if ("GIFT_CARD".equals(pm.getString("paymentMethodTypeId"))) {
                     try {
-                        GenericValue gc = pm.getRelatedOne("GiftCard", false);
+                        GenericValue gc = pm.getRelatedOne("GiftCard");
                         giftCards.add(gc);
                     } catch (GenericEntityException e) {
                         Debug.logError(e, "Unable to get gift card record from payment method : " + pm, module);
@@ -1884,7 +1862,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
     public boolean isPaymentMethodType(String id) {
         GenericValue paymentMethodType = null;
         try {
-            paymentMethodType = this.getDelegator().findOne("PaymentMethodType", UtilMisc.toMap("paymentMethodTypeId", id), true);
+            paymentMethodType = this.getDelegator().findByPrimaryKeyCache("PaymentMethodType", UtilMisc.toMap("paymentMethodTypeId", id));
         } catch (GenericEntityException e) {
             Debug.logInfo(e, "Problems getting PaymentMethodType", module);
         }
@@ -1913,7 +1891,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
      * @throws GenericEntityException
      */
     public GenericValue getGiftCertSettingFromStore(Delegator delegator) throws GenericEntityException {
-        return delegator.findOne("ProductStoreFinActSetting", UtilMisc.toMap("productStoreId", getProductStoreId(), "finAccountTypeId", FinAccountHelper.giftCertFinAccountTypeId), true);
+        return delegator.findByPrimaryKeyCache("ProductStoreFinActSetting", UtilMisc.toMap("productStoreId", getProductStoreId(), "finAccountTypeId", FinAccountHelper.giftCertFinAccountTypeId));
     }
 
     /**
@@ -2223,7 +2201,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             // the products already in the cart
             GenericValue shippingAddress = null;
             try {
-                shippingAddress = this.getDelegator().findOne("PostalAddress", UtilMisc.toMap("contactMechId", shippingContactMechId), false);
+                shippingAddress = this.getDelegator().findByPrimaryKey("PostalAddress", UtilMisc.toMap("contactMechId", shippingContactMechId));
             } catch (GenericEntityException gee) {
                 Debug.logError(gee, "Error retrieving the shipping address for contactMechId [" + shippingContactMechId + "].", module);
             }
@@ -2256,6 +2234,17 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         }
     }
     
+    /**
+     * Use alternative methods setShippingContactMechId(int idx, String shippingContactMechId)
+     * or setAllShippingContactMechId(String shippingContactMechId)
+     * <p>
+     * @deprecated
+     * @param shippingContactMechId
+     */
+    public void setShippingContactMechId(String shippingContactMechId) {
+        this.setShippingContactMechId(0, shippingContactMechId);
+    }
+
     /** Returns the shipping contact mech id. */
     public String getShippingContactMechId(int idx) {
         CartShipInfo csi = this.getShipInfo(idx);
@@ -2284,6 +2273,17 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         }
     }
     
+    /**
+     * Use alternative methods setShipmentMethodTypeId(int idx, String shipmentMethodTypeId)
+     * or setAllShipmentMethodTypeId(String shipmentMethodTypeId)
+     * <p>
+     * @deprecated
+     * @param shipmentMethodTypeId
+     */
+    public void setShipmentMethodTypeId(String shipmentMethodTypeId) {
+        this.setShipmentMethodTypeId(0, shipmentMethodTypeId);
+    }
+
     /** Returns the shipment method type ID */
     public String getShipmentMethodTypeId(int idx) {
         CartShipInfo csi = this.getShipInfo(idx);
@@ -2299,8 +2299,8 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         String shipmentMethodTypeId = this.getShipmentMethodTypeId(idx);
         if (UtilValidate.isNotEmpty(shipmentMethodTypeId)) {
             try {
-                return this.getDelegator().findOne("ShipmentMethodType",
-                        UtilMisc.toMap("shipmentMethodTypeId", shipmentMethodTypeId), false);
+                return this.getDelegator().findByPrimaryKey("ShipmentMethodType",
+                        UtilMisc.toMap("shipmentMethodTypeId", shipmentMethodTypeId));
             } catch (GenericEntityException e) {
                 Debug.logWarning(e, module);
             }
@@ -2340,6 +2340,17 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         }
     }
 
+    /**
+     * Use alternative methods setShippingInstructions(int idx, String shippingInstructions)
+     * or setAllShippingInstructions(String shippingInstructions)
+     * <p>
+     * @deprecated
+     * @param shippingInstructions
+     */
+    public void setShippingInstructions(String shippingInstructions) {
+        this.setShippingInstructions(0, shippingInstructions);
+    }
+
     /** Returns the shipping instructions. */
     public String getShippingInstructions(int idx) {
         CartShipInfo csi = this.getShipInfo(idx);
@@ -2369,6 +2380,16 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         }
     }
     
+    /**
+     * Use alternative methods setMaySplit(int idx, Boolean maySplit)
+     * or setAllMaySplit(Boolean maySplit)
+     * <p>
+     * @deprecated
+     * @param maySplit
+     */
+    public void setMaySplit(Boolean maySplit) {
+        this.setMaySplit(0, maySplit);
+    }
 
     /** Returns Boolean.TRUE if the order may be split (null if unspecified) */
     public String getMaySplit(int idx) {
@@ -2397,6 +2418,17 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         }
     }
     
+    /**
+     * Use alternative methods setGiftMessage(int idx, String giftMessage)
+     * or setAllGiftMessage(String giftMessage)
+     * <p>
+     * @deprecated
+     * @param giftMessage
+     */
+    public void setGiftMessage(String giftMessage) {
+        this.setGiftMessage(0, giftMessage);
+    }
+
     public String getGiftMessage(int idx) {
         CartShipInfo csi = this.getShipInfo(idx);
         return csi.giftMessage;
@@ -2425,6 +2457,17 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         }
     }
     
+    /**
+     * Use alternative methods setIsGift(int idx, Boolean isGift)
+     * or setAllIsGift(Boolean isGift)
+     * <p>
+     * @deprecated
+     * @param isGift
+     */
+    public void setIsGift(Boolean isGift) {
+        this.setIsGift(0, isGift);
+    }
+
     public String getIsGift(int idx) {
         CartShipInfo csi = this.getShipInfo(idx);
         return csi.isGift;
@@ -2451,6 +2494,17 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         }
     }
     
+    /**
+     * Use alternative methods setCarrierPartyId(int idx, String carrierPartyId)
+     * or setAllCarrierPartyId(String carrierPartyId)
+     * <p>
+     * @deprecated
+     * @param carrierPartyId
+     */
+    public void setCarrierPartyId(String carrierPartyId) {
+        this.setCarrierPartyId(0, carrierPartyId);
+    }
+
     public String getCarrierPartyId(int idx) {
         CartShipInfo csi = this.getShipInfo(idx);
         return csi.carrierPartyId;
@@ -2484,6 +2538,17 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         for(int x=0; x < shipInfo.size(); x++) {
             this.setProductStoreShipMethId(x, productStoreShipMethId);
         }
+    }
+
+    /**
+     * Use alternative methods setProductStoreShipMethId(int idx, String productStoreShipMethId)
+     * or setAllProductStoreShipMethId(String productStoreShipMethId)
+     * <p>
+     * @deprecated
+     * @param productStoreShipMethId
+     */
+    public void setProductStoreShipMethId(String productStoreShipMethId) {
+        this.setProductStoreShipMethId(0, productStoreShipMethId);
     }
 
     public void setShipGroupFacilityId(int idx, String facilityId) {
@@ -2527,7 +2592,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
     public GenericValue getShippingAddress(int idx) {
         if (this.getShippingContactMechId(idx) != null) {
             try {
-                return getDelegator().findOne("PostalAddress", UtilMisc.toMap("contactMechId", this.getShippingContactMechId(idx)), false);
+                return getDelegator().findByPrimaryKey("PostalAddress", UtilMisc.toMap("contactMechId", this.getShippingContactMechId(idx)));
             } catch (GenericEntityException e) {
                 Debug.logWarning(e.toString(), module);
                 return null;
@@ -2577,11 +2642,11 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             // set as the default shipping location the first from the list of available shipping locations
             if (this.getPartyId() != null && !this.getPartyId().equals("_NA_")) {
                 try {
-                    GenericValue orderParty = this.getDelegator().findOne("Party", UtilMisc.toMap("partyId", this.getPartyId()), false);
+                    GenericValue orderParty = this.getDelegator().findByPrimaryKey("Party", UtilMisc.toMap("partyId", this.getPartyId()));
                     Collection<GenericValue> shippingContactMechList = ContactHelper.getContactMech(orderParty, "SHIPPING_LOCATION", "POSTAL_ADDRESS", false);
                     if (UtilValidate.isNotEmpty(shippingContactMechList)) {
                         GenericValue shippingContactMech = (shippingContactMechList.iterator()).next();
-                        this.setAllShippingContactMechId(shippingContactMech.getString("contactMechId"));
+                        this.setShippingContactMechId(shippingContactMech.getString("contactMechId"));
                     }
                 } catch (GenericEntityException e) {
                     Debug.logError(e, "Error setting shippingContactMechId in setDefaultCheckoutOptions() method.", module);
@@ -2591,8 +2656,8 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             ShippingEstimateWrapper shipEstimateWrapper = org.ofbiz.order.shoppingcart.shipping.ShippingEstimateWrapper.getWrapper(dispatcher, this, 0);
             GenericValue carrierShipmentMethod = EntityUtil.getFirst(shipEstimateWrapper.getShippingMethods());
             if (carrierShipmentMethod != null) {
-                this.setAllShipmentMethodTypeId(carrierShipmentMethod.getString("shipmentMethodTypeId"));
-                this.setAllCarrierPartyId(carrierShipmentMethod.getString("partyId"));
+                this.setShipmentMethodTypeId(carrierShipmentMethod.getString("shipmentMethodTypeId"));
+                this.setCarrierPartyId(carrierShipmentMethod.getString("partyId"));
             }
         } else {
             // checkout options for purchase orders
@@ -2612,12 +2677,12 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
                 }
             }
             // shipping options
-            this.setAllShipmentMethodTypeId("NO_SHIPPING");
-            this.setAllCarrierPartyId("_NA_");
-            this.setAllShippingInstructions("");
-            this.setAllGiftMessage("");
-            this.setAllMaySplit(Boolean.TRUE);
-            this.setAllIsGift(Boolean.FALSE);
+            this.setShipmentMethodTypeId(0, "NO_SHIPPING");
+            this.setCarrierPartyId(0, "_NA_");
+            this.setShippingInstructions(0, "");
+            this.setGiftMessage(0, "");
+            this.setMaySplit(0, Boolean.TRUE);
+            this.setIsGift(0, Boolean.FALSE);
             //this.setInternalCode(internalCode);
         }
     }
@@ -2685,7 +2750,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         List cartAdjustments = this.getAdjustments();
         List tempAdjustmentsList = FastList.newInstance();
         if (cartAdjustments != null) {
-            Iterator<GenericValue> cartAdjustmentIter = cartAdjustments.iterator();
+            Iterator cartAdjustmentIter = cartAdjustments.iterator();
             while (cartAdjustmentIter.hasNext()) {
                 GenericValue checkOrderAdjustment = (GenericValue) cartAdjustmentIter.next();
                 if (UtilValidate.isEmpty(checkOrderAdjustment.getString("shipGroupSeqId")) || DataModelConstants.SEQ_ID_NA.equals(checkOrderAdjustment.getString("shipGroupSeqId"))) {
@@ -2728,7 +2793,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             }
             itemsTotal = itemsTotal.add(cartItem.getItemSubTotal());
         }
-        return itemsTotal.add(this.getOrderOtherAdjustmentTotal());
+        return itemsTotal;
     }
 
     /**
@@ -2743,7 +2808,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             if (payment.paymentMethodId != null) {
                 try {
                     // need to determine the payment method type from the payment method
-                    GenericValue paymentMethod = this.getDelegator().findOne("PaymentMethod", UtilMisc.toMap("paymentMethodId", payment.paymentMethodId), true);
+                    GenericValue paymentMethod = this.getDelegator().findByPrimaryKeyCache("PaymentMethod", UtilMisc.toMap("paymentMethodId", payment.paymentMethodId));
                     if (paymentMethod != null) {
                         thisPaymentMethodTypeId = paymentMethod.getString("paymentMethodTypeId");
                     }
@@ -3156,27 +3221,12 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         return new HashMap<GenericPK, String>(this.desiredAlternateGiftByAction);
     }
 
-    public void addProductPromoUse(String productPromoId, String productPromoCodeId, BigDecimal totalDiscountAmount, BigDecimal quantityLeftInActions, Map<ShoppingCartItem,BigDecimal> usageInfoMap) {
+    public void addProductPromoUse(String productPromoId, String productPromoCodeId, BigDecimal totalDiscountAmount, BigDecimal quantityLeftInActions) {
         if (UtilValidate.isNotEmpty(productPromoCodeId) && !this.productPromoCodes.contains(productPromoCodeId)) {
             throw new IllegalStateException("Cannot add a use to a promo code use for a code that has not been entered.");
         }
         if (Debug.verboseOn()) Debug.logVerbose("Used promotion [" + productPromoId + "] with code [" + productPromoCodeId + "] for total discount [" + totalDiscountAmount + "] and quantity left in actions [" + quantityLeftInActions + "]", module);
-        this.productPromoUseInfoList.add(new ProductPromoUseInfo(productPromoId, productPromoCodeId, totalDiscountAmount, quantityLeftInActions, usageInfoMap));
-    }
-
-    public void removeProductPromoUse(String productPromoId) {
-        if (!productPromoId.isEmpty()) {
-            int index = -1;
-            for (ProductPromoUseInfo productPromoUseInfo : this.productPromoUseInfoList) {
-                if (productPromoId.equals(productPromoUseInfo.productPromoId)) {
-                    index = this.productPromoUseInfoList.indexOf(productPromoUseInfo);
-                    break;
-                }
-            }
-            if (index != -1) {
-                this.productPromoUseInfoList.remove(index);
-            }
-        }
+        this.productPromoUseInfoList.add(new ProductPromoUseInfo(productPromoId, productPromoCodeId, totalDiscountAmount, quantityLeftInActions));
     }
 
     public void clearProductPromoUseInfo() {
@@ -3445,7 +3495,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             String productName = product.getString("productName");
             String description = product.getString("description");
             Map<String, Object> serviceContext = new HashMap<String, Object>();
-            GenericValue permUserLogin = delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", "system"), false);
+            GenericValue permUserLogin = delegator.findByPrimaryKey("UserLogin", UtilMisc.toMap("userLoginId", "system"));
             String internalName = item.getProductId() + "_" + configId;
             serviceContext.put("internalName", internalName);
             serviceContext.put("productName", productName);
@@ -3485,7 +3535,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
 
             //create a new WorkEffortGoodStandard based on existing one of AGGREGATED product .
             //Another approach could be to get WorkEffortGoodStandard of the AGGREGATED product while creating production run.
-            List<GenericValue> productionRunTemplates = delegator.findByAnd("WorkEffortGoodStandard", UtilMisc.toMap("productId", item.getProductId(), "workEffortGoodStdTypeId", "ROU_PROD_TEMPLATE", "statusId", "WEGS_CREATED"), null, false);
+            List<GenericValue> productionRunTemplates = delegator.findByAnd("WorkEffortGoodStandard", UtilMisc.toMap("productId", item.getProductId(), "workEffortGoodStdTypeId", "ROU_PROD_TEMPLATE", "statusId", "WEGS_CREATED"));
             GenericValue productionRunTemplate = EntityUtil.getFirst(EntityUtil.filterByDate(productionRunTemplates));
             if (productionRunTemplate != null) {
                 serviceContext.clear();
@@ -3881,7 +3931,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             if (responses != null) {
                 for(String responseId : responses) {
                     try {
-                        response = this.getDelegator().findOne("SurveyResponse", UtilMisc.toMap("surveyResponseId", responseId), false);
+                        response = this.getDelegator().findByPrimaryKey("SurveyResponse", UtilMisc.toMap("surveyResponseId", responseId));
                     } catch (GenericEntityException e) {
                         Debug.logError(e, "Unable to obtain SurveyResponse record for ID : " + responseId, module);
                     }
@@ -4057,7 +4107,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
                 String requirementId = item.getRequirementId();
                 if (requirementId != null) {
                     try {
-                        List<GenericValue> commitments = getDelegator().findByAnd("OrderRequirementCommitment", UtilMisc.toMap("requirementId", requirementId), null, false);
+                        List<GenericValue> commitments = getDelegator().findByAnd("OrderRequirementCommitment", UtilMisc.toMap("requirementId", requirementId));
                         // TODO: multiple commitments for the same requirement are still not supported
                         GenericValue commitment = EntityUtil.getFirst(commitments);
                         if (commitment != null) {
@@ -4178,7 +4228,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         String facilityId = null;
         if (UtilValidate.isNotEmpty(this.getProductStoreId())) {
             try {
-                GenericValue productStore = this.getDelegator().findOne("ProductStore", UtilMisc.toMap("productStoreId", this.getProductStoreId()), true);
+                GenericValue productStore = this.getDelegator().findByPrimaryKeyCache("ProductStore", UtilMisc.toMap("productStoreId", this.getProductStoreId()));
                 facilityId = productStore.getString("inventoryFacilityId");
             } catch (Exception e) {
                 Debug.logError(UtilProperties.getMessage(resource_error,"OrderProblemGettingProductStoreRecords", locale) + e.getMessage(), module);
@@ -4324,7 +4374,6 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             }
         }
 
-        @Override
         public boolean equals(java.lang.Object obj) {
             if (obj instanceof BasePriceOrderComparator) {
                 return this.ascending == ((BasePriceOrderComparator) obj).ascending;
@@ -4396,7 +4445,6 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             }
         }
 
-        @Override
         public boolean equals(Object obj) {
             if (obj == null) return false;
             ShoppingCartItemGroup that = (ShoppingCartItemGroup) obj;
@@ -4407,43 +4455,23 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
         }
     }
 
-    public static class ProductPromoUseInfo implements Serializable, Comparable<ProductPromoUseInfo> {
+    public static class ProductPromoUseInfo implements Serializable {
         public String productPromoId = null;
         public String productPromoCodeId = null;
         public BigDecimal totalDiscountAmount = BigDecimal.ZERO;
         public BigDecimal quantityLeftInActions = BigDecimal.ZERO;
-        private Map<ShoppingCartItem,BigDecimal> usageInfoMap = null;
 
-        public ProductPromoUseInfo(String productPromoId, String productPromoCodeId, BigDecimal totalDiscountAmount, BigDecimal quantityLeftInActions, Map<ShoppingCartItem,BigDecimal> usageInfoMap) {
+        public ProductPromoUseInfo(String productPromoId, String productPromoCodeId, BigDecimal totalDiscountAmount, BigDecimal quantityLeftInActions) {
             this.productPromoId = productPromoId;
             this.productPromoCodeId = productPromoCodeId;
             this.totalDiscountAmount = totalDiscountAmount;
             this.quantityLeftInActions = quantityLeftInActions;
-            this.usageInfoMap = usageInfoMap;
         }
 
         public String getProductPromoId() { return this.productPromoId; }
         public String getProductPromoCodeId() { return this.productPromoCodeId; }
         public BigDecimal getTotalDiscountAmount() { return this.totalDiscountAmount; }
         public BigDecimal getQuantityLeftInActions() { return this.quantityLeftInActions; }
-        public Map<ShoppingCartItem,BigDecimal> getUsageInfoMap() { return this.usageInfoMap; }
-        public BigDecimal getUsageWeight() {
-            Iterator<ShoppingCartItem> lineItems = this.usageInfoMap.keySet().iterator();
-            BigDecimal totalAmount = BigDecimal.ZERO;
-            while (lineItems.hasNext()) {
-                ShoppingCartItem lineItem = lineItems.next();
-                totalAmount = totalAmount.add(lineItem.getBasePrice().multiply(usageInfoMap.get(lineItem)));
-            }
-            if (totalAmount.compareTo(BigDecimal.ZERO) == 0) {
-                return BigDecimal.ZERO;
-            } else {
-                return getTotalDiscountAmount().negate().divide(totalAmount, scale, rounding);
-            }
-        }
-
-        public int compareTo(ProductPromoUseInfo other) {
-            return other.getUsageWeight().compareTo(getUsageWeight());
-        }
     }
 
     public static class CartShipInfo implements Serializable {
@@ -4676,7 +4704,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
                 // the products already in the cart
                 GenericValue shippingAddress = null;
                 try {
-                    shippingAddress = item.getDelegator().findOne("PostalAddress", UtilMisc.toMap("contactMechId", this.internalContactMechId), false);
+                    shippingAddress = item.getDelegator().findByPrimaryKey("PostalAddress", UtilMisc.toMap("contactMechId", this.internalContactMechId));
                 } catch (GenericEntityException gee) {
                     Debug.logError(gee, "Error retrieving the shipping address for contactMechId [" + this.internalContactMechId + "].", module);
                 }
@@ -4792,7 +4820,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             }
 
             try {
-                return delegator.findOne(entityName, lookupFields, true);
+                return delegator.findByPrimaryKeyCache(entityName, lookupFields);
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }
@@ -4813,18 +4841,18 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
                 try {
                     GenericValue pmObj = null;
                     if ("CREDIT_CARD".equals(paymentMethodTypeId)) {
-                        pmObj = delegator.findOne("CreditCard", lookupFields, false);
+                        pmObj = delegator.findByPrimaryKey("CreditCard", lookupFields);
                     } else if ("GIFT_CARD".equals(paymentMethodTypeId)) {
-                        pmObj = delegator.findOne("GiftCard", lookupFields, false);
+                        pmObj = delegator.findByPrimaryKey("GiftCard", lookupFields);
                     } else if ("EFT_ACCOUNT".equals(paymentMethodTypeId)) {
-                        pmObj = delegator.findOne("EftAccount", lookupFields, false);
+                        pmObj = delegator.findByPrimaryKey("EftAccount", lookupFields);
                     } else if ("EXT_BILLACT".equals(paymentMethodTypeId)) {
-                        pmObj = delegator.findOne("BillingAccount", lookupFields, false);
+                        pmObj = delegator.findByPrimaryKey("BillingAccount", lookupFields);
                     } else if ("EXT_PAYPAL".equals(paymentMethodTypeId)) {
-                        pmObj = delegator.findOne("PayPalPaymentMethod", lookupFields, false);
+                        pmObj = delegator.findByPrimaryKey("PayPalPaymentMethod", lookupFields);
                     }
                     if (pmObj != null) {
-                        postalAddress = pmObj.getRelatedOne("PostalAddress", false);
+                        postalAddress = pmObj.getRelatedOne("PostalAddress");
                     } else {
                         Debug.logInfo("No PaymentMethod Object Found - " + paymentMethodId, module);
                     }
@@ -4864,7 +4892,7 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
                 GenericValue productStore = null;
                 String splitPayPrefPerShpGrp = null;
                 try {
-                    productStore = delegator.findOne("ProductStore", UtilMisc.toMap("productStoreId", cart.getProductStoreId()), false);
+                    productStore = delegator.findByPrimaryKey("ProductStore", UtilMisc.toMap("productStoreId", cart.getProductStoreId()));
                 } catch (GenericEntityException e) {
                     Debug.logError(e.toString(), module);
                 }
@@ -5022,13 +5050,11 @@ public class ShoppingCart implements Iterable<ShoppingCartItem>, Serializable {
             }
         }
 
-        @Override
         public String toString() {
             return "Pm: " + paymentMethodId + " / PmType: " + paymentMethodTypeId + " / Amt: " + amount + " / Ref: " + refNum[0] + "!" + refNum[1];
         }
     }
 
-    @Override
     protected void finalize() throws Throwable {
         // DEJ20050518 we should not call clear because it kills the auto-save shopping list and is unnecessary given that when this object is GC'ed it will cause everything it points to that isn't referenced anywhere else to be GC'ed too: this.clear();
         super.finalize();

@@ -38,7 +38,7 @@ imageManagementPath = FlexibleStringExpander.expandString(UtilProperties.getProp
 String fileType = "original";
 String productId = request.getParameter("productId");
 
-productContentList = delegator.findByAnd("ProductContentAndInfo", UtilMisc.toMap("productId", productId, "productContentTypeId", "DEFAULT_IMAGE"), null, false);
+productContentList = delegator.findByAnd("ProductContentAndInfo", UtilMisc.toMap("productId", productId, "productContentTypeId", "DEFAULT_IMAGE"));
 if (productContentList) {
     dataResourceName = productContentList.get(0).drDataResourceName
 }
@@ -63,13 +63,13 @@ context.imageNameOriginal = imageUrlPrefix + "/" + filenameExpander.expandString
 
 // Start ProductContent stuff
 if (productId) {
-    product = delegator.findOne("Product",["productId" : productId], false);
+    product = delegator.findByPrimaryKey("Product",["productId" : productId]);
     context.productId = productId;
 }
 
 productContent = null;
 if (product) {
-    productContent = product.getRelated('ProductContent', null, ['productContentTypeId'], false);
+    productContent = product.getRelated('ProductContent', null, ['productContentTypeId']);
 }
 context.productContent = productContent;
 // End ProductContent stuff

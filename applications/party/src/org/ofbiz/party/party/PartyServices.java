@@ -132,7 +132,7 @@ public class PartyServices {
         GenericValue party = null;
 
         try {
-            party = delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
+            party = delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e.getMessage(), module);
         }
@@ -173,7 +173,7 @@ public class PartyServices {
         GenericValue person = null;
 
         try {
-            person = delegator.findOne("Person", UtilMisc.toMap("partyId", partyId), false);
+            person = delegator.findByPrimaryKey("Person", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e.getMessage(), module);
         }
@@ -216,7 +216,7 @@ public class PartyServices {
         }
 
         try {
-            GenericValue party = delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
+            GenericValue party = delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
 
             if (party.get("statusId") == null) { // old records
                 party.set("statusId", "PARTY_ENABLED");
@@ -226,7 +226,7 @@ public class PartyServices {
             if (!party.getString("statusId").equals(statusId)) {
 
                 // check that status is defined as a valid change
-                GenericValue statusValidChange = delegator.findOne("StatusValidChange", UtilMisc.toMap("statusId", party.getString("statusId"), "statusIdTo", statusId), false);
+                GenericValue statusValidChange = delegator.findByPrimaryKey("StatusValidChange", UtilMisc.toMap("statusId", party.getString("statusId"), "statusIdTo", statusId));
                 if (statusValidChange == null) {
                     String errorMsg = "Cannot change party status from " + party.getString("statusId") + " to " + statusId;
                     Debug.logWarning(errorMsg, module);
@@ -245,7 +245,7 @@ public class PartyServices {
 
                 // disable all userlogins for this user when the new status is disabled
                 if (("PARTY_DISABLED").equals(statusId)) {
-                    List <GenericValue> userLogins = delegator.findByAnd("UserLogin", UtilMisc.toMap("partyId", partyId), null, false);
+                    List <GenericValue> userLogins = delegator.findByAnd("UserLogin", UtilMisc.toMap("partyId", partyId));
                     for(GenericValue userLogin : userLogins) {
                         if (!"N".equals(userLogin.getString("enabled"))) {
                             userLogin.set("enabled", "N");
@@ -287,8 +287,8 @@ public class PartyServices {
         GenericValue party = null;
 
         try {
-            person = delegator.findOne("Person", UtilMisc.toMap("partyId", partyId), false);
-            party = delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
+            person = delegator.findByPrimaryKey("Person", UtilMisc.toMap("partyId", partyId));
+            party = delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e, module);
             return ServiceUtil.returnError(UtilProperties.getMessage(resourceError, 
@@ -370,8 +370,8 @@ public class PartyServices {
 
         try {
             // check to see if party object exists, if so make sure it is PARTY_GROUP type party
-            GenericValue party = delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
-            GenericValue partyGroupPartyType = delegator.findOne("PartyType", UtilMisc.toMap("partyTypeId", "PARTY_GROUP"), true);
+            GenericValue party = delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
+            GenericValue partyGroupPartyType = delegator.findByPrimaryKeyCache("PartyType", UtilMisc.toMap("partyTypeId", "PARTY_GROUP"));
 
             if (partyGroupPartyType == null) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(resourceError, 
@@ -379,7 +379,7 @@ public class PartyServices {
             }
 
             if (party != null) {
-                GenericValue partyType = party.getRelatedOne("PartyType", true);
+                GenericValue partyType = party.getRelatedOneCache("PartyType");
 
                 if (!EntityTypeUtil.isType(partyType, partyGroupPartyType)) {
                     return ServiceUtil.returnError(UtilProperties.getMessage(resourceError, 
@@ -390,7 +390,7 @@ public class PartyServices {
                 String partyTypeId = "PARTY_GROUP";
 
                 if (UtilValidate.isNotEmpty(context.get("partyTypeId"))) {
-                    GenericValue desiredPartyType = delegator.findOne("PartyType", UtilMisc.toMap("partyTypeId", context.get("partyTypeId")), true);
+                    GenericValue desiredPartyType = delegator.findByPrimaryKeyCache("PartyType", UtilMisc.toMap("partyTypeId", context.get("partyTypeId")));
                     if (desiredPartyType != null && EntityTypeUtil.isType(desiredPartyType, partyGroupPartyType)) {
                         partyTypeId = desiredPartyType.getString("partyTypeId");
                     } else {
@@ -421,7 +421,7 @@ public class PartyServices {
                 partyStat.create();
             }
 
-            GenericValue partyGroup = delegator.findOne("PartyGroup", UtilMisc.toMap("partyId", partyId), false);
+            GenericValue partyGroup = delegator.findByPrimaryKey("PartyGroup", UtilMisc.toMap("partyId", partyId));
             if (partyGroup != null) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(resourceError, 
                         "partyservices.cannot_create_party_group_already_exists", locale));
@@ -465,8 +465,8 @@ public class PartyServices {
         GenericValue party = null;
 
         try {
-            partyGroup = delegator.findOne("PartyGroup", UtilMisc.toMap("partyId", partyId), false);
-            party = delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
+            partyGroup = delegator.findByPrimaryKey("PartyGroup", UtilMisc.toMap("partyId", partyId));
+            party = delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e, module);
             return ServiceUtil.returnError(UtilProperties.getMessage(resourceError, 
@@ -544,7 +544,7 @@ public class PartyServices {
         GenericValue party = null;
 
         try {
-            party = delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
+            party = delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e.getMessage(), module);
         }
@@ -557,7 +557,7 @@ public class PartyServices {
         GenericValue affiliate = null;
 
         try {
-            affiliate = delegator.findOne("Affiliate", UtilMisc.toMap("partyId", partyId), false);
+            affiliate = delegator.findByPrimaryKey("Affiliate", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e.getMessage(), module);
         }
@@ -604,7 +604,7 @@ public class PartyServices {
         GenericValue affiliate = null;
 
         try {
-            affiliate = delegator.findOne("Affiliate", UtilMisc.toMap("partyId", partyId), false);
+            affiliate = delegator.findByPrimaryKey("Affiliate", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e, module);
             return ServiceUtil.returnError(UtilProperties.getMessage(resourceError, 
@@ -650,7 +650,7 @@ public class PartyServices {
         //Make sure the note Id actually exists if one is passed to avoid a foreign key error below
         if (noteId != null) {
             try {
-                GenericValue value = delegator.findOne("NoteData", UtilMisc.toMap("noteId", noteId), false);
+                GenericValue value = delegator.findByPrimaryKey("NoteData", UtilMisc.toMap("noteId", noteId));
                 if (value == null) {
                     Debug.logError("ERROR: Note id does not exist for : " + noteId + ", autogenerating." , module);
                     noteId = null;
@@ -918,7 +918,7 @@ public class PartyServices {
         GenericValue person = null;
 
         try {
-            person = delegator.findOne("Person", UtilMisc.toMap("partyId", partyId), true);
+            person = delegator.findByPrimaryKeyCache("Person", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             return ServiceUtil.returnError(UtilProperties.getMessage(resourceError,
                     "partyservices.cannot_get_party_entities_read",
@@ -965,8 +965,8 @@ public class PartyServices {
 
         try {
             // validate the existance of party and dataSource
-            GenericValue party = delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
-            GenericValue dataSource = delegator.findOne("DataSource", UtilMisc.toMap("dataSourceId", dataSourceId), false);
+            GenericValue party = delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
+            GenericValue dataSource = delegator.findByPrimaryKey("DataSource", UtilMisc.toMap("dataSourceId", dataSourceId));
             if (party == null || dataSource == null) {
                 List<String> errorList = UtilMisc.toList(UtilProperties.getMessage(resource, 
                         "PartyCannotCreatePartyDataSource", locale));
@@ -1018,7 +1018,7 @@ public class PartyServices {
         try {
             roleTypeId = (String) context.get("roleTypeId");
             if (UtilValidate.isNotEmpty(roleTypeId)) {
-                GenericValue currentRole = delegator.findOne("RoleType", UtilMisc.toMap("roleTypeId", roleTypeId), true);
+                GenericValue currentRole = delegator.findByPrimaryKeyCache("RoleType", UtilMisc.toMap("roleTypeId", roleTypeId));
                 result.put("currentRole", currentRole);
             }
         } catch (GenericEntityException e) {
@@ -1046,7 +1046,7 @@ public class PartyServices {
         try {
             partyTypeId = (String) context.get("partyTypeId");
             if (UtilValidate.isNotEmpty(partyTypeId)) {
-                GenericValue currentPartyType = delegator.findOne("PartyType", UtilMisc.toMap("partyTypeId", partyTypeId), true);
+                GenericValue currentPartyType = delegator.findByPrimaryKeyCache("PartyType", UtilMisc.toMap("partyTypeId", partyTypeId));
                 result.put("currentPartyType", currentPartyType);
             }
         } catch (GenericEntityException e) {
@@ -1062,7 +1062,7 @@ public class PartyServices {
         try {
             stateProvinceGeoId = (String) context.get("stateProvinceGeoId");
             if (UtilValidate.isNotEmpty(stateProvinceGeoId)) {
-                GenericValue currentStateGeo = delegator.findOne("Geo", UtilMisc.toMap("geoId", stateProvinceGeoId), true);
+                GenericValue currentStateGeo = delegator.findByPrimaryKeyCache("Geo", UtilMisc.toMap("geoId", stateProvinceGeoId));
                 result.put("currentStateGeo", currentStateGeo);
             }
         } catch (GenericEntityException e) {
@@ -1514,7 +1514,7 @@ public class PartyServices {
         // get the from/to party records
         GenericValue partyTo;
         try {
-            partyTo = delegator.findOne("Party", UtilMisc.toMap("partyId", partyIdTo), false);
+            partyTo = delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyIdTo));
         } catch (GenericEntityException e) {
             Debug.logInfo(e, module);
             return ServiceUtil.returnError(e.getMessage());
@@ -1530,7 +1530,7 @@ public class PartyServices {
 
         GenericValue party;
         try {
-            party = delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
+            party = delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logInfo(e, module);
             return ServiceUtil.returnError(e.getMessage());
@@ -1597,7 +1597,7 @@ public class PartyServices {
         // update the non-existing party roles
         List<GenericValue> rolesToMove;
         try {
-            rolesToMove = delegator.findByAnd("PartyRole", UtilMisc.toMap("partyId", partyId), null, false);
+            rolesToMove = delegator.findByAnd("PartyRole", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
             return ServiceUtil.returnError(e.getMessage());
@@ -1606,7 +1606,7 @@ public class PartyServices {
         for (GenericValue attr: rolesToMove) {
             attr.set("partyId", partyIdTo);
             try {
-                if (delegator.findOne("PartyRole", attr.getPrimaryKey(), false) == null) {
+                if (delegator.findByPrimaryKey("PartyRole", attr.getPrimaryKey()) == null) {
                     attr.create();
                 }
             } catch (GenericEntityException e) {
@@ -1689,7 +1689,7 @@ public class PartyServices {
         // update the non-existing attributes
         List<GenericValue> attrsToMove;
         try {
-            attrsToMove = delegator.findByAnd("PartyAttribute", UtilMisc.toMap("partyId", partyId), null, false);
+            attrsToMove = delegator.findByAnd("PartyAttribute", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
             return ServiceUtil.returnError(e.getMessage());
@@ -1698,7 +1698,7 @@ public class PartyServices {
         for (GenericValue attr: attrsToMove) {
             attr.set("partyId", partyIdTo);
             try {
-                if (delegator.findOne("PartyAttribute", attr.getPrimaryKey(), false) == null) {
+                if (delegator.findByPrimaryKey("PartyAttribute", attr.getPrimaryKey()) == null) {
                     attr.create();
                 }
             } catch (GenericEntityException e) {

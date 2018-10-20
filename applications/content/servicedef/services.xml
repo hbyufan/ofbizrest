@@ -405,6 +405,17 @@
         <attribute mode="OUT" name="view" optional="true" type="org.ofbiz.entity.GenericValue"/>
         <attribute mode="OUT" name="content" optional="true" type="org.ofbiz.entity.GenericValue"/>
     </service>
+    <!--
+    <service name="addMostRecent"
+            engine="java"
+            location="org.ofbiz.content.ContentManagementServices"
+            invoke="addMostRecent" auth="false">
+        <description>Get subContent of passed contentId/mapKey or subContentId</description>
+        <attribute mode="IN" name="suffix" optional="true" type="String"/>
+        <attribute mode="IN" name="pk" optional="true" type="org.ofbiz.entity.GenericValue"/>
+        <attribute mode="IN" name="session" optional="true" type="javax.servlet.http.HttpSession"/>
+    </service>
+    -->
 
     <service name="persistContentAndAssoc" engine="java" transaction-timeout="7200"
             location="org.ofbiz.content.ContentManagementServices" invoke="persistContentAndAssoc" auth="true">
@@ -648,6 +659,13 @@
         <attribute name="fieldValue0" type="String" mode="IN" optional="true"/>
     </service>
 
+    <service name="indexTree" auth="true" engine="java" validate="true" transaction-timeout="7200"
+        location="org.ofbiz.content.search.SearchServices" invoke="indexTree">
+        <description>Index content under publish point</description>
+        <attribute mode="IN" name="contentId" optional="false" type="String"/>
+        <attribute mode="OUT" name="badIndexList" optional="true" type="List"/>
+        <attribute mode="OUT" name="goodIndexCount" optional="true" type="Integer"/>
+    </service>
     <service name="resequence" auth="true" engine="java" validate="true" transaction-timeout="7200"
         location="org.ofbiz.content.ContentManagementServices" invoke="resequence">
         <description>Reorder sequence numbers in ContentAssoc entities for a given parent id</description>

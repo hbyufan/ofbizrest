@@ -153,4 +153,5 @@ under the License.
         <condition field-name="productTypeId" operator="equals" value="ASSET_USAGE"/>
         <action service="createFixedAssetAndLinkToProduct" mode="sync"/>
     </eca>
+
 </service-eca>

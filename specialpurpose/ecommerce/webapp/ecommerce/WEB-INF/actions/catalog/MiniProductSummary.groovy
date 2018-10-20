@@ -28,18 +28,17 @@ import org.ofbiz.product.config.ProductConfigWorker;
 import org.ofbiz.product.catalog.*;
 import org.ofbiz.product.store.*;
 import org.ofbiz.order.shoppingcart.*;
-import org.ofbiz.webapp.website.WebSiteWorker;
 
 miniProduct = request.getAttribute("miniProduct");
 optProductId = request.getAttribute("optProductId");
-webSiteId = WebSiteWorker.getWebSiteId(request);
+webSiteId = CatalogWorker.getWebSiteId(request);
 prodCatalogId = CatalogWorker.getCurrentCatalogId(request);
 productStoreId = ProductStoreWorker.getProductStoreId(request);
 cart = ShoppingCartEvents.getCartObject(request);
 context.remove("totalPrice");
 
 if (optProductId) {
-    miniProduct = delegator.findOne("Product", [productId : optProductId], false);
+    miniProduct = delegator.findByPrimaryKey("Product", [productId : optProductId]);
 }
 
 if (miniProduct && productStoreId && prodCatalogId ) {

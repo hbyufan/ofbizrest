@@ -155,7 +155,7 @@ public final class ScriptHelperImpl implements ScriptHelper {
 
     public List<Map<String, Object>> findList(String entityName, Map<String, ? extends Object> fields) throws ScriptException {
         try {
-            return UtilGenerics.checkList(ctxHelper.getDelegator().findByAnd(entityName, fields, null, false));
+            return UtilGenerics.checkList(ctxHelper.getDelegator().findByAnd(entityName, fields));
         } catch (GenericEntityException e) {
             String errMsg = "Error running script " + ctxHelper.getScriptName() + ": Problem invoking the findList method: " + e.getMessage();
             Debug.logWarning(e, errMsg, module);

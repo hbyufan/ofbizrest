@@ -36,11 +36,11 @@ if (UtilValidate.isEmpty(productionRunId)) {
 }
 if (UtilValidate.isNotEmpty(productionRunId)) {
 
-    GenericValue productionRun = delegator.findOne("WorkEffort", UtilMisc.toMap("workEffortId", productionRunId), false);
+    GenericValue productionRun = delegator.findByPrimaryKey("WorkEffort", UtilMisc.toMap("workEffortId", productionRunId));
     if (UtilValidate.isNotEmpty(productionRun)) {
         // If this is a task, get the parent production run
         if (productionRun.getString("workEffortTypeId") != null && "PROD_ORDER_TASK".equals(productionRun.getString("workEffortTypeId"))) {
-            productionRun = delegator.findOne("WorkEffort", UtilMisc.toMap("workEffortId", productionRun.getString("workEffortParentId")), false);
+            productionRun = delegator.findByPrimaryKey("WorkEffort", UtilMisc.toMap("workEffortId", productionRun.getString("workEffortParentId")));
         }
     }
 

@@ -51,12 +51,10 @@ under the License.
          }
      }
      function hideShowUsaStates() {
-		 var customerStateElement = document.getElementById('newuserform_stateProvinceGeoId');
-     	 var customerCountryElement = document.getElementById('newuserform_countryGeoId');
-         if (customerCountryElement.value == "USA" || customerCountryElement.value == "UMI") {
-             customerStateElement.style.display = "block";
+         if (document.getElementById('customerCountry').value == "USA" || document.getElementById('customerCountry').value == "UMI") {
+             document.getElementById('customerState').style.display = "block";
          } else {
-             customerStateElement.style.display = "none";
+             document.getElementById('customerState').style.display = "none";
          }
      }
    //]]>
@@ -214,7 +212,7 @@ will generally always be reserved for the logo at the top of the page.
             ${screens.render("component://common/widget/CommonScreens.xml#countries")}        
             <#assign defaultCountryGeoId = Static["org.ofbiz.base.util.UtilProperties"].getPropertyValue("general.properties", "country.geo.id.default")>
             <option selected="selected" value="${defaultCountryGeoId}">
-                <#assign countryGeo = delegator.findOne("Geo",Static["org.ofbiz.base.util.UtilMisc"].toMap("geoId",defaultCountryGeoId), false)>
+                <#assign countryGeo = delegator.findByPrimaryKey("Geo",Static["org.ofbiz.base.util.UtilMisc"].toMap("geoId",defaultCountryGeoId))>
                 ${countryGeo.get("geoName",locale)}
             </option>
         </select>

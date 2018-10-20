@@ -1,6 +1,6 @@
 /*
  * Translated default messages for the jQuery validation plugin.
- * Locale: RU (Russian; русский язык)
+ * Locale: RU
  */
 jQuery.extend(jQuery.validator.messages, {
         required: "Это поле необходимо заполнить.",

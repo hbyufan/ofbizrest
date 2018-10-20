@@ -28,7 +28,6 @@ import org.ofbiz.party.contact.*;
 import org.ofbiz.product.catalog.*;
 import org.ofbiz.product.store.*;
 
-
 orderId = parameters.orderId;
 orderHeader = null;
 // we have a special case here where for an anonymous order the user will already be logged out, but the userLogin will be in the request so we can still do a security check here
@@ -39,12 +38,12 @@ if (!userLogin) {
     if (!userLogin) {
         if (orderId) {
             orderHeader = delegator.findOne("OrderHeader", [orderId : orderId], false);
-            orderStatuses = orderHeader.getRelated("OrderStatus", null, null, false);
+            orderStatuses = orderHeader.getRelated("OrderStatus");
             filteredOrderStatusList = [];
             extOfflineModeExists = false;
             
             // Handled the case of OFFLINE payment method. In case of OFFLINE payment "ORDER_CREATED" status must be checked.
-            orderPaymentPreferences = orderHeader.getRelated("OrderPaymentPreference", null, UtilMisc.toList("orderPaymentPreferenceId"), false);
+            orderPaymentPreferences = orderHeader.getRelated("OrderPaymentPreference", UtilMisc.toList("orderPaymentPreferenceId"));
             filteredOrderPaymentPreferences = EntityUtil.filterByCondition(orderPaymentPreferences, EntityCondition.makeCondition("paymentMethodTypeId", EntityOperator.IN, ["EXT_OFFLINE"]));
             if (filteredOrderPaymentPreferences) {
                 extOfflineModeExists = true;
@@ -88,7 +87,7 @@ allowAnonymousView = context.allowAnonymousView;
 
 isDemoStore = true;
 if (orderId) {
-    orderHeader = delegator.findOne("OrderHeader", [orderId : orderId], false);
+    orderHeader = delegator.findByPrimaryKey("OrderHeader", [orderId : orderId]);
     if ("PURCHASE_ORDER".equals(orderHeader?.orderTypeId)) {
         //drop shipper or supplier
         roleTypeId = "SUPPLIER_AGENT";
@@ -100,7 +99,7 @@ if (orderId) {
     // check OrderRole to make sure the user can view this order.  This check must be done for any order which is not anonymously placed and
     // any anonymous order when the allowAnonymousView security flag (see above) is not set to Y, to prevent peeking
     if (orderHeader && (!"anonymous".equals(orderHeader.createdBy) || ("anonymous".equals(orderHeader.createdBy) && !"Y".equals(allowAnonymousView)))) {
-        orderRole = EntityUtil.getFirst(delegator.findByAnd("OrderRole", [orderId : orderId, partyId : partyId, roleTypeId : roleTypeId], null, false));
+        orderRole = EntityUtil.getFirst(delegator.findByAnd("OrderRole", [orderId : orderId, partyId : partyId, roleTypeId : roleTypeId]));
 
         if (!userLogin || !orderRole) {
             context.remove("orderHeader");
@@ -111,7 +110,7 @@ if (orderId) {
 }
 
 if (orderHeader) {
-    productStore = orderHeader.getRelatedOne("ProductStore", true);
+    productStore = orderHeader.getRelatedOneCache("ProductStore");
     if (productStore) isDemoStore = !"N".equals(productStore.isDemoStore);
 
     orderReadHelper = new OrderReadHelper(orderHeader);
@@ -128,26 +127,27 @@ if (orderHeader) {
     orderTaxTotal = OrderReadHelper.getAllOrderItemsAdjustmentsTotal(orderItems, orderAdjustments, false, true, false);
     orderTaxTotal = orderTaxTotal.add(OrderReadHelper.calcOrderAdjustments(orderHeaderAdjustments, orderSubTotal, false, true, false));
 
-    placingCustomerOrderRoles = delegator.findByAnd("OrderRole", [orderId : orderId, roleTypeId : roleTypeId], null, false);
+    placingCustomerOrderRoles = delegator.findByAnd("OrderRole", [orderId : orderId, roleTypeId : roleTypeId]);
     placingCustomerOrderRole = EntityUtil.getFirst(placingCustomerOrderRoles);
-    placingCustomerPerson = placingCustomerOrderRole == null ? null : delegator.findOne("Person", [partyId : placingCustomerOrderRole.partyId], false);
+    placingCustomerPerson = placingCustomerOrderRole == null ? null : delegator.findByPrimaryKey("Person", [partyId : placingCustomerOrderRole.partyId]);
 
-    billingAccount = orderHeader.getRelatedOne("BillingAccount", false);
+    billingAccount = orderHeader.getRelatedOne("BillingAccount");
 
-    orderPaymentPreferences = EntityUtil.filterByAnd(orderHeader.getRelated("OrderPaymentPreference", null, null, false), [EntityCondition.makeCondition("statusId", EntityOperator.NOT_EQUAL, "PAYMENT_CANCELLED")]);
+    orderPaymentPreferences = EntityUtil.filterByAnd(orderHeader.getRelated("OrderPaymentPreference"), [EntityCondition.makeCondition("statusId", EntityOperator.NOT_EQUAL, "PAYMENT_CANCELLED")]);
     paymentMethods = [];
     orderPaymentPreferences.each { opp ->
-        paymentMethod = opp.getRelatedOne("PaymentMethod", false);
+        paymentMethod = opp.getRelatedOne("PaymentMethod");
         if (paymentMethod) {
             paymentMethods.add(paymentMethod);
         } else {
-            paymentMethodType = opp.getRelatedOne("PaymentMethodType", false);
+            paymentMethodType = opp.getRelatedOne("PaymentMethodType");
             if (paymentMethodType) {
                 context.paymentMethodType = paymentMethodType;
             }
         }
     }
 
+    webSiteId = orderHeader.webSiteId ?: CatalogWorker.getWebSiteId(request);
 
     payToPartyId = productStore.payToPartyId;
     paymentAddress =  PaymentWorker.getPaymentAddress(delegator, payToPartyId);
@@ -177,9 +177,9 @@ if (orderHeader) {
     totalItems = 0.00;
     orderItems.each { oitem ->
         totalItems += oitem.quantity;
-        ritems = oitem.getRelated("ReturnItem", null, null, false);
+        ritems = oitem.getRelated("ReturnItem");
         ritems.each { ritem ->
-            rh = ritem.getRelatedOne("ReturnHeader", false);
+            rh = ritem.getRelatedOne("ReturnHeader");
             if (!rh.statusId.equals("RETURN_CANCELLED")) {
                 returned += ritem.returnQuantity;
             }
@@ -215,6 +215,6 @@ if (orderHeader) {
     context.orderShipmentInfoSummaryList = orderShipmentInfoSummaryList;
     context.customerPoNumberSet = customerPoNumberSet;
 
-    orderItemChangeReasons = delegator.findByAnd("Enumeration", [enumTypeId : "ODR_ITM_CH_REASON"], ["sequenceId"], false);
+    orderItemChangeReasons = delegator.findByAnd("Enumeration", [enumTypeId : "ODR_ITM_CH_REASON"], ["sequenceId"]);
     context.orderItemChangeReasons = orderItemChangeReasons;
 }

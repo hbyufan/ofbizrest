@@ -41,22 +41,22 @@ quoteId = parameters.quoteId;
 fromPartyId = parameters.fromPartyId;
 
 if (!orderHeader && orderId) {
-    orderHeader = delegator.findOne("OrderHeader", [orderId : orderId], false);
+    orderHeader = delegator.findByPrimaryKey("OrderHeader", [orderId : orderId]);
 } else if (shipmentId) {
-    shipment = delegator.findOne("Shipment", [shipmentId : shipmentId], false);
-    orderHeader = shipment.getRelatedOne("PrimaryOrderHeader", false);
+    shipment = delegator.findByPrimaryKey("Shipment", [shipmentId : shipmentId]);
+    orderHeader = shipment.getRelatedOne("PrimaryOrderHeader");
 }
 
 if (!invoice && invoiceId)    {
-    invoice = delegator.findOne("Invoice", [invoiceId : invoiceId], false);
+    invoice = delegator.findByPrimaryKey("Invoice", [invoiceId : invoiceId]);
 }
 
 if (!returnHeader && returnId) {
-    returnHeader = delegator.findOne("ReturnHeader", [returnId : returnId], false);
+    returnHeader = delegator.findByPrimaryKey("ReturnHeader", [returnId : returnId]);
 }
 
 if (quoteId) {
-    quote = delegator.findOne("Quote", [quoteId : quoteId], false);
+    quote = delegator.findByPrimaryKey("Quote", [quoteId : quoteId]);
 }
 
 // defaults:
@@ -71,7 +71,7 @@ if (orderHeader) {
         if (orh.getBillFromParty()) {
             partyId = orh.getBillFromParty().partyId;
         } else {
-            productStore = orderHeader.getRelatedOne("ProductStore", false);
+            productStore = orderHeader.getRelatedOne("ProductStore");
             if (orderHeader.orderTypeId.equals("SALES_ORDER") && productStore?.payToPartyId) {
                 partyId = productStore.payToPartyId;
             }
@@ -82,7 +82,7 @@ if (orderHeader) {
         if (billToParty) {
             partyId = billToParty.partyId;
         } else {
-            def billToCustomer = EntityUtil.getFirst(orderHeader.getRelated("OrderRole", [roleTypeId : "BILL_TO_CUSTOMER"], null, false));
+            def billToCustomer = EntityUtil.getFirst(orderHeader.getRelatedByAnd("OrderRole", [roleTypeId : "BILL_TO_CUSTOMER"]));
             if (billToCustomer) {
                 partyId = billToCustomer.partyId;
             }
@@ -102,7 +102,7 @@ if (orderHeader) {
         partyId = returnHeader.fromPartyId;
     }
 } else if (quote) {
-    productStore = quote.getRelatedOne("ProductStore", false);
+    productStore = quote.getRelatedOne("ProductStore");
     if (productStore?.payToPartyId) {
         partyId = productStore.payToPartyId;
     }
@@ -118,7 +118,7 @@ if (!partyId) {
 }
 
 // the logo
-partyGroup = delegator.findOne("PartyGroup", [partyId : partyId], false);
+partyGroup = delegator.findByPrimaryKey("PartyGroup", [partyId : partyId]);
 if (partyGroup) {
     partyContentWrapper = new PartyContentWrapper(dispatcher, partyGroup, locale, "text/html");
     partyContent = partyContentWrapper.getFirstPartyContentByType(partyGroup.partyId , partyGroup, "LGOIMGURL", delegator);
@@ -143,20 +143,19 @@ if (partyGroup?.groupName) {
 context.companyName = companyName;
 
 // the address
-addresses = delegator.findByAnd("PartyContactWithPurpose", [partyId : partyId, contactMechPurposeTypeId : "GENERAL_LOCATION"], null, false);
-addresses = EntityUtil.filterByDate(addresses, nowTimestamp, "contactFromDate", "contactThruDate", true);
-addresses = EntityUtil.filterByDate(addresses, nowTimestamp, "purposeFromDate", "purposeThruDate", true);
+addresses = delegator.findByAnd("PartyContactMechPurpose", [partyId : partyId, contactMechPurposeTypeId : "GENERAL_LOCATION"]);
+selAddresses = EntityUtil.filterByDate(addresses, nowTimestamp, "fromDate", "thruDate", true);
 address = null;
-if (addresses) {
-    address = delegator.findOne("PostalAddress", [contactMechId : addresses[0].contactMechId], false);
+if (selAddresses) {
+    address = delegator.findByPrimaryKey("PostalAddress", [contactMechId : selAddresses[0].contactMechId]);
 }
 if (address)    {
    // get the country name and state/province abbreviation
-   country = address.getRelatedOne("CountryGeo", true);
+   country = address.getRelatedOneCache("CountryGeo");
    if (country) {
       context.countryName = country.get("geoName", locale);
    }
-   stateProvince = address.getRelatedOne("StateProvinceGeo", true);
+   stateProvince = address.getRelatedOneCache("StateProvinceGeo");
    if (stateProvince) {
        context.stateProvinceAbbr = stateProvince.abbreviation;
    }
@@ -164,34 +163,31 @@ if (address)    {
 context.postalAddress = address;
 
 //telephone
-phones = delegator.findByAnd("PartyContactWithPurpose", [partyId : partyId, contactMechPurposeTypeId : "PRIMARY_PHONE"], null, false);
-phones = EntityUtil.filterByDate(phones, nowTimestamp, "contactFromDate", "contactThruDate", true);
-phones = EntityUtil.filterByDate(phones, nowTimestamp, "purposeFromDate", "purposeThruDate", true);
-if (phones) {
-    context.phone = delegator.findOne("TelecomNumber", [contactMechId : phones[0].contactMechId], false);
+phones = delegator.findByAnd("PartyContactMechPurpose", [partyId : partyId, contactMechPurposeTypeId : "PRIMARY_PHONE"]);
+selPhones = EntityUtil.filterByDate(phones, nowTimestamp, "fromDate", "thruDate", true);
+if (selPhones) {
+    context.phone = delegator.findByPrimaryKey("TelecomNumber", [contactMechId : selPhones[0].contactMechId]);
 }
 
 // Fax
-faxNumbers = delegator.findByAnd("PartyContactWithPurpose", [partyId : partyId, contactMechPurposeTypeId : "FAX_NUMBER"], null, false);
-faxNumbers = EntityUtil.filterByDate(faxNumbers, nowTimestamp, "contactFromDate", "contactThruDate", true);
-faxNumbers = EntityUtil.filterByDate(faxNumbers, nowTimestamp, "purposeFromDate", "purposeThruDate", true);
+faxNumbers = delegator.findByAnd("PartyContactMechPurpose", [partyId : partyId, contactMechPurposeTypeId : "FAX_NUMBER"]);
+faxNumbers = EntityUtil.filterByDate(faxNumbers, nowTimestamp, null, null, true);
 if (faxNumbers) {
     context.fax = delegator.findOne("TelecomNumber", [contactMechId : faxNumbers[0].contactMechId], false);
 }
 
 //Email
-emails = delegator.findByAnd("PartyContactWithPurpose", [partyId : partyId, contactMechPurposeTypeId : "PRIMARY_EMAIL"], null, false);
-emails = EntityUtil.filterByDate(emails, nowTimestamp, "contactFromDate", "contactThruDate", true);
-emails = EntityUtil.filterByDate(emails, nowTimestamp, "purposeFromDate", "purposeThruDate", true);
-if (emails) {
-    context.email = delegator.findOne("ContactMech", [contactMechId : emails[0].contactMechId], false);
+emails = delegator.findByAnd("PartyContactMechPurpose", [partyId : partyId, contactMechPurposeTypeId : "PRIMARY_EMAIL"]);
+selEmails = EntityUtil.filterByDate(emails, nowTimestamp, "fromDate", "thruDate", true);
+if (selEmails) {
+    context.email = delegator.findByPrimaryKey("ContactMech", [contactMechId : selEmails[0].contactMechId]);
 } else {    //get email address from party contact mech
-    contacts = delegator.findByAnd("PartyContactMech", [partyId : partyId], null, false);
+    contacts = delegator.findByAnd("PartyContactMech", [partyId : partyId]);
     selContacts = EntityUtil.filterByDate(contacts, nowTimestamp, "fromDate", "thruDate", true);
     if (selContacts) {
         i = selContacts.iterator();
         while (i.hasNext())    {
-            email = i.next().getRelatedOne("ContactMech", false);
+            email = i.next().getRelatedOne("ContactMech");
             if ("ELECTRONIC_ADDRESS".equals(email.contactMechTypeId))    {
                 context.email = email;
                 break;
@@ -201,19 +197,17 @@ if (emails) {
 }
 
 // website
-websiteUrls = delegator.findByAnd("PartyContactWithPurpose", [partyId : partyId, contactMechPurposeTypeId : "PRIMARY_WEB_URLs"], null, false);
-websiteUrls = EntityUtil.filterByDate(websiteUrls, nowTimestamp, "contactFromDate", "contactThruDate", true);
-websiteUrls = EntityUtil.filterByDate(websiteUrls, nowTimestamp, "purposeFromDate", "purposeThruDate", true);
+websiteUrls = EntityUtil.filterByDate(delegator.findByAnd("PartyContactMechPurpose", [partyId : partyId, contactMechPurposeTypeId : "PRIMARY_WEB_URL"]));
 if (websiteUrls) {
     websiteUrl = EntityUtil.getFirst(websiteUrls);
     context.website = delegator.findOne("ContactMech", [contactMechId : websiteUrl.contactMechId], false);
 } else { //get web address from party contact mech
-contacts = delegator.findByAnd("PartyContactMech", [partyId : partyId], null, false);
+contacts = delegator.findByAnd("PartyContactMech", [partyId : partyId]);
 selContacts = EntityUtil.filterByDate(contacts, nowTimestamp, "fromDate", "thruDate", true);
 if (selContacts) {
     Iterator i = selContacts.iterator();
     while (i.hasNext())    {
-        website = i.next().getRelatedOne("ContactMech", false);
+        website = i.next().getRelatedOne("ContactMech");
         if ("WEB_ADDRESS".equals(website.contactMechTypeId)) {
             context.website = website;
             break;
@@ -223,14 +217,14 @@ if (selContacts) {
 }
 
 //Bank account
-paymentMethods = delegator.findByAnd("PaymentMethod", [partyId : partyId, paymentMethodTypeId : "EFT_ACCOUNT"], null, false);
+paymentMethods = delegator.findByAnd("PaymentMethod", [partyId : partyId, paymentMethodTypeId : "EFT_ACCOUNT"]);
 selPayments = EntityUtil.filterByDate(paymentMethods, nowTimestamp, "fromDate", "thruDate", true);
 if (selPayments) {
-    context.eftAccount = delegator.findOne("EftAccount", [paymentMethodId : selPayments[0].paymentMethodId], false);
+    context.eftAccount = delegator.findByPrimaryKey("EftAccount", [paymentMethodId : selPayments[0].paymentMethodId]);
 }
 
 // Tax ID Info
-partyTaxAuthInfoList = delegator.findByAnd("PartyTaxAuthInfo", [partyId : partyId], null, false);
+partyTaxAuthInfoList = delegator.findByAnd("PartyTaxAuthInfo", [partyId : partyId]);
 if (partyTaxAuthInfoList) {
     if (address?.countryGeoId) {
         // if we have an address with country filter by that

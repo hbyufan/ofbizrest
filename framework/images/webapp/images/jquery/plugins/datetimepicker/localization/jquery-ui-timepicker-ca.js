@@ -8,14 +8,13 @@
 		minuteText: 'Minuts',
 		secondText: 'Segons',
 		millisecText: 'Milisegons',
-		microsecText: 'Microsegons',
 		timezoneText: 'Fus horari',
 		currentText: 'Ara',
 		closeText: 'Tancar',
-		timeFormat: 'HH:mm',
+		timeFormat: 'hh:mm',
 		amNames: ['AM', 'A'],
 		pmNames: ['PM', 'P'],
-		isRTL: false
+		ampm: false
 	};
 	$.timepicker.setDefaults($.timepicker.regional['ca']);
 })(jQuery);

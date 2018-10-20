@@ -19,6 +19,7 @@
 package org.ofbiz.accounting.thirdparty.clearcommerce;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import org.ofbiz.accounting.payment.PaymentGatewayServices;
@@ -45,6 +47,7 @@ import org.ofbiz.service.DispatchContext;
 import org.ofbiz.service.ServiceUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 
 /**
@@ -789,7 +792,7 @@ public class CCPaymentServices {
         String countryGeoId = address.getString("countryGeoId");
         if (UtilValidate.isNotEmpty(countryGeoId)) {
             try {
-                GenericValue countryGeo = address.getRelatedOne("CountryGeo", true);
+                GenericValue countryGeo = address.getRelatedOneCache("CountryGeo");
                 UtilXml.addChildElementValue(addressElement, "Country", countryGeo.getString("geoSecCode"), document);
             } catch (GenericEntityException gee) {
                 Debug.logInfo(gee, "Error finding related Geo for countryGeoId: " + countryGeoId, module);
@@ -918,8 +921,12 @@ public class CCPaymentServices {
         Document responseDocument = null;
         try {
             responseDocument = UtilXml.readXmlDocument(response, false);
-        } catch (Exception e) {
-            throw new ClearCommerceException("Error reading response Document from a String: " + e.getMessage());
+        } catch (SAXException se) {
+            throw new ClearCommerceException("Error reading response Document from a String: " + se.getMessage());
+        } catch (ParserConfigurationException pce) {
+            throw new ClearCommerceException("Error reading response Document from a String: " + pce.getMessage());
+        } catch (IOException ioe) {
+            throw new ClearCommerceException("Error reading response Document from a String: " + ioe.getMessage());
         }
         if (Debug.verboseOn()) Debug.logVerbose("Result severity from clearCommerce:" + getMessageListMaxSev(responseDocument), module);
         if (Debug.verboseOn() && getMessageListMaxSev(responseDocument) > 4)

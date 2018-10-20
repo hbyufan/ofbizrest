@@ -1,6 +1,6 @@
 /*
  * Translated default messages for the jQuery validation plugin.
- * Locale: EU (Basque; euskara, euskera)
+ * Locale: EU (Basque)
  */
 jQuery.extend(jQuery.validator.messages, {
   required: "Eremu hau beharrezkoa da.",

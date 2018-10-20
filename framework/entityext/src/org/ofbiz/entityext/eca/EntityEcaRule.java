@@ -18,12 +18,12 @@
  *******************************************************************************/
 package org.ofbiz.entityext.eca;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javolution.util.FastList;
 import javolution.util.FastMap;
 
 import org.ofbiz.base.util.Debug;
@@ -34,47 +34,54 @@ import org.ofbiz.service.DispatchContext;
 import org.w3c.dom.Element;
 
 /**
- * Entity event-condition-action rule.
+ * EntityEcaRule
  */
 @SuppressWarnings("serial")
 public final class EntityEcaRule implements java.io.Serializable {
 
     public static final String module = EntityEcaRule.class.getName();
 
-    private final String entityName;
-    private final String operationName;
-    private final String eventName;
-    private final boolean runOnError;
-    private final List<EntityEcaCondition> conditions;
-    private final List<Object> actionsAndSets;
-    private boolean enabled = true;
+    private static final Set<String> nameSet = new HashSet<String>(2);
+    static {
+        nameSet.add("set");
+        nameSet.add("action");
+    }
+
+    protected final String entityName;
+    protected final String operationName;
+    protected final String eventName;
+    protected final boolean runOnError;
+    protected final List<EntityEcaCondition> conditions = FastList.newInstance();
+    protected final List<Object> actionsAndSets = FastList.newInstance();
+    protected boolean enabled = true;
 
     public EntityEcaRule(Element eca) {
         this.entityName = eca.getAttribute("entity");
         this.operationName = eca.getAttribute("operation");
         this.eventName = eca.getAttribute("event");
         this.runOnError = "true".equals(eca.getAttribute("run-on-error"));
-        ArrayList<EntityEcaCondition> conditions = new ArrayList<EntityEcaCondition>();
-        ArrayList<Object> actionsAndSets = new ArrayList<Object>();
-        for (Element element: UtilXml.childElementList(eca)) {
-            if ("condition".equals(element.getNodeName())) {
-                conditions.add(new EntityEcaCondition(element, true));
-            } else if ("condition-field".equals(element.getNodeName())) {
-                conditions.add(new EntityEcaCondition(element, false));
-            } else if ("action".equals(element.getNodeName())) {
-                actionsAndSets.add(new EntityEcaAction(element));
-            } else if ("set".equals(element.getNodeName())) {
-                actionsAndSets.add(new EntityEcaSetField(element));
-            } else {
-                Debug.logWarning("Invalid eca child element " + element.getNodeName(), module);
-            }
+
+        for (Element element: UtilXml.childElementList(eca, "condition")) {
+            conditions.add(new EntityEcaCondition(element, true));
         }
-        conditions.trimToSize();
-        this.conditions = Collections.unmodifiableList(conditions);
-        actionsAndSets.trimToSize();
-        this.actionsAndSets = Collections.unmodifiableList(actionsAndSets);
+
+        for (Element element: UtilXml.childElementList(eca, "condition-field")) {
+            conditions.add(new EntityEcaCondition(element, false));
+        }
+
         if (Debug.verboseOn()) {
             Debug.logVerbose("Conditions: " + conditions, module);
+        }
+
+        for (Element actionOrSetElement: UtilXml.childElementList(eca, nameSet)) {
+            if ("action".equals(actionOrSetElement.getNodeName())) {
+                this.actionsAndSets.add(new EntityEcaAction(actionOrSetElement));
+            } else {
+                this.actionsAndSets.add(new EntityEcaSetField(actionOrSetElement));
+            }
+        }
+
+        if (Debug.verboseOn()) {
             Debug.logVerbose("actions and sets (intermixed): " + actionsAndSets, module);
         }
     }
@@ -93,14 +100,6 @@ public final class EntityEcaRule implements java.io.Serializable {
 
     public boolean getRunOnError() {
         return this.runOnError;
-    }
-
-    public List<Object> getActionsAndSets() {
-        return this.actionsAndSets;
-    }
-
-    public List<EntityEcaCondition> getConditions() {
-        return this.conditions;
     }
 
     public void eval(String currentOperation, DispatchContext dctx, GenericEntity value, boolean isError, Set<String> actionsRun) throws GenericEntityException {
@@ -135,9 +134,9 @@ public final class EntityEcaRule implements java.io.Serializable {
                     EntityEcaAction ea = (EntityEcaAction) actionOrSet;
                     // in order to enable OR logic without multiple calls to the given service,
                     //only execute a given service name once per service call phase
-                    if (actionsRun.add(ea.getServiceName())) {
+                    if (actionsRun.add(ea.serviceName)) {
                         if (Debug.infoOn()) {
-                            Debug.logInfo("Running Entity ECA Service: " + ea.getServiceName() + ", triggered by rule on Entity: " + value.getEntityName(), module);
+                            Debug.logInfo("Running Entity ECA Service: " + ea.serviceName + ", triggered by rule on Entity: " + value.getEntityName(), module);
                         }
                         ea.runAction(dctx, context, value);
                     }
@@ -149,10 +148,6 @@ public final class EntityEcaRule implements java.io.Serializable {
         }
     }
 
-    /**
-     * @deprecated Not thread-safe, no replacement.
-     * @param enabled
-     */
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }

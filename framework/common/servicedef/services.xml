@@ -86,6 +86,13 @@ under the License.
         <attribute name="timing" type="String" mode="IN" optional="true"/>
         <attribute name="verbose" type="String" mode="IN" optional="true"/>
     </service>
+    <service name="addOrUpdateLogger" engine="java"
+             location="org.ofbiz.common.CommonServices" invoke="addOrUpdateLogger" auth="true">
+        <description>Add/Update logger in logging system</description>
+        <attribute name="name" type="String" mode="IN" optional="false"/>
+        <attribute name="level" type="String" mode="IN" optional="false"/>
+        <attribute name="additivity" type="String" mode="IN" optional="true"/>
+    </service>
 
     <service name="displayXaDebugInfo" engine="java"
             location="org.ofbiz.common.CommonServices" invoke="displayXaDebugInfo" auth="true">
@@ -174,9 +181,9 @@ under the License.
         <description>Create a CustomTimePeriod record</description>
         <auto-attributes mode="OUT" include="pk" optional="false"/>
         <auto-attributes mode="IN" include="nonpk" optional="true"/>
-        <attribute name="organizationPartyId" type="String" mode="IN" optional="false"/><!-- FIXME: Framework dependency on Party component -->
         <override name="fromDate" optional="false"/>
         <override name="thruDate" optional="false"/>
+        <override name="organizationPartyId" optional="false"/>
         <override name="periodTypeId" optional="false"/>
     </service>
     <service name="updateCustomTimePeriod" default-entity-name="CustomTimePeriod" engine="simple"
@@ -347,7 +354,6 @@ under the License.
         <attribute name="remoteFilename" type="String" mode="IN" optional="false"/>
         <attribute name="binaryTransfer" type="Boolean" mode="IN" optional="true"/>
         <attribute name="passiveMode" type="Boolean" mode="IN" optional="true"/>
-        <attribute name="defaultTimeout" type="Integer" mode="IN" optional="true"/>
     </service>
     <service name="ftpPutFile" engine="java" use-transaction="false"
         location="org.ofbiz.common.FtpServices" invoke="putFile">
@@ -703,8 +709,10 @@ under the License.
     <service name="updateGeo" default-entity-name="Geo" engine="entity-auto" invoke="update" auth="true">
         <description>Update a Geo</description>
         <permission-service service-name="commonGenericPermission" main-action="UPDATE"/>
-        <auto-attributes include="pk" mode="IN" optional="false"/>
+        <auto-attributes include="pk" mode="IN"/>
         <auto-attributes include="nonpk" mode="IN" optional="true"/>
+        <override name="geoName" optional="false"/>
+        <override name="geoTypeId" optional="false"/>        
     </service>
     <service name="deleteGeo" default-entity-name="Geo" engine="entity-auto" invoke="delete" auth="true">
         <description>Delete a Geo</description>
@@ -772,42 +780,11 @@ under the License.
         <attribute name="geoAssocTypeId" mode="IN" type="String"/>        
         <attribute name="geoList" mode="OUT" type="java.util.List"/>
     </service>
-    
-    <service name="getServerTimestamp" engine="simple" auth="false"
-        location="component://common/script/org/ofbiz/common/CommonServices.xml" invoke="getServerTimestamp">
-        <attribute name="serverTimestamp" mode="OUT" type="TimeStamp"/>
-    </service>
-    
-    <service name="getServerTimeZone" engine="simple" auth="false"
-        location="component://common/script/org/ofbiz/common/CommonServices.xml" invoke="getServerTimeZone">
-        <attribute name="serverTimeZone" mode="OUT" type="String"/>
-    </service>
-    
-    <service name="getServerTimestampAsLong" engine="simple" auth="false"
-        location="component://common/script/org/ofbiz/common/CommonServices.xml" invoke="getServerTimestampAsLong">
-        <attribute name="serverTimestamp" mode="OUT" type="Long"/>
-    </service>
-    
+
     <service name="createJsLanguageFileMapping" engine="java" auth="false" use-transaction="false"
         location="org.ofbiz.common.JsLanguageFileMappingCreator" invoke="createJsLanguageFileMapping">
         <description>Create or update the JsLanguageFilesMapping.java. You still need to compile thereafter</description>
         <attribute name="encoding" mode="IN" type="String" optional="true" default-value="UTF-8"></attribute>
-    </service>
-
-    <!-- Metrics services -->
-    <service name="getAllMetrics" auth="true" use-transaction="false"
-            engine="java" location="org.ofbiz.common.CommonServices" invoke="getAllMetrics">
-        <description>
-            Get all metrics. Returns a List of Maps - one Map per metric. Each Map includes the following keys:
-            name, serviceRate, threshold, totalEvents. See org.ofbiz.base.metrics.Metrics.
-        </description>
-        <attribute name="metricsList" mode="OUT" type="java.util.List" optional="false" />
-    </service>
-
-    <service name="resetMetric" auth="true" use-transaction="false"
-         engine="java" location="org.ofbiz.common.CommonServices" invoke="resetMetric">
-        <description>Resets a metric. See org.ofbiz.base.metrics.Metrics.</description>
-        <attribute name="name" mode="IN" type="String" optional="false"/>
     </service>
 
 </services>

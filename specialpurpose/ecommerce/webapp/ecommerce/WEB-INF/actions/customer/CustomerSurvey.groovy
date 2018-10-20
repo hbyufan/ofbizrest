@@ -27,9 +27,9 @@ paramMap = UtilHttp.getParameterMap(request);
 
 productStoreSurveyId = parameters.productStoreSurveyId;
 
-surveyAppl = delegator.findOne("ProductStoreSurveyAppl", [productStoreSurveyId : productStoreSurveyId], false);
+surveyAppl = delegator.findByPrimaryKey("ProductStoreSurveyAppl", [productStoreSurveyId : productStoreSurveyId]);
 if (surveyAppl) {
-    survey = surveyAppl.getRelatedOne("Survey", false);
+    survey = surveyAppl.getRelatedOne("Survey");
     context.survey = survey;
 
     if (!parameters._ERROR_MESSAGE_) {

@@ -46,7 +46,7 @@ context.imageNameOriginal = imageUrlPrefix + "/" + filenameExpander.expandString
 // Start ProductContent stuff
 productContent = null;
 if (product) {
-    productContent = product.getRelated('ProductContent', null, ['productContentTypeId'], false);
+    productContent = product.getRelated('ProductContent', null, ['productContentTypeId']);
 }
 context.productContent = productContent;
 // End ProductContent stuff

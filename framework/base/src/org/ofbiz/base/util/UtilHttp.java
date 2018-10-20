@@ -759,29 +759,11 @@ public class UtilHttp {
                 String name = entry.getKey();
                 Object value = entry.getValue();
                 String valueStr = null;
-                if (name == null || value == null) {
-                    continue;
-                }
-
-                Collection<?> col;
-                if (value instanceof String) {
-                    col = Arrays.asList(value);
-                } else if (value instanceof Collection) {
-                    col = UtilGenerics.cast(value);
-                } else if (value == null) {
-                    continue;
-                } else if (value.getClass().isArray()) {
-                    col = Arrays.asList((Object[]) value);
-                } else {
-                    col = Arrays.asList(value);
-                }
-                for (Object colValue: col) {
-                    if (colValue instanceof String) {
-                        valueStr = (String) colValue;
-                    } else if (colValue == null) {
-                        continue;
+                if (name != null && value != null) {
+                    if (value instanceof String) {
+                        valueStr = (String) value;
                     } else {
-                        valueStr = colValue.toString();
+                        valueStr = value.toString();
                     }
 
                     if (UtilValidate.isNotEmpty(valueStr)) {
@@ -1098,10 +1080,10 @@ public class UtilHttp {
                     name = token.substring(0, equalsIndex);
                 }
                 if (!paramNames.contains(name)) {
-                    if (cleanQuery.length() > 0) {
+                    cleanQuery.append(token);
+                    if (queryTokens.hasMoreTokens()) {
                         cleanQuery.append("&");
                     }
-                    cleanQuery.append(token);
                 }
             }
             retStr = cleanQuery.toString();

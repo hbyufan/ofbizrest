@@ -67,14 +67,13 @@ under the License.
             <td><a href='<@ofbizUrl>${url}?constraint=location@${selectedServiceMap.location}</@ofbizUrl>'>${selectedServiceMap.location}</a></td>
           </tr>
           <tr>
-            <td class="label">${uiLabelMap.WebtoolsDefinitionLocation}</td>
-            <td><a href='<@ofbizUrl>${url}?constraint=definitionLocation@${selectedServiceMap.definitionLocation}</@ofbizUrl>'>${selectedServiceMap.definitionLocation}</a></td>
+            <td class="label">${uiLabelMap.WebtoolsArtifactInfo}</td>
+            <td><a href='<@ofbizUrl>ArtifactInfo?name=${selectedServiceMap.serviceName}&amp;type=service</@ofbizUrl>'>${uiLabelMap.WebtoolsArtifactInfo}</a></td>
             <td class="label">${uiLabelMap.WebtoolsDefaultEntityName}</td>
             <td><a href='<@ofbizUrl>${url}?constraint=default_entity_name@${selectedServiceMap.defaultEntityName}</@ofbizUrl>'>${selectedServiceMap.defaultEntityName}</a></td>
           </tr>
           <tr>
-            <td class="label">${uiLabelMap.WebtoolsArtifactInfo}</td>
-            <td><a href='<@ofbizUrl>ArtifactInfo?name=${selectedServiceMap.serviceName}&amp;type=service</@ofbizUrl>'>${uiLabelMap.WebtoolsArtifactInfo}</a></td>
+            <td colspan="2">&nbsp;</td>
             <td class="label">${uiLabelMap.WebtoolsRequireNewTransaction}</td>
             <td>${selectedServiceMap.requireNewTransaction}</td>
           </tr>
@@ -336,13 +335,34 @@ under the License.
 
   <#-- Show alphabetical index -->
   <#if serviceNamesAlphaList?exists && serviceNamesAlphaList?has_content>
+    <form id='dispForm' method='post' action='<@ofbizUrl>${url}</@ofbizUrl>'>
       <div class="button-bar">
         <#assign isfirst=true>
         <#list serviceNamesAlphaList as alpha>
           <a href='<@ofbizUrl>${url}?constraint=alpha@${alpha}</@ofbizUrl>'>${alpha}</a>
           <#assign isfirst=false>
         </#list>
+        <#if dispArrList?exists && dispArrList?has_content>
+          &nbsp;&nbsp;&nbsp;&nbsp;
+          <script language='javascript' type='text/javascript'>
+            function submitDispForm(){
+                selObj = document.getElementById('sd');
+                var dispVar = selObj.options[selObj.selectedIndex].value;
+                if(dispVar != ''){
+                    document.getElementById('dispForm').submit();
+                }
+            }
+          </script>
+          <select id='sd' name='selDisp' onchange='submitDispForm();'>
+            <option value='' selected="selected">${uiLabelMap.WebtoolsSelectDispatcher}</option>
+            <option value='' ></option>
+            <#list dispArrList as disp>
+              <option value='${disp}'>${disp}</option>
+            </#list>
+          </select>
+        </#if>
       </div>
+    </form>
   </#if>
 
   <div class="screenlet">
@@ -355,7 +375,6 @@ under the License.
           <td>${uiLabelMap.WebtoolsDefaultEntityName}</td>
           <td>${uiLabelMap.WebtoolsInvoke}</td>
           <td>${uiLabelMap.WebtoolsLocation}</td>
-          <td>${uiLabelMap.WebtoolsDefinitionLocation}</td>
         </tr>
         <#assign alt_row = false>
         <#list servicesList as service>
@@ -365,7 +384,6 @@ under the License.
             <td><a href='<@ofbizUrl>${url}?constraint=default_entity_name@${service.defaultEntityName?default(uiLabelMap.CommonNA)}</@ofbizUrl>'>${service.defaultEntityName}</a></td>
             <td>${service.invoke}</td>
             <td><a href='<@ofbizUrl>${url}?constraint=location@${service.location?default(uiLabelMap.CommonNA)}</@ofbizUrl>'>${service.location}</a></td>
-            <td><a href='<@ofbizUrl>${url}?constraint=definitionLocation@${service.definitionLocation}</@ofbizUrl>'>${service.definitionLocation}</a></td>
           </tr>
           <#assign alt_row = !alt_row>
         </#list>

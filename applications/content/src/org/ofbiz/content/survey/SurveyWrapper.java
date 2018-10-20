@@ -25,6 +25,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -240,7 +241,7 @@ public class SurveyWrapper {
     public GenericValue getSurvey() {
         GenericValue survey = null;
         try {
-            survey = delegator.findOne("Survey", UtilMisc.toMap("surveyId", surveyId), true);
+            survey = delegator.findByPrimaryKeyCache("Survey", UtilMisc.toMap("surveyId", surveyId));
         } catch (GenericEntityException e) {
             Debug.logError(e, "Unable to get Survey : " + surveyId, module);
         }
@@ -287,8 +288,8 @@ public class SurveyWrapper {
 
         try {
             Map<String, Object> fields = UtilMisc.<String, Object>toMap("surveyId", surveyId);
-            List<String> order = UtilMisc.toList("sequenceNum", "surveyMultiRespColId");
-            questions = delegator.findByAnd("SurveyQuestionAndAppl", fields, order, true);
+            List<String> order = UtilMisc.<String>toList("sequenceNum", "surveyMultiRespColId");
+            questions = delegator.findByAndCache("SurveyQuestionAndAppl", fields, order);
             if (questions != null) {
                 questions = EntityUtil.filterByDate(questions);
             }
@@ -312,7 +313,7 @@ public class SurveyWrapper {
         String responseId = null;
         List<GenericValue> responses = null;
         try {
-            responses = delegator.findByAnd("SurveyResponse", UtilMisc.toMap("surveyId", surveyId, "partyId", partyId), UtilMisc.toList("-lastModifiedDate"), false);
+            responses = delegator.findByAnd("SurveyResponse", UtilMisc.toMap("surveyId", surveyId, "partyId", partyId), UtilMisc.toList("-lastModifiedDate"));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -345,7 +346,7 @@ public class SurveyWrapper {
     public List<GenericValue> getSurveyResponses(GenericValue question) throws SurveyWrapperException {
         List<GenericValue> responses = null;
         try {
-            responses = delegator.findByAnd("SurveyResponse", UtilMisc.toMap("surveyQuestionId", question.getString("surveyQuestionId")), null, false);
+            responses = delegator.findByAnd("SurveyResponse", UtilMisc.toMap("surveyQuestionId", question.getString("surveyQuestionId")));
         } catch (GenericEntityException e) {
             throw new SurveyWrapperException(e);
         }
@@ -359,7 +360,7 @@ public class SurveyWrapper {
         if (responseId != null) {
             List<GenericValue> answers = null;
             try {
-                answers = delegator.findByAnd("SurveyResponseAnswer", UtilMisc.toMap("surveyResponseId", responseId), null, false);
+                answers = delegator.findByAnd("SurveyResponseAnswer", UtilMisc.toMap("surveyResponseId", responseId));
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }

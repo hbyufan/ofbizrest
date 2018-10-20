@@ -47,7 +47,7 @@ abstract class GroovyBaseScript extends Script {
     }
 
     List findList(String entityName, Map inputMap) {
-        List genericValues = binding.getVariable('delegator').findByAnd(entityName, inputMap, null, false);
+        List genericValues = binding.getVariable('delegator').findByAnd(entityName, inputMap);
         // TODO: get the list of entity fields from the map and use them only
         return genericValues;
     }
@@ -56,9 +56,6 @@ abstract class GroovyBaseScript extends Script {
         // TODO: implement some clever i18n mechanism based on the userLogin and locale in the binding
         if (this.binding.hasVariable('request')) {
             // the script is invoked as an "event"
-            if (message) {
-                this.binding.getVariable('request').setAttribute("_EVENT_MESSAGE_", message)
-            }
             return 'success';
         } else {
             // the script is invoked as a "service"

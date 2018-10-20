@@ -20,6 +20,8 @@ package org.ofbiz.service;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -33,9 +35,9 @@ import javolution.util.FastMap;
 
 import org.ofbiz.base.config.GenericConfigException;
 import org.ofbiz.base.config.ResourceHandler;
-import org.ofbiz.base.metrics.MetricsFactory;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralException;
+import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilTimer;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.base.util.UtilXml;
@@ -44,6 +46,7 @@ import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.model.ModelEntity;
 import org.ofbiz.entity.model.ModelField;
 import org.ofbiz.entity.model.ModelFieldType;
+import org.ofbiz.service.engine.GenericEngine;
 import org.ofbiz.service.group.GroupModel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -65,6 +68,7 @@ public class ModelServiceReader implements Serializable {
     protected boolean isFromURL;
     protected URL readerURL = null;
     protected ResourceHandler handler = null;
+    protected Map<String, ModelService> modelServices = null;
     protected DispatchContext dctx = null;
 
     public static Map<String, ModelService> getModelServiceMap(URL readerURL, DispatchContext dctx) {
@@ -213,11 +217,6 @@ public class ModelServiceReader implements Serializable {
         service.validate = !"false".equalsIgnoreCase(serviceElement.getAttribute("validate"));
         service.useTransaction = !"false".equalsIgnoreCase(serviceElement.getAttribute("use-transaction"));
         service.requireNewTransaction = !"false".equalsIgnoreCase(serviceElement.getAttribute("require-new-transaction"));
-        if (service.requireNewTransaction && !service.useTransaction) {
-            // requireNewTransaction implies that a transaction is used
-            service.useTransaction = true;
-            Debug.logWarning("In service definition [" + service.name + "] the value use-transaction has been changed from false to true as required when require-new-transaction is set to true", module);
-        }
         service.hideResultInLog = !"false".equalsIgnoreCase(serviceElement.getAttribute("hideResultInLog"));        
 
         // set the semaphore sleep/wait times
@@ -284,11 +283,7 @@ public class ModelServiceReader implements Serializable {
         this.createAutoAttrDefs(serviceElement, service);
         this.createAttrDefs(serviceElement, service);
         this.createOverrideDefs(serviceElement, service);
-        // Get metrics.
-        Element metricsElement = UtilXml.firstChildElement(serviceElement, "metric");
-        if (metricsElement != null) {
-            service.metrics = MetricsFactory.getInstance(metricsElement);
-        }
+
         return service;
     }
 
@@ -509,8 +504,6 @@ public class ModelServiceReader implements Serializable {
             param.mode = UtilXml.checkEmpty(attribute.getAttribute("mode")).intern();
             param.entityName = UtilXml.checkEmpty(attribute.getAttribute("entity-name")).intern();
             param.fieldName = UtilXml.checkEmpty(attribute.getAttribute("field-name")).intern();
-            param.requestAttributeName = UtilXml.checkEmpty(attribute.getAttribute("request-attribute-name")).intern();
-            param.sessionAttributeName = UtilXml.checkEmpty(attribute.getAttribute("session-attribute-name")).intern();
             param.stringMapPrefix = UtilXml.checkEmpty(attribute.getAttribute("string-map-prefix")).intern();
             param.stringListSuffix = UtilXml.checkEmpty(attribute.getAttribute("string-list-suffix")).intern();
             param.formLabel = attribute.hasAttribute("form-label")?attribute.getAttribute("form-label").intern():null;

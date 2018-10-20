@@ -19,6 +19,7 @@
 package org.ofbiz.accounting.thirdparty.valuelink;
 
 import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -908,7 +909,7 @@ public class ValueLinkServices {
         // get the GiftCard VO
         GenericValue giftCard = null;
         try {
-            giftCard = paymentPref.getRelatedOne("GiftCard", false);
+            giftCard = paymentPref.getRelatedOne("GiftCard");
         } catch (GenericEntityException e) {
             Debug.logError("Unable to get GiftCard from OrderPaymentPreference", module);
             return ServiceUtil.returnError(UtilProperties.getMessage(resourceError, 
@@ -973,7 +974,7 @@ public class ValueLinkServices {
         // get the GiftCard VO
         GenericValue giftCard = null;
         try {
-            giftCard = paymentPref.getRelatedOne("GiftCard", false);
+            giftCard = paymentPref.getRelatedOne("GiftCard");
         } catch (GenericEntityException e) {
             Debug.logError("Unable to get GiftCard from OrderPaymentPreference", module);
             return ServiceUtil.returnError(UtilProperties.getMessage(resourceError, 
@@ -1038,7 +1039,7 @@ public class ValueLinkServices {
         // the order header for store info
         GenericValue orderHeader = null;
         try {
-            orderHeader = orderItem.getRelatedOne("OrderHeader", false);
+            orderHeader = orderItem.getRelatedOne("OrderHeader");
         } catch (GenericEntityException e) {
             Debug.logError(e, "Unable to get OrderHeader from OrderItem",module);
             return ServiceUtil.returnError(UtilProperties.getMessage(resourceOrder, 
@@ -1092,7 +1093,7 @@ public class ValueLinkServices {
         // the product entity needed for information
         GenericValue product = null;
         try {
-            product = orderItem.getRelatedOne("Product", false);
+            product = orderItem.getRelatedOne("Product");
         } catch (GenericEntityException e) {
             Debug.logError("Unable to get Product from OrderItem", module);
         }
@@ -1106,7 +1107,7 @@ public class ValueLinkServices {
         try {
             Map<String, Object> fields = UtilMisc.toMap("productId", product.get("productId"), "productFeatureTypeId", "TYPE");
             List<String> order = UtilMisc.toList("-fromDate");
-            List<GenericValue> featureAppls = delegator.findByAnd("ProductFeatureAndAppl", fields, order, true);
+            List<GenericValue> featureAppls = delegator.findByAndCache("ProductFeatureAndAppl", fields, order);
             featureAppls = EntityUtil.filterByDate(featureAppls);
             typeFeature = EntityUtil.getFirst(featureAppls);
         } catch (GenericEntityException e) {
@@ -1136,7 +1137,7 @@ public class ValueLinkServices {
             Map<String, Object> fields = UtilMisc.<String, Object>toMap("orderId", orderId, 
                     "orderItemSeqId", orderItem.get("orderItemSeqId"), "surveyId", surveyId);
             List<String> order = UtilMisc.toList("-responseDate");
-            List<GenericValue> responses = delegator.findByAnd("SurveyResponse", fields, order, false);
+            List<GenericValue> responses = delegator.findByAnd("SurveyResponse", fields, order);
             // there should be only one
             surveyResponse = EntityUtil.getFirst(responses);
         } catch (GenericEntityException e) {
@@ -1148,7 +1149,7 @@ public class ValueLinkServices {
         // get the response answers
         List<GenericValue> responseAnswers = null;
         try {
-            responseAnswers = surveyResponse.getRelated("SurveyResponseAnswer", null, null, false);
+            responseAnswers = surveyResponse.getRelated("SurveyResponseAnswer");
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
             return ServiceUtil.returnError(UtilProperties.getMessage(resourceError,
@@ -1161,7 +1162,7 @@ public class ValueLinkServices {
             for(GenericValue answer : responseAnswers) {
                 GenericValue question = null;
                 try {
-                    question = answer.getRelatedOne("SurveyQuestion", false);
+                    question = answer.getRelatedOne("SurveyQuestion");
                 } catch (GenericEntityException e) {
                     Debug.logError(e, module);
                     return ServiceUtil.returnError(UtilProperties.getMessage(resourceError,
@@ -1264,7 +1265,7 @@ public class ValueLinkServices {
             GenericValue productStoreEmail = null;
             String emailType = "PRDS_GC_PURCHASE";
             try {
-                productStoreEmail = delegator.findOne("ProductStoreEmailSetting", UtilMisc.toMap("productStoreId", productStoreId, "emailType", emailType), false);
+                productStoreEmail = delegator.findByPrimaryKey("ProductStoreEmailSetting", UtilMisc.toMap("productStoreId", productStoreId, "emailType", emailType));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Unable to get product store email setting for gift card purchase", module);
             }
@@ -1332,7 +1333,7 @@ public class ValueLinkServices {
         // the order header for store info
         GenericValue orderHeader = null;
         try {
-            orderHeader = orderItem.getRelatedOne("OrderHeader", false);
+            orderHeader = orderItem.getRelatedOne("OrderHeader");
         } catch (GenericEntityException e) {
             Debug.logError(e, "Unable to get OrderHeader from OrderItem",module);
             return ServiceUtil.returnError(UtilProperties.getMessage(resourceOrder, 
@@ -1391,7 +1392,7 @@ public class ValueLinkServices {
             Map<String, Object> fields = UtilMisc.toMap("orderId", orderId, 
                     "orderItemSeqId", orderItem.get("orderItemSeqId"), "surveyId", surveyId);
             List<String> order = UtilMisc.toList("-responseDate");
-            List<GenericValue> responses = delegator.findByAnd("SurveyResponse", fields, order, false);
+            List<GenericValue> responses = delegator.findByAnd("SurveyResponse", fields, order);
             // there should be only one
             surveyResponse = EntityUtil.getFirst(responses);
         } catch (GenericEntityException e) {
@@ -1403,7 +1404,7 @@ public class ValueLinkServices {
         // get the response answers
         List<GenericValue> responseAnswers = null;
         try {
-            responseAnswers = surveyResponse.getRelated("SurveyResponseAnswer", null, null, false);
+            responseAnswers = surveyResponse.getRelated("SurveyResponseAnswer");
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
             return ServiceUtil.returnError(UtilProperties.getMessage(resourceError,
@@ -1416,7 +1417,7 @@ public class ValueLinkServices {
             for(GenericValue answer : responseAnswers) {
                 GenericValue question = null;
                 try {
-                    question = answer.getRelatedOne("SurveyQuestion", false);
+                    question = answer.getRelatedOne("SurveyQuestion");
                 } catch (GenericEntityException e) {
                     Debug.logError(e, module);
                     return ServiceUtil.returnError(UtilProperties.getMessage(resourceError,
@@ -1516,7 +1517,7 @@ public class ValueLinkServices {
         GenericValue productStoreEmail = null;
         String emailType = "PRDS_GC_RELOAD";
         try {
-            productStoreEmail = delegator.findOne("ProductStoreEmailSetting", UtilMisc.toMap("productStoreId", productStoreId, "emailType", emailType), false);
+            productStoreEmail = delegator.findByPrimaryKey("ProductStoreEmailSetting", UtilMisc.toMap("productStoreId", productStoreId, "emailType", emailType));
         } catch (GenericEntityException e) {
             Debug.logError(e, "Unable to get product store email setting for gift card purchase", module);
         }

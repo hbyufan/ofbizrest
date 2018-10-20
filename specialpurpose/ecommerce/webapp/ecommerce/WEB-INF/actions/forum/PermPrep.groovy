@@ -102,7 +102,7 @@ if (permissionType.equals("complex")) {
 
     if (!currentValue || !"Content".equals(entityName)) {
         if (thisContentId) {
-            currentValue = delegator.findOne("Content", [contentId : thisContentId], false);
+            currentValue = delegator.findByPrimaryKey("Content", [contentId : thisContentId]);
         }
     }
     if ("add".equals(mode)) {

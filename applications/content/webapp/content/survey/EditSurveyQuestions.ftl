@@ -44,12 +44,12 @@ under the License.
         </tr>
         <#assign alt_row = false>
         <#list surveyQuestionAndApplList as surveyQuestionAndAppl>
-          <#assign questionType = surveyQuestionAndAppl.getRelatedOne("SurveyQuestionType", true)/>
-          <#assign questionCat = surveyQuestionAndAppl.getRelatedOne("SurveyQuestionCategory", true)?if_exists/>
-          <#assign currentSurveyPage = surveyQuestionAndAppl.getRelatedOne("SurveyPage", true)?if_exists/>
-          <#assign currentSurveyMultiResp = surveyQuestionAndAppl.getRelatedOne("SurveyMultiResp", true)?if_exists/>
+          <#assign questionType = surveyQuestionAndAppl.getRelatedOneCache("SurveyQuestionType")/>
+          <#assign questionCat = surveyQuestionAndAppl.getRelatedOneCache("SurveyQuestionCategory")?if_exists/>
+          <#assign currentSurveyPage = surveyQuestionAndAppl.getRelatedOneCache("SurveyPage")?if_exists/>
+          <#assign currentSurveyMultiResp = surveyQuestionAndAppl.getRelatedOneCache("SurveyMultiResp")?if_exists/>
           <#if currentSurveyMultiResp?has_content>
-            <#assign currentSurveyMultiRespColumns = currentSurveyMultiResp.getRelated("SurveyMultiRespColumn", null, null, false)/>
+            <#assign currentSurveyMultiRespColumns = currentSurveyMultiResp.getRelated("SurveyMultiRespColumn")/>
           <#else/>
             <#assign currentSurveyMultiRespColumns = []/>
           </#if>
@@ -92,7 +92,7 @@ under the License.
               <td>
                 <select name="surveyMultiRespColId">
                   <#if surveyQuestionAndAppl.surveyMultiRespColId?has_content>
-                    <#assign currentSurveyMultiRespColumn = surveyQuestionAndAppl.getRelatedOne("SurveyMultiRespColumn", false)/>
+                    <#assign currentSurveyMultiRespColumn = surveyQuestionAndAppl.getRelatedOne("SurveyMultiRespColumn")/>
                     <option value="${currentSurveyMultiRespColumn.surveyMultiRespColId}">${(currentSurveyMultiRespColumn.columnTitle)?if_exists} [${currentSurveyMultiRespColumn.surveyMultiRespColId}]</option>
                     <option value="${currentSurveyMultiRespColumn.surveyMultiRespColId}">----</option>
                   </#if>
@@ -160,7 +160,7 @@ under the License.
               </tr>
           <#assign alt_row = false>
           <#list categoryQuestions as question>
-            <#assign questionType = question.getRelatedOne("SurveyQuestionType", false)>
+            <#assign questionType = question.getRelatedOne("SurveyQuestionType")>
             <form method="post" action="<@ofbizUrl>createSurveyQuestionAppl</@ofbizUrl>">
               <input type="hidden" name="surveyId" value="${requestParameters.surveyId}" />
               <input type="hidden" name="surveyQuestionId" value="${question.surveyQuestionId}" />

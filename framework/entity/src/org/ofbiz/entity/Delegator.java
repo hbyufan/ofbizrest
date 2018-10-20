@@ -48,8 +48,6 @@ import org.xml.sax.SAXException;
 
 public interface Delegator {
 
-    enum OperationType {INSERT, UPDATE, DELETE}
-
     public void clearAllCacheLinesByDummyPK(Collection<GenericPK> dummyPKs);
 
     public void clearAllCacheLinesByValue(Collection<GenericValue> values);
@@ -138,9 +136,9 @@ public interface Delegator {
 
     public void clearCacheLineFlexible(GenericEntity dummyPK, boolean distribute);
 
-    public Delegator cloneDelegator();
+    public GenericDelegator cloneDelegator();
 
-    public Delegator cloneDelegator(String delegatorName);
+    public GenericDelegator cloneDelegator(String delegatorName);
 
     /**
      * Creates a Entity in the form of a GenericValue and write it to the
@@ -308,9 +306,7 @@ public interface Delegator {
      *            The fields of the named entity to query by with their
      *            corresponding values
      * @return List of GenericValue instances that match the query
-     * @deprecated use {@link #findByAnd(String, Map, List, boolean)}
      */
-    @Deprecated
     public List<GenericValue> findByAnd(String entityName, Map<String, ? extends Object> fields) throws GenericEntityException;
 
     /**
@@ -327,9 +323,7 @@ public interface Delegator {
      *            optionally add a " ASC" for ascending or " DESC" for
      *            descending
      * @return List of GenericValue instances that match the query
-     * @deprecated use {@link #findByAnd(String, Map, List, boolean)}
      */
-    @Deprecated
     public List<GenericValue> findByAnd(String entityName, Map<String, ? extends Object> fields, List<String> orderBy) throws GenericEntityException;
 
     /**
@@ -342,9 +336,7 @@ public interface Delegator {
      *            The fields of the named entity to query by with their
      *            corresponding values
      * @return List of GenericValue instances that match the query
-     * @deprecated use {@link #findByAnd(String, Map, List, boolean)}
      */
-    @Deprecated
     public List<GenericValue> findByAnd(String entityName, Object... fields) throws GenericEntityException;
 
     /**
@@ -358,9 +350,7 @@ public interface Delegator {
      *            The fields of the named entity to query by with their
      *            corresponding values
      * @return List of GenericValue instances that match the query
-     * @deprecated use {@link #findByAnd(String, Map, List, boolean)}
      */
-    @Deprecated
     public List<GenericValue> findByAndCache(String entityName, Map<String, ? extends Object> fields) throws GenericEntityException;
 
     /**
@@ -378,30 +368,8 @@ public interface Delegator {
      *            optionally add a " ASC" for ascending or " DESC" for
      *            descending
      * @return List of GenericValue instances that match the query
-     * @deprecated use {@link #findByAnd(String, Map, List, boolean)}
      */
-    @Deprecated
     public List<GenericValue> findByAndCache(String entityName, Map<String, ? extends Object> fields, List<String> orderBy) throws GenericEntityException;
-
-    /**
-     * Finds Generic Entity records by all of the specified fields (ie: combined
-     * using AND), looking first in the cache; uses orderBy for lookup, but only
-     * keys results on the entityName and fields
-     *
-     * @param entityName
-     *            The Name of the Entity as defined in the entity XML file
-     * @param fields
-     *            The fields of the named entity to query by with their
-     *            corresponding values
-     * @param orderBy
-     *            The fields of the named entity to order the query by;
-     *            optionally add a " ASC" for ascending or " DESC" for
-     *            descending
-     * @param useCache
-     *            Whether to cache the results
-     * @return List of GenericValue instances that match the query
-     */
-    public List<GenericValue> findByAnd(String entityName, Map<String, ? extends Object> fields, List<String> orderBy, boolean useCache) throws GenericEntityException;
 
     /**
      * Find a Generic Entity by its Primary Key NOTE 20080502: 550 references
@@ -414,9 +382,7 @@ public interface Delegator {
      *            The fields of the named entity to query by with their
      *            corresponding values
      * @return The GenericValue corresponding to the primaryKey
-     * @deprecated use {@link #findOne(String, Map, boolean)}
      */
-    @Deprecated
     public GenericValue findByPrimaryKey(String entityName, Map<String, ? extends Object> fields) throws GenericEntityException;
 
     /**
@@ -429,9 +395,7 @@ public interface Delegator {
      *            The fields of the named entity to query by with their
      *            corresponding values
      * @return The GenericValue corresponding to the primaryKey
-     * @deprecated use {@link #findOne(String, Map, boolean)}
      */
-    @Deprecated
     public GenericValue findByPrimaryKeyCache(String entityName, Map<String, ? extends Object> fields) throws GenericEntityException;
 
     /**
@@ -444,9 +408,7 @@ public interface Delegator {
      *            The fields of the named entity to query by with their
      *            corresponding values
      * @return The GenericValue corresponding to the primaryKey
-     * @deprecated use {@link #findOne(String, boolean, Object...)}
      */
-    @Deprecated
     public GenericValue findByPrimaryKeyCache(String entityName, Object... fields) throws GenericEntityException;
 
     /**
@@ -786,9 +748,7 @@ public interface Delegator {
      *            GenericValue instance containing the entity
      * @return List of GenericValue instances as specified in the relation
      *         definition
-     * @deprecated use {@link #getRelated(String, Map, List, GenericValue, boolean)}
      */
-    @Deprecated
     public List<GenericValue> getRelated(String relationName, Map<String, ? extends Object> byAndFields, List<String> orderBy, GenericValue value) throws GenericEntityException;
 
     /**
@@ -804,33 +764,8 @@ public interface Delegator {
      *            GenericValue instance containing the entity
      * @return List of GenericValue instances as specified in the relation
      *         definition
-     * @deprecated use {@link #getRelated(String, Map, List, GenericValue, boolean)}
      */
-    @Deprecated
     public List<GenericValue> getRelatedCache(String relationName, GenericValue value) throws GenericEntityException;
-
-    /**
-     * Get the named Related Entity for the GenericValue from the persistent
-     * store
-     *
-     * @param relationName
-     *            String containing the relation name which is the combination
-     *            of relation.title and relation.rel-entity-name as specified in
-     *            the entity XML definition file
-     * @param byAndFields
-     *            the fields that must equal in order to keep; may be null
-     * @param orderBy
-     *            The fields of the named entity to order the query by; may be
-     *            null; optionally add a " ASC" for ascending or " DESC" for
-     *            descending
-     * @param value
-     *            GenericValue instance containing the entity
-     * @param useCache
-     *            Whether to cache the results
-     * @return List of GenericValue instances as specified in the relation
-     *         definition
-     */
-    public List<GenericValue> getRelated(String relationName, Map<String, ? extends Object> byAndFields, List<String> orderBy, GenericValue value, boolean useCache) throws GenericEntityException;
 
     /**
      * Get a dummy primary key for the named Related Entity for the GenericValue
@@ -850,44 +785,23 @@ public interface Delegator {
     public GenericPK getRelatedDummyPK(String relationName, Map<String, ? extends Object> byAndFields, GenericValue value) throws GenericEntityException;
 
     /**
-     * Get related entity where relation is of type one, uses findOne
+     * Get related entity where relation is of type one, uses findByPrimaryKey
      * NOTE 20080502: 7 references
      *
      * @throws IllegalArgumentException
      *             if the list found has more than one item
-     * @deprecated use {@link #getRelatedOne(String, GenericValue, boolean)}
      */
-    @Deprecated
     public GenericValue getRelatedOne(String relationName, GenericValue value) throws GenericEntityException;
 
     /**
-     * Get related entity where relation is of type one, uses findOne
+     * Get related entity where relation is of type one, uses findByPrimaryKey,
      * checking first in the cache to see if the desired value is there NOTE
      * 20080502: 1 references
      *
      * @throws IllegalArgumentException
      *             if the list found has more than one item
-     * @deprecated use {@link #getRelatedOne(String, GenericValue, boolean)}
      */
-    @Deprecated
     public GenericValue getRelatedOneCache(String relationName, GenericValue value) throws GenericEntityException;
-
-    /**
-     * Get related entity where relation is of type one, uses findByPrimaryKey
-     *
-     * @param relationName
-     *            String containing the relation name which is the combination
-     *            of relation.title and relation.rel-entity-name as specified in
-     *            the entity XML definition file
-     * @param value
-     *            GenericValue instance containing the entity
-     * @param useCache
-     *            Whether to cache the results
-     * @return GenericValue that is the related entity
-     * @throws IllegalArgumentException
-     *             if the list found has more than one item
-     */
-    public GenericValue getRelatedOne(String relationName, GenericValue value, boolean useCache) throws GenericEntityException;
 
     public void initEntityEcaHandler();
 
@@ -907,7 +821,7 @@ public interface Delegator {
     /** Creates a Primary Key in the form of a GenericPK without persisting it */
     public GenericPK makePKSingle(String entityName, Object singlePkValue);
 
-    public Delegator makeTestDelegator(String delegatorName);
+    public GenericDelegator makeTestDelegator(String delegatorName);
 
     /**
      * Creates a Entity in the form of a GenericValue without persisting it;
@@ -1035,6 +949,7 @@ public interface Delegator {
      *            The fields of the named entity to query by with their
      *            corresponding values
      * @return int representing number of rows effected by this operation
+     * @deprecated
      */
     public int removeByAnd(String entityName, boolean doCacheClear, Object... fields) throws GenericEntityException;
 

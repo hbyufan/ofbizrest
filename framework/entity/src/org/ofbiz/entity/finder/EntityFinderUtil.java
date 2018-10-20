@@ -26,10 +26,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javolution.util.FastList;
 
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.ObjectType;
@@ -386,7 +387,7 @@ public class EntityFinderUtil {
                 }
                 result = results.subList(start, end);
             } else {
-                result = new LinkedList<GenericValue>();
+                result = FastList.newInstance();
             }
             listAcsr.put(context, result);
         }
@@ -449,7 +450,7 @@ public class EntityFinderUtil {
                 }
                 result = results.subList(begin, end);
             } else {
-                result = new LinkedList<GenericValue>();
+                result = FastList.newInstance();
             }
             listAcsr.put(context, result);
         }

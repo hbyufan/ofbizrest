@@ -20,8 +20,9 @@ package org.ofbiz.minilang.method.ifops;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
+
+import javolution.util.FastList;
 
 import org.ofbiz.base.util.UtilXml;
 import org.ofbiz.base.util.collections.FlexibleMapAccessor;
@@ -34,6 +35,7 @@ import org.ofbiz.minilang.method.MessageElement;
 import org.ofbiz.minilang.method.MethodContext;
 import org.ofbiz.minilang.method.MethodOperation;
 import org.ofbiz.security.Security;
+import org.ofbiz.security.authz.Authorization;
 import org.w3c.dom.Element;
 
 /**
@@ -76,11 +78,12 @@ public final class CheckPermission extends MethodOperation {
         boolean hasPermission = false;
         GenericValue userLogin = methodContext.getUserLogin();
         if (userLogin != null) {
+            Authorization authz = methodContext.getAuthz();
             Security security = methodContext.getSecurity();
-            hasPermission = this.primaryPermissionInfo.hasPermission(methodContext, userLogin, security);
+            hasPermission = this.primaryPermissionInfo.hasPermission(methodContext, userLogin, authz, security);
             if (!hasPermission && altPermissionInfoList != null) {
                 for (PermissionInfo altPermInfo : altPermissionInfoList) {
-                    if (altPermInfo.hasPermission(methodContext, userLogin, security)) {
+                    if (altPermInfo.hasPermission(methodContext, userLogin, authz, security)) {
                         hasPermission = true;
                         break;
                     }
@@ -90,7 +93,7 @@ public final class CheckPermission extends MethodOperation {
         if (!hasPermission && messageElement != null) {
             List<String> messages = errorListFma.get(methodContext.getEnvMap());
             if (messages == null) {
-                messages = new LinkedList<String>();
+                messages = FastList.newInstance();
                 errorListFma.put(methodContext.getEnvMap(), messages);
             }
             messages.add(messageElement.getMessage(methodContext));
@@ -144,7 +147,7 @@ public final class CheckPermission extends MethodOperation {
             this.actionFse = FlexibleStringExpander.getInstance(element.getAttribute("action"));
         }
 
-        private boolean hasPermission(MethodContext methodContext, GenericValue userLogin, Security security) {
+        private boolean hasPermission(MethodContext methodContext, GenericValue userLogin, Authorization authz, Security security) {
             String permission = permissionFse.expandString(methodContext.getEnvMap());
             String action = actionFse.expandString(methodContext.getEnvMap());
             if (!action.isEmpty()) {
@@ -152,7 +155,7 @@ public final class CheckPermission extends MethodOperation {
                 return security.hasEntityPermission(permission, action, userLogin);
             } else {
                 // run hasPermission
-                return security.hasPermission(permission, userLogin);
+                return authz.hasPermission(userLogin.getString("userLoginId"), permission, methodContext.getEnvMap());
             }
         }
     }

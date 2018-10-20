@@ -32,6 +32,7 @@ import org.ofbiz.minilang.artifact.ArtifactInfoContext;
 import org.ofbiz.minilang.method.MethodContext;
 import org.ofbiz.minilang.method.MethodOperation;
 import org.ofbiz.security.Security;
+import org.ofbiz.security.authz.Authorization;
 import org.w3c.dom.Element;
 
 /**
@@ -74,15 +75,16 @@ public final class HasPermissionCondition extends MethodOperation implements Con
     public boolean checkCondition(MethodContext methodContext) throws MiniLangException {
         GenericValue userLogin = methodContext.getUserLogin();
         if (userLogin != null) {
-            Security security = methodContext.getSecurity();
             String permission = permissionFse.expandString(methodContext.getEnvMap());
             String action = actionFse.expandString(methodContext.getEnvMap());
             if (!action.isEmpty()) {
+                Security security = methodContext.getSecurity();
                 if (security.hasEntityPermission(permission, action, userLogin)) {
                     return true;
                 }
             } else {
-                if (security.hasPermission(permission, userLogin)) {
+                Authorization authz = methodContext.getAuthz();
+                if (authz.hasPermission(userLogin.getString("userLoginId"), permission, methodContext.getEnvMap())) {
                     return true;
                 }
             }

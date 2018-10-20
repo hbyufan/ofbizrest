@@ -5,17 +5,16 @@
         timeOnlyTitle: 'Scegli orario',
         timeText: 'Orario',
         hourText: 'Ora',
-        minuteText: 'Minuti',
-        secondText: 'Secondi',
-        millisecText: 'Millisecondi',
-        microsecText: 'Microsecondi',
+        minuteText: 'Minuto',
+        secondText: 'Secondo',
+        millisecText: 'Millisecondo',
         timezoneText: 'Fuso orario',
         currentText: 'Adesso',
         closeText: 'Chiudi',
-        timeFormat: 'HH:mm',
+        timeFormat: 'hh:mm',
         amNames: ['m.', 'AM', 'A'],
         pmNames: ['p.', 'PM', 'P'],
-        isRTL: false
+        ampm: false
     };
     $.timepicker.setDefaults($.timepicker.regional['it']);
 })(jQuery);

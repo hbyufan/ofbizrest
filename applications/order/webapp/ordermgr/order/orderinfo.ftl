@@ -23,7 +23,7 @@ under the License.
             <#if orderHeader.externalId?has_content>
                <#assign externalOrder = "(" + orderHeader.externalId + ")"/>
             </#if>
-            <#assign orderType = orderHeader.getRelatedOne("OrderType", false)/>
+            <#assign orderType = orderHeader.getRelatedOne("OrderType")/>
             <li class="h3">&nbsp;${orderType?if_exists.get("description", locale)?default(uiLabelMap.OrderOrder)}&nbsp;${uiLabelMap.CommonNbr}&nbsp;<a href="<@ofbizUrl>orderview?orderId=${orderId}</@ofbizUrl>">${orderId}</a> ${externalOrder?if_exists} [&nbsp;<a href="<@ofbizUrl>order.pdf?orderId=${orderId}</@ofbizUrl>" target="_blank">PDF</a>&nbsp;]</li>
             <#if currentStatus.statusId == "ORDER_APPROVED" && orderHeader.orderTypeId == "SALES_ORDER">
               <li class="h3"><a href="javascript:document.PrintOrderPickSheet.submit()">${uiLabelMap.FormFieldTitle_printPickSheet}</a>
@@ -114,8 +114,8 @@ under the License.
                 <#if orderHeaderStatuses?has_content>
                   <hr />
                   <#list orderHeaderStatuses as orderHeaderStatus>
-                    <#assign loopStatusItem = orderHeaderStatus.getRelatedOne("StatusItem", false)>
-                    <#assign userlogin = orderHeaderStatus.getRelatedOne("UserLogin", false)>
+                    <#assign loopStatusItem = orderHeaderStatus.getRelatedOne("StatusItem")>
+                    <#assign userlogin = orderHeaderStatus.getRelatedOne("UserLogin")>
                     <div>
                       ${loopStatusItem.get("description",locale)} <#if orderHeaderStatus.statusDatetime?has_content>- ${Static["org.ofbiz.base.util.UtilFormatOut"].formatDateTime(orderHeaderStatus.statusDatetime, "", locale, timeZone)?default("0000-00-00 00:00:00")}</#if>
                       &nbsp;
@@ -151,7 +151,7 @@ under the License.
               <td width="5%">&nbsp;</td>
               <td valign="top" width="80%">
                   <#if orderHeader.salesChannelEnumId?has_content>
-                    <#assign channel = orderHeader.getRelatedOne("SalesChannelEnumeration", false)>
+                    <#assign channel = orderHeader.getRelatedOne("SalesChannelEnumeration")>
                     ${(channel.get("description",locale))?default("N/A")}
                   <#else>
                     ${uiLabelMap.CommonNA}
@@ -164,7 +164,7 @@ under the License.
                 <td align="right" valign="top" width="15%" class="label">&nbsp;${uiLabelMap.OrderProductStore}</td>
                 <td width="5%">&nbsp;</td>
                 <td valign="top" width="80%">
-                  ${productStore.storeName!}&nbsp;<a href="/catalog/control/EditProductStore?productStoreId=${productStore.productStoreId}${StringUtil.wrapString(externalKeyParam)}" target="catalogmgr" class="buttontext">(${productStore.productStoreId})</a>
+                  ${productStore.storeName!}&nbsp;<a href="/catalog/control/EditProductStore?productStoreId=${productStore.productStoreId}${externalKeyParam}" target="catalogmgr" class="buttontext">(${productStore.productStoreId})</a>
                 </td>
               </tr>
               <tr><td colspan="3"><hr /></td></tr>
@@ -174,7 +174,7 @@ under the License.
               <td width="5%">&nbsp;</td>
               <td valign="top" width="80%">
                   <#if orderHeader.originFacilityId?has_content>
-                    <a href="/facility/control/EditFacility?facilityId=${orderHeader.originFacilityId}${StringUtil.wrapString(externalKeyParam)}" target="facilitymgr" class="buttontext">${orderHeader.originFacilityId}</a>
+                    <a href="/facility/control/EditFacility?facilityId=${orderHeader.originFacilityId}${externalKeyParam}" target="facilitymgr" class="buttontext">${orderHeader.originFacilityId}</a>
                   <#else>
                     ${uiLabelMap.CommonNA}
                   </#if>
@@ -186,7 +186,7 @@ under the License.
               <td width="5%">&nbsp;</td>
               <td valign="top" width="80%">
                   <#if orderHeader.createdBy?has_content>
-                    <a href="/partymgr/control/viewprofile?userlogin_id=${orderHeader.createdBy}${StringUtil.wrapString(externalKeyParam)}" target="partymgr" class="buttontext">${orderHeader.createdBy}</a>
+                    <a href="/partymgr/control/viewprofile?userlogin_id=${orderHeader.createdBy}${externalKeyParam}" target="partymgr" class="buttontext">${orderHeader.createdBy}</a>
                   <#else>
                     ${uiLabelMap.CommonNotSet}
                   </#if>

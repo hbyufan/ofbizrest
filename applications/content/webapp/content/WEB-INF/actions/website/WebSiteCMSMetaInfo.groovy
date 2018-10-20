@@ -27,8 +27,8 @@ if (content) {
     titles = EntityUtil.filterByDate(titles);
     title = EntityUtil.getFirst(titles);
     if (title) {
-        tc = title.getRelatedOne("ToContent", false);
-        tcdr = tc.getRelatedOne("DataResource", false);
+        tc = title.getRelatedOne("ToContent");
+        tcdr = tc.getRelatedOne("DataResource");
         context.title = tcdr;
     }
 
@@ -36,8 +36,8 @@ if (content) {
     titleProps = EntityUtil.filterByDate(titleProps);
     titleProp = EntityUtil.getFirst(titleProps);
     if (titleProp) {
-        tpc = titleProp.getRelatedOne("ToContent", false);
-        tpcdr = tpc.getRelatedOne("DataResource", false);
+        tpc = titleProp.getRelatedOne("ToContent");
+        tpcdr = tpc.getRelatedOne("DataResource");
         context.titleProperty = tpcdr;
     }
 
@@ -45,8 +45,8 @@ if (content) {
     metaDescs = EntityUtil.filterByDate(metaDescs);
     metaDesc = EntityUtil.getFirst(metaDescs);
     if (metaDesc) {
-        mdc = metaDesc.getRelatedOne("ToContent", false);
-        mdcdr = mdc.getRelatedOne("DataResource", false);
+        mdc = metaDesc.getRelatedOne("ToContent");
+        mdcdr = mdc.getRelatedOne("DataResource");
         context.metaDescription = mdcdr;
     }
 
@@ -54,8 +54,8 @@ if (content) {
     metaKeys = EntityUtil.filterByDate(metaKeys);
     metaKey = EntityUtil.getFirst(metaKeys);
     if (metaKey) {
-        mkc = metaKey.getRelatedOne("ToContent", false);
-        mkcdr = mkc.getRelatedOne("DataResource", false);
+        mkc = metaKey.getRelatedOne("ToContent");
+        mkcdr = mkc.getRelatedOne("DataResource");
         context.metaKeywords = mkcdr;
     }
 }

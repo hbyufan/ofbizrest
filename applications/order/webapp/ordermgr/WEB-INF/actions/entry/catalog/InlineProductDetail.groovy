@@ -27,7 +27,6 @@ import org.ofbiz.entity.condition.*;
 import org.ofbiz.entity.util.*;
 import org.ofbiz.webapp.taglib.*;
 import org.ofbiz.webapp.stats.VisitHandler;
-import org.ofbiz.webapp.website.WebSiteWorker
 import org.ofbiz.order.shoppingcart.ShoppingCartEvents;
 import org.ofbiz.product.catalog.*;
 import org.ofbiz.product.category.*;
@@ -47,7 +46,7 @@ catalogName = CatalogWorker.getCatalogName(request);
 currentCatalogId = CatalogWorker.getCurrentCatalogId(request);
 
 if (inlineProductId) {
-    inlineProduct = delegator.findOne("Product", [productId : inlineProductId], true);
+    inlineProduct = delegator.findByPrimaryKeyCache("Product", [productId : inlineProductId]);
     if (inlineProduct) {
         context.product = inlineProduct;
         contentWrapper = new ProductContentWrapper(inlineProduct, request);
@@ -123,7 +122,7 @@ if (inlineProduct) {
 
 
     // get the product price
-    webSiteId = WebSiteWorker.getWebSiteId(request);
+    webSiteId = CatalogWorker.getWebSiteId(request);
     autoUserLogin = request.getSession().getAttribute("autoUserLogin");
     if (cart.isSalesOrder()) {
         // sales order: run the "calculateProductPrice" service
@@ -176,7 +175,7 @@ if (inlineProduct) {
                 if (variantTree) {
                     featureOrder = new LinkedList(featureSet);
                     featureOrder.each { featureKey ->
-                        featureValue = delegator.findOne("ProductFeatureType", [productFeatureTypeId : featureKey], true);
+                        featureValue = delegator.findByPrimaryKeyCache("ProductFeatureType", [productFeatureTypeId : featureKey]);
                         fValue = featureValue.get("description") ?: featureValue.productFeatureTypeId;
                         featureTypes[featureKey] = fValue;
                     }
@@ -284,7 +283,7 @@ if (inlineProduct) {
                         }
                         numberFormat = NumberFormat.getCurrencyInstance(locale);
                         variants.each { variantAssoc ->
-                            variant = variantAssoc.getRelatedOne("AssocProduct", false);
+                            variant = variantAssoc.getRelatedOne("AssocProduct");
                             // Get the price for each variant. Reuse the priceContext already setup for virtual product above and replace the product
                             if (cart.isSalesOrder()) {
                                 // sales order: run the "calculateProductPrice" service

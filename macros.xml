@@ -54,6 +54,9 @@ under the License.
  <patternset id="src.exc.set"/>
 
  <path id="groovy.class.path">
+  <pathelement location="${ofbiz.home.dir}/framework/base/lib/commons/commons-cli-1.0.jar"/>
+  <pathelement location="${ofbiz.home.dir}/framework/base/lib/scripting/antlr-2.7.6.jar"/>
+  <pathelement location="${ofbiz.home.dir}/framework/base/lib/scripting/asm-3.2.jar"/>
   <pathelement location="${ofbiz.home.dir}/framework/base/lib/scripting/groovy-all-2.4.5.jar"/>
  </path>
  <path id="rhino.class.path">
@@ -87,7 +90,7 @@ under the License.
  <presetdef name="default-javadoc">
     <javadoc classpathref="local.class.path"
              destdir="${build.dir}/javadocs"
-             windowtitle="Apache Open for Business - ${desc}"
+             windowtitle="Open for Business - ${desc}"
              useexternalfile="yes"
              maxmemory="512M"
              encoding="UTF-8"
@@ -106,6 +109,8 @@ under the License.
         <exclude name="**/JREntityListIteratorDataSource.java"/>
         <exclude name="**/JRMapCollectionDataSource.java"/>
         <exclude name="**/openoffice/"/>
+        <exclude name="**/XaPoolConnectionFactory.java"/>
+        <exclude name="**/JasperReportsPdfViewHandler.java"/>
         <exclude name="**/JasperReportsXmlViewHandler.java"/>
         <exclude name="**/JasperReportsJXlsViewHandler.java"/>
         <exclude name="**/JasperReportsPoiXlsViewHandler.java"/>
@@ -115,6 +120,7 @@ under the License.
         <exclude name="**/FopPdfViewHandler.java"/>
         <exclude name="**/FreeMarkerViewRenderer.java"/>
         <exclude name="**/JpCacheIncludeTransform.java"/>             
+        <exclude name="**/shark/"/>
       </fileset>
       <link href="https://docs.oracle.com/javase/7/docs/api/" offline="true" packagelistLoc="${ofbiz.home.dir}/tools/api-java17"/>
     </javadoc>
@@ -254,12 +260,4 @@ under the License.
    </if>
   </sequential>
  </macrodef>
-
- <presetdef name="externalsubant">
-  <subant inheritall="false">
-   <propertyset>
-    <propertyref name="ofbiz.home.dir"/>
-   </propertyset>
-  </subant>
- </presetdef>
 </project>

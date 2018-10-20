@@ -327,7 +327,7 @@ public class WorkEffortServices {
 
             if (UtilValidate.isNotEmpty(statusId)) {
                 try {
-                    currentStatus = delegator.findOne("StatusItem", UtilMisc.toMap("statusId", statusId), true);
+                    currentStatus = delegator.findByPrimaryKeyCache("StatusItem", UtilMisc.toMap("statusId", statusId));
                 } catch (GenericEntityException e) {
                     Debug.logWarning(e, module);
                 }
@@ -336,7 +336,7 @@ public class WorkEffortServices {
             // get a list of workEffortPartyAssignments, if empty then this user CANNOT view the event, unless they have permission to view all
             if (userLogin != null && userLogin.get("partyId") != null && workEffortId != null) {
                 try {
-                    workEffortPartyAssignments = delegator.findByAnd("WorkEffortPartyAssignment", UtilMisc.toMap("workEffortId", workEffortId, "partyId", userLogin.get("partyId")), null, false);
+                    workEffortPartyAssignments = delegator.findByAnd("WorkEffortPartyAssignment", UtilMisc.toMap("workEffortId", workEffortId, "partyId", userLogin.get("partyId")));
                 } catch (GenericEntityException e) {
                     Debug.logWarning(e, module);
                 }
@@ -350,7 +350,7 @@ public class WorkEffortServices {
 
             if (workEffort.get("currentStatusId") != null) {
                 try {
-                    currentStatus = delegator.findOne("StatusItem", UtilMisc.toMap("statusId", workEffort.get("currentStatusId")), true);
+                    currentStatus = delegator.findByPrimaryKeyCache("StatusItem", UtilMisc.toMap("statusId", workEffort.get("currentStatusId")));
                 } catch (GenericEntityException e) {
                     Debug.logWarning(e, module);
                 }
@@ -803,9 +803,9 @@ public class WorkEffortServices {
             for (GenericValue incomingProductionRun: incomingProductionRuns) {
                 double producedQtyTot = 0.0;
                 if (incomingProductionRun.getString("currentStatusId").equals("PRUN_COMPLETED")) {
-                    List<GenericValue> inventoryItems = delegator.findByAnd("WorkEffortAndInventoryProduced", UtilMisc.toMap("productId", productId, "workEffortId", incomingProductionRun.getString("workEffortId")), null, false);
+                    List<GenericValue> inventoryItems = delegator.findByAnd("WorkEffortAndInventoryProduced", UtilMisc.toMap("productId", productId, "workEffortId", incomingProductionRun.getString("workEffortId")));
                     for (GenericValue inventoryItem: inventoryItems) {
-                        GenericValue inventoryItemDetail = EntityUtil.getFirst(delegator.findByAnd("InventoryItemDetail", UtilMisc.toMap("inventoryItemId", inventoryItem.getString("inventoryItemId")), UtilMisc.toList("inventoryItemDetailSeqId"), false));
+                        GenericValue inventoryItemDetail = EntityUtil.getFirst(delegator.findByAnd("InventoryItemDetail", UtilMisc.toMap("inventoryItemId", inventoryItem.getString("inventoryItemId")), UtilMisc.toList("inventoryItemDetailSeqId")));
                         if (inventoryItemDetail != null && inventoryItemDetail.get("quantityOnHandDiff") != null) {
                             Double inventoryItemQty = inventoryItemDetail.getDouble("quantityOnHandDiff");
                             producedQtyTot = producedQtyTot + inventoryItemQty.doubleValue();
@@ -929,7 +929,7 @@ public class WorkEffortServices {
             int currentCount = reminder.get("currentCount") == null ? 0 : reminder.getLong("currentCount").intValue();
             GenericValue workEffort = null;
             try {
-                workEffort = reminder.getRelatedOne("WorkEffort", false);
+                workEffort = reminder.getRelatedOne("WorkEffort");
             } catch (GenericEntityException e) {
                 Debug.logWarning("Error while getting work effort: " + e, module);
             }
@@ -1049,7 +1049,7 @@ public class WorkEffortServices {
         GenericValue reminder = (GenericValue) context.get("reminder");
         GenericValue contactMech = null;
         try {
-            contactMech = reminder.getRelatedOne("ContactMech", false);
+            contactMech = reminder.getRelatedOne("ContactMech");
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -1091,7 +1091,7 @@ public class WorkEffortServices {
     @Deprecated
     protected static void processEventReminder(DispatchContext ctx, GenericValue reminder, Map<String, Object> parameters) throws GenericEntityException {
         LocalDispatcher dispatcher = ctx.getDispatcher();
-        GenericValue contactMech = reminder.getRelatedOne("ContactMech", false);
+        GenericValue contactMech = reminder.getRelatedOne("ContactMech");
         if (contactMech != null && "EMAIL_ADDRESS".equals(contactMech.get("contactMechTypeId"))) {
             String screenLocation = UtilProperties.getPropertyValue("EventReminders", "eventReminders.emailScreenWidgetLocation");
             String fromAddress = UtilProperties.getPropertyValue("EventReminders", "eventReminders.emailFromAddress");

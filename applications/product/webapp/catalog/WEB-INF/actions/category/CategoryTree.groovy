@@ -34,7 +34,7 @@ List separateRootType(roots) {
         prodRootTypeTree = [];
         roots.each { root ->
             prodCateMap = [:];
-            productCategory = root.getRelatedOne("ProductCategory", false);
+            productCategory = root.getRelatedOne("ProductCategory");
             prodCateMap.productCategoryId = productCategory.getString("productCategoryId");
             prodCateMap.categoryName = productCategory.getString("categoryName");
             prodCateMap.isCatalog = false;
@@ -55,7 +55,7 @@ if (prodCatalogs) {
         prodCatalogMap.categoryName = prodCatalog.getString("catalogName");
         prodCatalogMap.isCatalog = true;
         prodCatalogMap.isCategoryType = false;
-        prodCatalogCategories = EntityUtil.filterByDate(delegator.findByAnd("ProdCatalogCategory", ["prodCatalogId" : prodCatalog.prodCatalogId], null, false));
+        prodCatalogCategories = EntityUtil.filterByDate(delegator.findByAnd("ProdCatalogCategory", ["prodCatalogId" : prodCatalog.prodCatalogId]));
         if (prodCatalogCategories) {
             prodCatalogMap.child = separateRootType(prodCatalogCategories);
         }

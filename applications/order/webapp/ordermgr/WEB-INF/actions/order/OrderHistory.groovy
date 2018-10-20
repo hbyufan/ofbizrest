@@ -25,7 +25,7 @@ context.orderId = orderId;
 
 orderHeader = null;
 if (orderId) {
-    orderHeader = delegator.findOne("OrderHeader", [orderId : orderId], false);
+    orderHeader = delegator.findByPrimaryKey("OrderHeader", [orderId : orderId]);
 }
 
 if (orderHeader) {

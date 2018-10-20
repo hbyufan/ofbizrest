@@ -17,8 +17,6 @@
  * under the License.
  */
 
-import java.sql.Timestamp;
-
 import org.ofbiz.base.util.UtilDateTime;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.entity.GenericValue;

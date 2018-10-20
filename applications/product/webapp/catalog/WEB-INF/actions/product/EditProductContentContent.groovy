@@ -78,9 +78,9 @@ if (contentId) {
 if ("FULFILLMENT_EMAIL".equals(productContentTypeId)) {
     emailData = [:];
     if (contentId && content) {
-        subjectDr = content.getRelatedOne("DataResource", false);
+        subjectDr = content.getRelatedOne("DataResource");
         if (subjectDr) {
-            subject = subjectDr.getRelatedOne("ElectronicText", false);
+            subject = subjectDr.getRelatedOne("ElectronicText");
             emailData.subject = subject.textData;
             emailData.subjectDataResourceId = subject.dataResourceId;
         }
@@ -89,9 +89,9 @@ if ("FULFILLMENT_EMAIL".equals(productContentTypeId)) {
         contentAssocs = result.get("contentAssocs");
         if (contentAssocs) {
             contentAssocs.each { contentAssoc ->
-                bodyContent = contentAssoc.getRelatedOne("ToContent", false);
-                bodyDr = bodyContent.getRelatedOne("DataResource", false);
-                body = bodyDr.getRelatedOne("ElectronicText", false);
+                bodyContent = contentAssoc.getRelatedOne("ToContent");
+                bodyDr = bodyContent.getRelatedOne("DataResource");
+                body = bodyDr.getRelatedOne("ElectronicText");
                 emailData.put(contentAssoc.mapKey, body.textData);
                 emailData.put(contentAssoc.get("mapKey")+"DataResourceId", body.dataResourceId);
             }
@@ -103,9 +103,9 @@ if ("FULFILLMENT_EMAIL".equals(productContentTypeId)) {
 } else if ("DIGITAL_DOWNLOAD".equals(productContentTypeId)) {
     downloadData = [:];
     if (contentId && content) {
-        downloadDr = content.getRelatedOne("DataResource", false);
+        downloadDr = content.getRelatedOne("DataResource");
         if (downloadDr) {
-            download = downloadDr.getRelatedOne("OtherDataResource", false);
+            download = downloadDr.getRelatedOne("OtherDataResource");
             if (download) {
                 downloadData.file = download.dataResourceContent;
                 downloadData.fileDataResourceId = download.dataResourceId;
@@ -122,9 +122,9 @@ if ("FULFILLMENT_EMAIL".equals(productContentTypeId)) {
     //Assume it is a generic simple text content
     textData = [:];
     if (contentId && content) {
-        textDr = content.getRelatedOne("DataResource", false);
+        textDr = content.getRelatedOne("DataResource");
         if (textDr) {
-            text = textDr.getRelatedOne("ElectronicText", false);
+            text = textDr.getRelatedOne("ElectronicText");
             if (text) {
                 textData.text = text.textData;
                 textData.textDataResourceId = text.dataResourceId;

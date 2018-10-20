@@ -55,8 +55,8 @@ if (!pubPt) {
 }
 */
 
-contentToValue = delegator.findOne("Content", [contentId : contentIdTo], false);
-contentToPurposeList = contentToValue.getRelated("ContentPurpose", null, null, true);
+contentToValue = delegator.findByPrimaryKey("Content", [contentId : contentIdTo]);
+contentToPurposeList = contentToValue.getRelatedCache("ContentPurpose");
 currentValue = delegator.makeValue("Content", [contentTypeId : "DOCUMENT", statusId : "CTNT_PUBLISHED", privilegeEnumId : "_00_"]);
 
 if (contentToPurposeList.contains("RESPONSE")) {
@@ -105,7 +105,7 @@ if (!"granted".equals(permissionStatus)) {
 }
 
 /*
-pubContentValue = delegator.findOne("Content", [contentId : pubPt], false);
+pubContentValue = delegator.findByPrimaryKey("Content", [contentId : pubPt]);
 if (pubContentValue) {
     mapIn.currentContent = pubContentValue;
     mapIn.statusId = "CTNT_PUBLISHED";

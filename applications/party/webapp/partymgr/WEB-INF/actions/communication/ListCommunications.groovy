@@ -25,7 +25,7 @@ import javolution.util.FastList;
 partyId = parameters.partyId;
 context.partyId = partyId;
 
-party = delegator.findOne("Party", [partyId : partyId], false);
+party = delegator.findByPrimaryKey("Party", [partyId : partyId]);
 context.party = party;
 
 // get the sort field

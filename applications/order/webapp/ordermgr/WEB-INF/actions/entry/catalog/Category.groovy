@@ -60,22 +60,22 @@ if (productCategoryId) {
 }
  */
 
-category = delegator.findOne("ProductCategory", [productCategoryId : productCategoryId], true);
+category = delegator.findByPrimaryKeyCache("ProductCategory", [productCategoryId : productCategoryId]);
 if (category) {
     if (category.detailScreen) {
         detailScreen = category.detailScreen;
     }
-    categoryPageTitle = delegator.findByAnd("ProductCategoryContentAndInfo", [productCategoryId : productCategoryId, prodCatContentTypeId : "PAGE_TITLE"], null, true);
+    categoryPageTitle = delegator.findByAndCache("ProductCategoryContentAndInfo", [productCategoryId : productCategoryId, prodCatContentTypeId : "PAGE_TITLE"]);
     if (categoryPageTitle) {
-        pageTitle = delegator.findOne("ElectronicText", [dataResourceId : categoryPageTitle.get(0).dataResourceId], true);
+        pageTitle = delegator.findByPrimaryKeyCache("ElectronicText", [dataResourceId : categoryPageTitle.get(0).dataResourceId]);
     }
-    categoryMetaDescription = delegator.findByAnd("ProductCategoryContentAndInfo", [productCategoryId : productCategoryId, prodCatContentTypeId : "META_DESCRIPTION"], null, true);
+    categoryMetaDescription = delegator.findByAndCache("ProductCategoryContentAndInfo", [productCategoryId : productCategoryId, prodCatContentTypeId : "META_DESCRIPTION"]);
     if (categoryMetaDescription) {
-        metaDescription = delegator.findOne("ElectronicText", [dataResourceId : categoryMetaDescription.get(0).dataResourceId], true);
+        metaDescription = delegator.findByPrimaryKeyCache("ElectronicText", [dataResourceId : categoryMetaDescription.get(0).dataResourceId]);
     }
-    categoryMetaKeywords = delegator.findByAnd("ProductCategoryContentAndInfo", [productCategoryId : productCategoryId, prodCatContentTypeId : "META_KEYWORD"], null, true);
+    categoryMetaKeywords = delegator.findByAndCache("ProductCategoryContentAndInfo", [productCategoryId : productCategoryId, prodCatContentTypeId : "META_KEYWORD"]);
     if (categoryMetaKeywords) {
-        metaKeywords = delegator.findOne("ElectronicText", [dataResourceId : categoryMetaKeywords.get(0).dataResourceId], true);
+        metaKeywords = delegator.findByPrimaryKeyCache("ElectronicText", [dataResourceId : categoryMetaKeywords.get(0).dataResourceId]);
     }
     categoryContentWrapper = new CategoryContentWrapper(category, request);
     

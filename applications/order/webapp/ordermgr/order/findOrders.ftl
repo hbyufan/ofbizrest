@@ -87,8 +87,6 @@ function toggleOrderIdList() {
   <input type='hidden' name='correspondingPoId' value='${requestParameters.correspondingPoId?if_exists}'/>
   <input type='hidden' name='internalCode' value='${requestParameters.internalCode?if_exists}'/>
   <input type='hidden' name='productId' value='${requestParameters.productId?if_exists}'/>
-  <input type='hidden' name='goodIdentificationTypeId' value='${requestParameters.goodIdentificationTypeId?if_exists}'/>
-  <input type='hidden' name='goodIdentificationIdValue' value='${requestParameters.goodIdentificationIdValue?if_exists}'/>
   <input type='hidden' name='inventoryItemId' value='${requestParameters.inventoryItemId?if_exists}'/>
   <input type='hidden' name='serialNumber' value='${requestParameters.serialNumber?if_exists}'/>
   <input type='hidden' name='softIdentifier' value='${requestParameters.softIdentifier?if_exists}'/>
@@ -168,29 +166,6 @@ function toggleOrderIdList() {
                 <td width='5%'>&nbsp;</td>
                 <td align='left'><input type='text' name='productId' value='${requestParameters.productId?if_exists}'/></td>
               </tr>
-              <#if goodIdentificationTypes?has_content>
-              <tr>
-                  <td width='25%' align='right' class='label'>${uiLabelMap.ProductGoodIdentificationType}</td>
-                  <td width='5%'>&nbsp;</td>
-                  <td align='left'>
-                      <select name='goodIdentificationTypeId'>
-                          <#if currentGoodIdentificationType?has_content>
-                              <option value="${currentGoodIdentificationType.goodIdentificationTypeId}">${currentGoodIdentificationType.get("description", locale)}</option>
-                              <option value="${currentGoodIdentificationType.goodIdentificationTypeId}">---</option>
-                          </#if>
-                          <option value="">${uiLabelMap.ProductAnyGoodIdentification}</option>
-                          <#list goodIdentificationTypes as goodIdentificationType>
-                              <option value="${goodIdentificationType.goodIdentificationTypeId}">${goodIdentificationType.get("description", locale)}</option>
-                          </#list>
-                      </select>
-                  </td>
-              </tr>
-              <tr>
-                  <td width='25%' align='right' class='label'>${uiLabelMap.ProductGoodIdentification}</td>
-                  <td width='5%'>&nbsp;</td>
-                  <td align='left'><input type='text' name='goodIdentificationIdValue' value='${requestParameters.goodIdentificationIdValue?if_exists}'/></td>
-              </tr>
-              </#if>
               <tr>
                 <td width='25%' align='right' class='label'>${uiLabelMap.ProductInventoryItemId}</td>
                 <td width='5%'>&nbsp;</td>
@@ -213,6 +188,7 @@ function toggleOrderIdList() {
                   <select name='roleTypeId' id='roleTypeId' multiple="multiple">
                     <#if currentRole?has_content>
                     <option value="${currentRole.roleTypeId}">${currentRole.get("description", locale)}</option>
+                    <option value="${currentRole.roleTypeId}">---</option>
                     </#if>
                     <option value="">${uiLabelMap.CommonAnyRoleType}</option>
                     <#list roleTypes as roleType>
@@ -343,13 +319,13 @@ function toggleOrderIdList() {
                 <td align='left'>
                   <select name="shipmentMethod">
                     <#if currentCarrierShipmentMethod?has_content>
-                      <#assign currentShipmentMethodType = currentCarrierShipmentMethod.getRelatedOne("ShipmentMethodType", false)>
+                      <#assign currentShipmentMethodType = currentCarrierShipmentMethod.getRelatedOne("ShipmentMethodType")>
                       <option value="${currentCarrierShipmentMethod.partyId}@${currentCarrierShipmentMethod.shipmentMethodTypeId}">${currentCarrierShipmentMethod.partyId?if_exists} ${currentShipmentMethodType.description?if_exists}</option>
                       <option value="${currentCarrierShipmentMethod.partyId}@${currentCarrierShipmentMethod.shipmentMethodTypeId}">---</option>
                     </#if>
                     <option value="">${uiLabelMap.OrderSelectShippingMethod}</option>
                     <#list carrierShipmentMethods as carrierShipmentMethod>
-                      <#assign shipmentMethodType = carrierShipmentMethod.getRelatedOne("ShipmentMethodType", false)>
+                      <#assign shipmentMethodType = carrierShipmentMethod.getRelatedOne("ShipmentMethodType")>
                       <option value="${carrierShipmentMethod.partyId}@${carrierShipmentMethod.shipmentMethodTypeId}">${carrierShipmentMethod.partyId?if_exists} ${shipmentMethodType.description?if_exists}</option>
                     </#list>
                   </select>
@@ -611,8 +587,8 @@ document.lookuporder.orderId.focus();
           <#assign alt_row = false>
           <#list orderList as orderHeader>
             <#assign orh = Static["org.ofbiz.order.order.OrderReadHelper"].getHelper(orderHeader)>
-            <#assign statusItem = orderHeader.getRelatedOne("StatusItem", true)>
-            <#assign orderType = orderHeader.getRelatedOne("OrderType", true)>
+            <#assign statusItem = orderHeader.getRelatedOneCache("StatusItem")>
+            <#assign orderType = orderHeader.getRelatedOneCache("OrderType")>
             <#if orderType.orderTypeId == "PURCHASE_ORDER">
               <#assign displayParty = orh.getSupplierAgent()?if_exists>
             <#else>

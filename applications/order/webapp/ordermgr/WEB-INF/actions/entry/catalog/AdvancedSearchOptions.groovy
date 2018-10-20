@@ -34,7 +34,7 @@ if (!searchCategoryId) {
     currentCatalogId = CatalogWorker.getCurrentCatalogId(request);
     searchCategoryId = CatalogWorker.getCatalogSearchCategoryId(request, currentCatalogId);
 }
-searchCategory = delegator.findOne("ProductCategory", [productCategoryId : searchCategoryId], false);
+searchCategory = delegator.findByPrimaryKey("ProductCategory", [productCategoryId : searchCategoryId]);
 
 productFeaturesByTypeMap = ParametricSearch.makeCategoryFeatureLists(searchCategoryId, delegator);
 productFeatureTypeIdsOrdered = new TreeSet(productFeaturesByTypeMap.keySet()) as List;

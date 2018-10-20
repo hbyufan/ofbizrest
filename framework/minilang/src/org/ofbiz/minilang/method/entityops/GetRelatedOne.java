@@ -69,7 +69,11 @@ public final class GetRelatedOne extends MethodOperation {
         String relationName = relationNameFse.expandString(methodContext.getEnvMap());
         boolean useCache = "true".equals(useCacheFse.expandString(methodContext.getEnvMap()));
         try {
-            toValueFma.put(methodContext.getEnvMap(), value.getRelatedOne(relationName, useCache));
+            if (useCache) {
+                toValueFma.put(methodContext.getEnvMap(), value.getRelatedOneCache(relationName));
+            } else {
+                toValueFma.put(methodContext.getEnvMap(), value.getRelatedOne(relationName));
+            }
         } catch (GenericEntityException e) {
             String errMsg = "Exception thrown while finding related value: " + e.getMessage();
             Debug.logWarning(e, errMsg, module);

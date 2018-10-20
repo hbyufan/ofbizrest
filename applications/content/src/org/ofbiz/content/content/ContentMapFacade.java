@@ -112,9 +112,9 @@ public class ContentMapFacade implements Map<Object, Object> {
         this.cache = cache;
         try {
             if (cache) {
-                this.value = delegator.findOne("Content", UtilMisc.toMap("contentId", contentId), true);
+                this.value = delegator.findByPrimaryKeyCache("Content", UtilMisc.toMap("contentId", contentId));
             } else {
-                this.value = delegator.findOne("Content", UtilMisc.toMap("contentId", contentId), false);
+                this.value = delegator.findByPrimaryKey("Content", UtilMisc.toMap("contentId", contentId));
             }
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
@@ -233,9 +233,9 @@ public class ContentMapFacade implements Map<Object, Object> {
             }
             try {
                 if (cache) {
-                    this.fields = delegator.findOne("Content", UtilMisc.toMap("contentId", contentId), true);
+                    this.fields = delegator.findByPrimaryKeyCache("Content", UtilMisc.toMap("contentId", contentId));
                 } else {
-                    this.fields = delegator.findOne("Content", UtilMisc.toMap("contentId", contentId), false);
+                    this.fields = delegator.findByPrimaryKey("Content", UtilMisc.toMap("contentId", contentId));
                 }
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
@@ -297,7 +297,11 @@ public class ContentMapFacade implements Map<Object, Object> {
                     expressions.put("statusId", this.statusFilter);
                 }
 
-                subs = delegator.findByAnd("ContentAssocViewTo", expressions, UtilMisc.toList(this.sortOrder), cache);
+                if (cache) {
+                    subs = delegator.findByAndCache("ContentAssocViewTo", expressions, UtilMisc.toList(this.sortOrder));
+                } else {
+                    subs = delegator.findByAnd("ContentAssocViewTo", expressions, UtilMisc.toList(this.sortOrder));
+                }
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }
@@ -429,9 +433,9 @@ public class ContentMapFacade implements Map<Object, Object> {
             GenericValue content = null;
             try {
                 if (cache) {
-                    content = delegator.findOne("Content", UtilMisc.toMap("contentId", name), true);
+                    content = delegator.findByPrimaryKeyCache("Content", UtilMisc.toMap("contentId", name));
                 } else {
-                    content = delegator.findOne("Content", UtilMisc.toMap("contentId", name), false);
+                    content = delegator.findByPrimaryKey("Content", UtilMisc.toMap("contentId", name));
                 }
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
@@ -467,7 +471,11 @@ public class ContentMapFacade implements Map<Object, Object> {
                 if(!this.statusFilter.equals("")) {
                     expressions.put("statusId", this.statusFilter);
                 }
-                subs = delegator.findByAnd("ContentAssocViewTo", expressions, UtilMisc.toList(this.sortOrder), cache);
+                if (cache) {
+                    subs = delegator.findByAndCache("ContentAssocViewTo", expressions, UtilMisc.toList(this.sortOrder));
+                } else {
+                    subs = delegator.findByAnd("ContentAssocViewTo", expressions, UtilMisc.toList(this.sortOrder));
+                }
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }
@@ -507,7 +515,11 @@ public class ContentMapFacade implements Map<Object, Object> {
             String name = (String) key;
             List<GenericValue> metaData = null;
             try {
-                metaData = delegator.findByAnd("ContentMetaData", UtilMisc.toMap("contentId", contentId, "metaDataPredicateId", name), null, cache);
+                if (cache) {
+                    metaData = delegator.findByAndCache("ContentMetaData", UtilMisc.toMap("contentId", contentId, "metaDataPredicateId", name));
+                } else {
+                    metaData = delegator.findByAnd("ContentMetaData", UtilMisc.toMap("contentId", contentId, "metaDataPredicateId", name));
+                }
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }
@@ -528,7 +540,11 @@ public class ContentMapFacade implements Map<Object, Object> {
                 // get the data resource value object
                 GenericValue dr = null;
                 try {
-                    dr = value.getRelatedOne("DataResource", cache);
+                    if (cache) {
+                        dr = value.getRelatedOneCache("DataResource");
+                    } else {
+                        dr = value.getRelatedOne("DataResource");
+                    }
                 } catch (GenericEntityException e) {
                     Debug.logError(e, module);
                 }

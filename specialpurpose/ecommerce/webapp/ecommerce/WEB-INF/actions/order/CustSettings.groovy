@@ -35,7 +35,7 @@ if (partyId) {
 
     // NOTE: if there was an error, then don't look up and fill in all of this data, just use the values from the previous request (which will be in the parameters Map automagically)
     if (!request.getAttribute("_ERROR_MESSAGE_") && !request.getAttribute("_ERROR_MESSAGE_LIST_")) {
-        person = delegator.findOne("Person", [partyId : partyId], false);
+        person = delegator.findByPrimaryKey("Person", [partyId : partyId]);
         if (person) {
             context.callSubmitForm = true;
             // should never be null for the anonymous checkout, but just in case
@@ -69,7 +69,7 @@ if (partyId) {
 
         // get the Email Address
         emailPartyContactDetail = EntityUtil.getFirst(EntityUtil.filterByDate(delegator.findByAnd("PartyContactDetailByPurpose",
-                [partyId : partyId, contactMechPurposeTypeId : "PRIMARY_EMAIL"], null, false)));
+                [partyId : partyId, contactMechPurposeTypeId : "PRIMARY_EMAIL"])));
         if (emailPartyContactDetail) {
             parameters.emailContactMechId = emailPartyContactDetail.contactMechId;
             parameters.emailAddress = emailPartyContactDetail.infoString;
@@ -78,7 +78,7 @@ if (partyId) {
 
         // get the Phone Numbers
         homePhonePartyContactDetail = EntityUtil.getFirst(EntityUtil.filterByDate(delegator.findByAnd("PartyContactDetailByPurpose",
-                [partyId : partyId, contactMechPurposeTypeId : "PHONE_HOME"], null, false)));
+                [partyId : partyId, contactMechPurposeTypeId : "PHONE_HOME"])));
         if (homePhonePartyContactDetail) {
             parameters.homePhoneContactMechId = homePhonePartyContactDetail.contactMechId;
             parameters.homeCountryCode = homePhonePartyContactDetail.countryCode;
@@ -89,7 +89,7 @@ if (partyId) {
         }
 
         workPhonePartyContactDetail = EntityUtil.getFirst(EntityUtil.filterByDate(delegator.findByAnd("PartyContactDetailByPurpose",
-                [partyId : partyId, contactMechPurposeTypeId : "PHONE_WORK"], null, false)));
+                [partyId : partyId, contactMechPurposeTypeId : "PHONE_WORK"])));
         if (workPhonePartyContactDetail) {
             parameters.workPhoneContactMechId = workPhonePartyContactDetail.contactMechId;
             parameters.workCountryCode = workPhonePartyContactDetail.countryCode;

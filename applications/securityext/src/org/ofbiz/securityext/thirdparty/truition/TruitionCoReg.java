@@ -170,7 +170,7 @@ public class TruitionCoReg {
 
         GenericValue party = null;
         try {
-            party = userLogin.getRelatedOne("Party", false);
+            party = userLogin.getRelatedOne("Party");
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -182,7 +182,7 @@ public class TruitionCoReg {
             if ("PERSON".equals(party.getString("partyTypeId"))) {
                 GenericValue person = null;
                 try {
-                    person = party.getRelatedOne("Person", false);
+                    person = party.getRelatedOne("Person");
                 } catch (GenericEntityException e) {
                     Debug.logError(e, module);
                 }
@@ -232,8 +232,8 @@ public class TruitionCoReg {
                     if (adVl != null) {
                         GenericValue addr = null;
                         try {
-                            addr = adVl.getDelegator().findOne("PostalAddress", UtilMisc.toMap("contactMechId",
-                                    adVl.getString("contactMechId")), false);
+                            addr = adVl.getDelegator().findByPrimaryKey("PostalAddress", UtilMisc.toMap("contactMechId",
+                                    adVl.getString("contactMechId")));
                         } catch (GenericEntityException e) {
                             Debug.logError(e, module);
                         }
@@ -268,8 +268,8 @@ public class TruitionCoReg {
                     if (phVl != null) {
                         GenericValue tele = null;
                         try {
-                            tele = phVl.getDelegator().findOne("TelecomNumber", UtilMisc.toMap("contactMechId",
-                                    phVl.getString("contactMechId")), false);
+                            tele = phVl.getDelegator().findByPrimaryKey("TelecomNumber", UtilMisc.toMap("contactMechId",
+                                    phVl.getString("contactMechId")));
                         } catch (GenericEntityException e) {
                             Debug.logError(e, module);
                         }

@@ -22,11 +22,11 @@ import org.ofbiz.entity.util.EntityUtil;
 import org.ofbiz.base.component.ComponentConfig;
 
 if (parameters.communicationEventId) {
-    context.communicationEventRole = delegator.findOne("CommunicationEventRole",
+    context.communicationEventRole = delegator.findByPrimaryKey("CommunicationEventRole",
            ["communicationEventId" : parameters.communicationEventId,
             "partyId" : parameters.partyId,
             "roleTypeId" : parameters.roleTypeId
-           ], false);
+           ]);
 
     context.projectMgrExists = ComponentConfig.componentExists("projectmgr");
 }

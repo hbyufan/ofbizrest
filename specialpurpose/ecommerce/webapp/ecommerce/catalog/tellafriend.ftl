@@ -28,7 +28,6 @@ under the License.
         <#else>
             <#assign cancel = "Y">
         </#if>
-        <input type="hidden" name="webSiteId" value="${context.webSiteId?if_exists}">
       <#if !cancel?exists>
         <table>
           <tr>
@@ -59,7 +58,7 @@ under the License.
         window.close();
         // -->
         </script>
-        <div>${uiLabelMap.EcommerceTellAFriendSorry}</div>
+        <div class="tabletext">${uiLabelMap.EcommerceTellAFriendSorry}</div>
       </#if>
     </form>
 </body>

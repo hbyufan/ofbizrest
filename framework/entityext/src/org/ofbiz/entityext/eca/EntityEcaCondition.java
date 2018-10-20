@@ -33,27 +33,36 @@ import org.w3c.dom.Element;
  * EntityEcaCondition
  */
 @SuppressWarnings("serial")
-public final class EntityEcaCondition implements java.io.Serializable {
+public class EntityEcaCondition implements java.io.Serializable {
 
     public static final String module = EntityEcaCondition.class.getName();
 
-    private final String lhsValueName, rhsValueName;
-    private final String operator;
-    private final String compareType;
-    private final String format;
-    private final boolean constant;
+    protected String lhsValueName, rhsValueName;
+    protected String operator;
+    protected String compareType;
+    protected String format;
+    protected boolean constant = false;
+
+    protected EntityEcaCondition() {}
 
     public EntityEcaCondition(Element condition, boolean constant) {
         this.lhsValueName = condition.getAttribute("field-name");
+
         this.constant = constant;
         if (constant) {
             this.rhsValueName = condition.getAttribute("value");
         } else {
             this.rhsValueName = condition.getAttribute("to-field-name");
         }
+
         this.operator = condition.getAttribute("operator");
         this.compareType = condition.getAttribute("type");
         this.format = condition.getAttribute("format");
+
+        if (lhsValueName == null)
+            lhsValueName = "";
+        if (rhsValueName == null)
+            rhsValueName = "";
     }
 
     public boolean eval(DispatchContext dctx, GenericEntity value) throws GenericEntityException {
@@ -89,21 +98,6 @@ public final class EntityEcaCondition implements java.io.Serializable {
         } else {
             return false;
         }
-    }
-
-    public String getLValue() {
-        return this.lhsValueName;
-    }
-
-    public String getRValue() {
-        if (constant && !rhsValueName.isEmpty()) {
-            return "\"".concat(this.rhsValueName).concat("\"");
-        }
-        return this.rhsValueName;
-    }
-
-    public String getOperator() {
-        return this.operator;
     }
 
     @Override

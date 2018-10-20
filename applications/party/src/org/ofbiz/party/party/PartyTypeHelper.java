@@ -47,7 +47,7 @@ public class PartyTypeHelper {
         try {
             party = delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
             if (UtilValidate.isNotEmpty(party)) {
-                partyType = party.getRelatedOne("PartyType", true);
+                partyType = party.getRelatedOneCache("PartyType");
                 checkedTypeOfParty = delegator.findOne("PartyType", UtilMisc.toMap("partyTypeId", checkedPartyType), true);
             } else {
                 return false;

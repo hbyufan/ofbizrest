@@ -41,7 +41,7 @@ public class StatusWorker {
         Delegator delegator = (Delegator) pageContext.getRequest().getAttribute("delegator");
 
         try {
-            List<GenericValue> statusItems = delegator.findByAnd("StatusItem", UtilMisc.toMap("statusTypeId", statusTypeId), UtilMisc.toList("sequenceId"), true);
+            List<GenericValue> statusItems = delegator.findByAndCache("StatusItem", UtilMisc.toMap("statusTypeId", statusTypeId), UtilMisc.toList("sequenceId"));
 
             if (statusItems != null)
                 pageContext.setAttribute(attributeName, statusItems);
@@ -55,7 +55,7 @@ public class StatusWorker {
         List<GenericValue> statusItems = FastList.newInstance();
 
         try {
-            List<GenericValue> calItems = delegator.findByAnd("StatusItem", UtilMisc.toMap("statusTypeId", statusTypeIdOne), UtilMisc.toList("sequenceId"), true);
+            List<GenericValue> calItems = delegator.findByAndCache("StatusItem", UtilMisc.toMap("statusTypeId", statusTypeIdOne), UtilMisc.toList("sequenceId"));
 
             if (calItems != null)
                 statusItems.addAll(calItems);
@@ -63,7 +63,7 @@ public class StatusWorker {
             Debug.logError(e, module);
         }
         try {
-            List<GenericValue> taskItems = delegator.findByAnd("StatusItem", UtilMisc.toMap("statusTypeId", statusTypeIdTwo), UtilMisc.toList("sequenceId"), true);
+            List<GenericValue> taskItems = delegator.findByAndCache("StatusItem", UtilMisc.toMap("statusTypeId", statusTypeIdTwo), UtilMisc.toList("sequenceId"));
 
             if (taskItems != null)
                 statusItems.addAll(taskItems);
@@ -80,7 +80,7 @@ public class StatusWorker {
         List<GenericValue> statusValidChangeToDetails = null;
 
         try {
-            statusValidChangeToDetails = delegator.findByAnd("StatusValidChangeToDetail", UtilMisc.toMap("statusId", statusId), UtilMisc.toList("sequenceId"), true);
+            statusValidChangeToDetails = delegator.findByAndCache("StatusValidChangeToDetail", UtilMisc.toMap("statusId", statusId), UtilMisc.toList("sequenceId"));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }

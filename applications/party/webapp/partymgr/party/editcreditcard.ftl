@@ -60,7 +60,7 @@ under the License.
                 <td>
                   <p><b>${uiLabelMap.PartyUseCurrentAddress}:</b></p>
                   <#list curPartyContactMechPurposes as curPartyContactMechPurpose>
-                    <#assign curContactMechPurposeType = curPartyContactMechPurpose.getRelatedOne("ContactMechPurposeType", true)>
+                    <#assign curContactMechPurposeType = curPartyContactMechPurpose.getRelatedOneCache("ContactMechPurposeType")>
                     <p>
                       <b>${curContactMechPurposeType.get("description",locale)?if_exists}</b>
                       <#if curPartyContactMechPurpose.thruDate?exists>
@@ -103,7 +103,7 @@ under the License.
                   </td>
                   <td>
                     <#list partyContactMechPurposes as partyContactMechPurpose>
-                      <#assign contactMechPurposeType = partyContactMechPurpose.getRelatedOne("ContactMechPurposeType", true)>
+                      <#assign contactMechPurposeType = partyContactMechPurpose.getRelatedOneCache("ContactMechPurposeType")>
                       <p>
                         <b>${contactMechPurposeType.get("description",locale)?if_exists}</b>
                         <#if partyContactMechPurpose.thruDate?exists>(${uiLabelMap.CommonExpire}:${partyContactMechPurpose.thruDate})</#if>

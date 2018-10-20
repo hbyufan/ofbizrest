@@ -184,7 +184,7 @@ public final class ScriptUtil {
                     Debug.logVerbose("Script engine " + engine.getClass().getName() + " does not implement Compilable", module);
                 }
             }
-            if (compiledScript != null) {
+            if (script != null) {
                 parsedScripts.putIfAbsent(cacheKey, compiledScript);
             }
         }
@@ -336,16 +336,16 @@ public final class ScriptUtil {
      */
     public static Object executeScript(String filePath, String functionName, Map<String, Object> context, Object[] args) {
         try {
-            // Enabled to run Groovy data preparation scripts using GroovyUtil rather than the generic JSR223 that doesn't support debug mode
-            // and does not return a stack trace with line number on error
+            /* Enable this to run Groovy data preparation scripts using GroovyUtil rather than the generic JSR223 that doesn't support debug mode
             if (filePath.endsWith(".groovy")) {
                 return GroovyUtil.runScriptAtLocation(filePath, functionName, context);
             }
+            */
             return executeScript(filePath, functionName, createScriptContext(context), args);
         } catch (Exception e) {
             String errMsg = "Error running script at location [" + filePath + "]: " + e.toString();
             Debug.logWarning(e, errMsg, module);
-            throw new IllegalArgumentException(errMsg, e);
+            throw new IllegalArgumentException(errMsg);
         }
     }
 
@@ -438,14 +438,12 @@ public final class ScriptUtil {
         public Set<java.util.Map.Entry<String, Object>> entrySet() {
             return bindings.entrySet();
         }
-        @Override
         public boolean equals(Object o) {
             return bindings.equals(o);
         }
         public Object get(Object key) {
             return bindings.get(key);
         }
-        @Override
         public int hashCode() {
             return bindings.hashCode();
         }

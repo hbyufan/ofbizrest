@@ -26,13 +26,13 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.SimpleHash;
 import freemarker.template.Template;
 import freemarker.template.WrappingTemplateModel;
 
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilHttp;
-import org.ofbiz.base.util.template.FreeMarkerWorker;
 
 import org.jpublish.JPublishContext;
 import org.jpublish.Page;
@@ -59,9 +59,10 @@ public class FreeMarkerViewRenderer extends org.jpublish.view.freemarker.FreeMar
         HttpServletRequest request = context.getRequest();
         HttpServletResponse response = context.getResponse();
 
-        WrappingTemplateModel.setDefaultObjectWrapper(FreeMarkerWorker.getDefaultOfbizWrapper());
+        BeansWrapper wrapper = BeansWrapper.getDefaultInstance();
+        WrappingTemplateModel.setDefaultObjectWrapper(wrapper);
         Map contextMap = new HashMap();
-        SimpleHash root = new SimpleHash(FreeMarkerWorker.getDefaultOfbizWrapper());
+        SimpleHash root = new SimpleHash(wrapper);
         try {
             Object[] keys = context.getKeys();
             for (int i = 0; i < keys.length; i++) {
@@ -70,13 +71,13 @@ public class FreeMarkerViewRenderer extends org.jpublish.view.freemarker.FreeMar
                 if (value != null) {
                     contextMap.put(key, value);
                     //no longer wrapping; let FM do it if needed, more efficient
-                    //root.put(key, FreeMarkerWorker.getDefaultOfbizWrapper().wrap(value));
+                    //root.put(key, wrapper.wrap(value));
                     root.put(key, value);
                 }
             }
-            root.put("context", FreeMarkerWorker.getDefaultOfbizWrapper().wrap(contextMap));
+            root.put("context", wrapper.wrap(contextMap));
             root.put("cachedInclude", new JpCacheIncludeTransform()); // only adding this in for JP!
-            //root.put("jpublishContext", FreeMarkerWorker.getDefaultOfbizWrapper().wrap(context));
+            //root.put("jpublishContext", wrapper.wrap(context));
             FreeMarkerViewHandler.prepOfbizRoot(root, request, response);
         } catch (Exception e) {
             throw new ViewRenderException(e);
@@ -90,7 +91,7 @@ public class FreeMarkerViewRenderer extends org.jpublish.view.freemarker.FreeMar
             Object viewContext = createViewContext(context, path);
 
             Template template = fmConfig.getTemplate(path, UtilHttp.getLocale(context.getRequest()));
-            template.setObjectWrapper(FreeMarkerWorker.getDefaultOfbizWrapper());
+            template.setObjectWrapper(BeansWrapper.getDefaultInstance());
 
             /* NEVER add content to the beginning of templates; this effects XML processing which requires the
                first line remain intact.

@@ -5,17 +5,16 @@
 		timeOnlyTitle: 'Zvoľte čas',
 		timeText: 'Čas',
 		hourText: 'Hodiny',
-		minuteText: 'Minúty',
+		minuteText: 'Minuty',
 		secondText: 'Sekundy',
 		millisecText: 'Milisekundy',
-		microsecText: 'Mikrosekundy',
 		timezoneText: 'Časové pásmo',
 		currentText: 'Teraz',
-		closeText: 'Zavrieť',
-		timeFormat: 'H:m',
+		closeText: 'Zavřít',
+		timeFormat: 'h:m',
 		amNames: ['dop.', 'AM', 'A'],
-		pmNames: ['pop.', 'PM', 'P'],
-		isRTL: false
+		pmNames: ['odp.', 'PM', 'P'],
+		ampm: false
 	};
 	$.timepicker.setDefaults($.timepicker.regional['sk']);
 })(jQuery);

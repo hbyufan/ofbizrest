@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javolution.util.FastMap;
 
@@ -192,7 +193,7 @@ public class ShoppingCartHelper {
         GenericValue product = null;
         if (productId != null) {
             try {
-                product = delegator.findOne("Product", UtilMisc.toMap("productId", productId), true);
+                product = delegator.findByPrimaryKeyCache("Product", UtilMisc.toMap("productId", productId));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Unable to lookup product : " + productId, module);
             }
@@ -217,7 +218,7 @@ public class ShoppingCartHelper {
                     productFeatureAndAppl = EntityUtil.getFirst(EntityUtil.filterByDate(delegator.findByAnd("ProductFeatureAndAppl",
                                                                                     UtilMisc.toMap("productId", productId,
                                                                                                    "productFeatureTypeId", selectedFeatureType,
-                                                                                                   "productFeatureId", selectedFeatureValue), null, false)));
+                                                                                                   "productFeatureId", selectedFeatureValue))));
                 } catch (GenericEntityException gee) {
                     Debug.logError(gee, module);
                 }
@@ -331,7 +332,7 @@ public class ShoppingCartHelper {
                     String aggregatedProdId = null;
                     if (EntityTypeUtil.hasParentType(delegator, "ProductType", "productTypeId", ProductWorker.getProductTypeId(delegator, productId), "parentTypeId", "AGGREGATED")) {
                         try {
-                            GenericValue instanceProduct = delegator.findOne("Product", UtilMisc.toMap("productId", productId), false);
+                            GenericValue instanceProduct = delegator.findByPrimaryKey("Product", UtilMisc.toMap("productId", productId));
                             String configId = instanceProduct.getString("configId");
                             aggregatedProdId = ProductWorker.getInstanceAggregatedId(delegator, productId);
                             configWrapper = ProductConfigWorker.loadProductConfigWrapper(delegator, dispatcher, configId, aggregatedProdId, cart.getProductStoreId(), catalogId, cart.getWebSiteId(), cart.getCurrency(), cart.getLocale(), cart.getAutoUserLogin());
@@ -434,7 +435,7 @@ public class ShoppingCartHelper {
                         originalProductId = productId;
                         productId = ProductWorker.getOriginalProductId(delegator, productId);
                         try {
-                            originalProduct = delegator.findOne("Product", UtilMisc.toMap("productId", originalProductId), false);
+                            originalProduct = delegator.findByPrimaryKey("Product", UtilMisc.toMap("productId", originalProductId));
                         } catch (GenericEntityException e) {
                             Debug.logError(e, "Error getting parent product", module);
                         }
@@ -444,27 +445,7 @@ public class ShoppingCartHelper {
                             quantity = quantity.multiply(piecesIncluded);
                         }
                     }
-
-                    try {
-                        //For quantity we should test if we allow to add decimal quantity for this product an productStore : 
-                        // if not and if quantity is in decimal format then return error.
-                        if(! ProductWorker.isDecimalQuantityOrderAllowed(delegator, productId, cart.getProductStoreId())){
-                            BigDecimal remainder = quantity.remainder(BigDecimal.ONE);
-                            if (remainder.compareTo(BigDecimal.ZERO) != 0) {
-                                return ServiceUtil.returnError(UtilProperties.getMessage(resource_error, "cart.addToCart.quantityInDecimalNotAllowed", this.cart.getLocale()));
-                            }
-                            quantity = quantity.setScale(0, UtilNumber.getBigDecimalRoundingMode("order.rounding"));
-                        } else {
-                            quantity = quantity.setScale(UtilNumber.getBigDecimalScale("order.decimals"), UtilNumber.getBigDecimalRoundingMode("order.rounding"));
-                        }
-                    } catch(GenericEntityException e) {
-                        Debug.logError(e.getMessage(), module);
-                        quantity = BigDecimal.ONE;
-                    }
-                    if (quantity.compareTo(BigDecimal.ZERO) < 0) {
-                        return ServiceUtil.returnError(UtilProperties.getMessage(resource_error, "cart.quantity_not_positive_number", this.cart.getLocale()));
-                    }
-
+                    
                     try {
                         if (Debug.verboseOn()) Debug.logVerbose("Bulk Adding to cart [" + quantity + "] of [" + productId + "] in Item Group [" + itemGroupNumber + "]", module);
                         this.cart.addOrIncreaseItem(productId, null, quantity, null, null, null, null, null, null, null, catalogId, null, null, itemGroupNumberToUse, originalProductId, dispatcher);
@@ -524,7 +505,7 @@ public class ShoppingCartHelper {
                 requirementId = (String) context.get("requirementId" + thisSuffix);
                 GenericValue requirement = null;
                 try {
-                    requirement = delegator.findOne("Requirement", UtilMisc.toMap("requirementId", requirementId), false);
+                    requirement = delegator.findByPrimaryKey("Requirement", UtilMisc.toMap("requirementId", requirementId));
                 } catch (GenericEntityException gee) {
                 }
                 if (requirement == null) {
@@ -554,7 +535,6 @@ public class ShoppingCartHelper {
                             if (Debug.warningOn()) Debug.logWarning(UtilProperties.getMessage(resource_error, "OrderTheRequirementIsAlreadyInTheCartNotAdding", UtilMisc.toMap("requirementId",requirementId), cart.getLocale()), module);
                             continue;
                         }
-
                         try {
                             if (Debug.verboseOn()) Debug.logVerbose("Bulk Adding to cart requirement [" + quantity + "] of [" + productId + "]", module);
                             int index = this.cart.addOrIncreaseItem(productId, null, quantity, null, null, null, requirement.getTimestamp("requiredByDate"), null, null, null, catalogId, null, null, itemGroupNumber, null, dispatcher);
@@ -592,7 +572,7 @@ public class ShoppingCartHelper {
         Collection<GenericValue> prodCatMemberCol = null;
 
         try {
-            prodCatMemberCol = delegator.findByAnd("ProductCategoryMember", UtilMisc.toMap("productCategoryId", categoryId), null, true);
+            prodCatMemberCol = delegator.findByAndCache("ProductCategoryMember", UtilMisc.toMap("productCategoryId", categoryId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e.toString(), module);
             Map<String, Object> messageMap = UtilMisc.<String, Object>toMap("categoryId", categoryId);
@@ -769,16 +749,8 @@ public class ShoppingCartHelper {
                         }
                     } else {
                         quantity = (BigDecimal) ObjectType.simpleTypeConvert(quantString, "BigDecimal", null, locale);
-                        //For quantity we should test if we allow to add decimal quantity for this product an productStore : 
-                        // if not and if quantity is in decimal format then return error.
-                        if (!ProductWorker.isDecimalQuantityOrderAllowed(delegator, item.getProductId(), cart.getProductStoreId()) && parameterName.startsWith("update")) {
-                            BigDecimal remainder = quantity.remainder(BigDecimal.ONE);
-                            if (remainder.compareTo(BigDecimal.ZERO) != 0) {
-                                String errMsg = UtilProperties.getMessage(resource_error, "cart.addToCart.quantityInDecimalNotAllowed", this.cart.getLocale());
-                                errorMsgs.add(errMsg);
-                                result = ServiceUtil.returnError(errorMsgs);
-                                return result;
-                            }
+                        //For quantity we should test if we allow to add decimal quantity for this product an productStore : if not then round to 0
+                        if(! ProductWorker.isDecimalQuantityOrderAllowed(delegator, item.getProductId(), cart.getProductStoreId())){
                             quantity = quantity.setScale(0, UtilNumber.getBigDecimalRoundingMode("order.rounding"));
                         }                
                         else {
@@ -964,7 +936,7 @@ public class ShoppingCartHelper {
         GenericValue productFeatureAppl = null;
         List<GenericValue> features = null;
         try {
-            features = delegator.findByAnd("ProductFeatureAndAppl", fields, UtilMisc.toList("-fromDate"), false);
+            features = delegator.findByAnd("ProductFeatureAndAppl", fields, UtilMisc.toList("-fromDate"));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
             return null;
@@ -1010,7 +982,7 @@ public class ShoppingCartHelper {
         }
 
         try {
-            agreement = this.delegator.findOne("Agreement",UtilMisc.toMap("agreementId", agreementId), true);
+            agreement = this.delegator.findByPrimaryKeyCache("Agreement",UtilMisc.toMap("agreementId", agreementId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e.toString(), module);
             result = ServiceUtil.returnError(UtilProperties.getMessage(resource_error,"OrderCouldNotGetAgreement",UtilMisc.toMap("agreementId",agreementId),this.cart.getLocale()) + UtilProperties.getMessage(resource_error,"OrderError",this.cart.getLocale()) + e.getMessage());
@@ -1024,7 +996,7 @@ public class ShoppingCartHelper {
             cart.setAgreementId(agreementId);
             try {
                 // set the currency based on the pricing agreement
-                List<GenericValue> agreementItems = agreement.getRelated("AgreementItem", UtilMisc.toMap("agreementItemTypeId", "AGREEMENT_PRICING_PR"), null, false);
+                List<GenericValue> agreementItems = agreement.getRelated("AgreementItem", UtilMisc.toMap("agreementItemTypeId", "AGREEMENT_PRICING_PR"), null);
                 if (agreementItems.size() > 0) {
                     GenericValue agreementItem = agreementItems.get(0);
                     String currencyUomId = (String) agreementItem.get("currencyUomId");
@@ -1047,7 +1019,7 @@ public class ShoppingCartHelper {
                  // clear the existing order terms
                  cart.removeOrderTerms();
                  // set order terms based on agreement terms
-                 List<GenericValue> agreementTerms = EntityUtil.filterByDate(agreement.getRelated("AgreementTerm", null, null, false));
+                 List<GenericValue> agreementTerms = EntityUtil.filterByDate(agreement.getRelated("AgreementTerm"));
                  if (agreementTerms.size() > 0) {
                       for (int i = 0; agreementTerms.size() > i;i++) {
                            GenericValue agreementTerm = agreementTerms.get(i);

@@ -114,7 +114,6 @@ public class ModelFormField {
     protected boolean separateColumn = false;
     protected Boolean requiredField = null;
     protected Boolean sortField = null;
-    protected String sortFieldHelpText = "";
     protected String headerLink;
     protected String headerLinkStyle;
     protected String parentFormName;
@@ -161,7 +160,6 @@ public class ModelFormField {
         this.separateColumn = "true".equals(fieldElement.getAttribute("separate-column"));
         this.requiredField = fieldElement.hasAttribute("required-field") ? "true".equals(fieldElement.getAttribute("required-field")) : null;
         this.sortField = fieldElement.hasAttribute("sort-field") ? "true".equals(fieldElement.getAttribute("sort-field")) : null;
-        this.sortFieldHelpText = fieldElement.getAttribute("sort-field-help-text");
         this.headerLink = fieldElement.getAttribute("header-link");
         this.headerLinkStyle = fieldElement.getAttribute("header-link-style");
         this.parentFormName = fieldElement.getAttribute("form-name");
@@ -246,7 +244,6 @@ public class ModelFormField {
         if (UtilValidate.isNotEmpty(overrideFormField.tooltip)) this.tooltip = overrideFormField.tooltip;
         if (overrideFormField.requiredField != null) this.requiredField = overrideFormField.requiredField;
         if (overrideFormField.sortField != null) this.sortField = overrideFormField.sortField;
-        if (UtilValidate.isNotEmpty(overrideFormField.sortFieldHelpText)) this.sortFieldHelpText = overrideFormField.sortFieldHelpText;
         if (UtilValidate.isNotEmpty(overrideFormField.titleAreaStyle)) this.titleAreaStyle = overrideFormField.titleAreaStyle;
         if (UtilValidate.isNotEmpty(overrideFormField.widgetAreaStyle)) this.widgetAreaStyle = overrideFormField.widgetAreaStyle;
         if (UtilValidate.isNotEmpty(overrideFormField.titleStyle)) this.titleStyle = overrideFormField.titleStyle;
@@ -988,17 +985,15 @@ public class ModelFormField {
 
     public String getCurrentContainerId(Map<String, Object> context) {
         ModelForm modelForm = this.getModelForm();
-        String idName = FlexibleStringExpander.expandString(this.getIdName(), context);
-
         if (modelForm != null) {
             Integer itemIndex = (Integer) context.get("itemIndex");
             if ("list".equals(modelForm.getType()) || "multi".equals(modelForm.getType() )) {
                 if (itemIndex != null) {
-                    return idName + modelForm.getItemIndexSeparator() + itemIndex.intValue();
+                    return this.getIdName() + modelForm.getItemIndexSeparator() + itemIndex.intValue();
                 }
             }
         }
-        return idName;
+        return this.getIdName();
     }
 
     public String getHeaderLink() {
@@ -1251,10 +1246,6 @@ public class ModelFormField {
      */
     public void setRequiredField(boolean required) {
         this.requiredField = required;
-    }
-
-    public String getSortFieldHelpText(Map<String, Object> context) {
-        return FlexibleStringExpander.expandString(this.sortFieldHelpText, context);
     }
 
     public boolean isSortField() {
@@ -3607,7 +3598,6 @@ public class ModelFormField {
         protected String lookupPosition;
         protected String fadeBackground;
         protected String initiallyCollapsed;
-        protected String showDescription;
 
         public LookupField(Element element, ModelFormField modelFormField) {
             super(element, modelFormField);
@@ -3621,7 +3611,6 @@ public class ModelFormField {
             this.lookupPosition = element.getAttribute("position");
             this.fadeBackground = element.getAttribute("fade-background");            
             this.initiallyCollapsed = element.getAttribute("initially-collapsed");
-            this.showDescription = element.getAttribute("show-description");
 
             Element subHyperlinkElement = UtilXml.firstChildElement(element, "sub-hyperlink");
             if (subHyperlinkElement != null) {
@@ -3713,15 +3702,6 @@ public class ModelFormField {
         public void setFadeBackground(String str) {
             this.fadeBackground = str;
         }
-
-        public Boolean getShowDescription() {
-            return UtilValidate.isEmpty(this.showDescription) ? null : "true".equals(this.showDescription);
-        }
-
-        public void setShowDescription(String str) {
-            this.showDescription = str;
-        }
-
         //initially-collapsed status
         public boolean getInitiallyCollapsed() {
             return "true".equals(this.initiallyCollapsed);

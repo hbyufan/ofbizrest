@@ -94,8 +94,8 @@ public class OrderReadHelper {
         this.orderItems = orderItems;
         if (this.orderHeader != null && !this.orderHeader.getEntityName().equals("OrderHeader")) {
             try {
-                this.orderHeader = orderHeader.getDelegator().findOne("OrderHeader", UtilMisc.toMap("orderId",
-                        orderHeader.getString("orderId")), false);
+                this.orderHeader = orderHeader.getDelegator().findByPrimaryKey("OrderHeader", UtilMisc.toMap("orderId",
+                        orderHeader.getString("orderId")));
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
                 this.orderHeader = null;
@@ -103,7 +103,7 @@ public class OrderReadHelper {
         } else if (this.orderHeader == null && orderItems != null) {
             GenericValue firstItem = EntityUtil.getFirst(orderItems);
             try {
-                this.orderHeader = firstItem.getRelatedOne("OrderHeader", false);
+                this.orderHeader = firstItem.getRelatedOne("OrderHeader");
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
                 this.orderHeader = null;
@@ -129,7 +129,7 @@ public class OrderReadHelper {
 
     public OrderReadHelper(Delegator delegator, String orderId) {
         try {
-            this.orderHeader = delegator.findOne("OrderHeader", UtilMisc.toMap("orderId", orderId), false);
+            this.orderHeader = delegator.findByPrimaryKey("OrderHeader", UtilMisc.toMap("orderId", orderId));
         } catch (GenericEntityException e) {
             String errMsg = "Error finding order with ID [" + orderId + "]: " + e.toString();
             Debug.logError(e, errMsg, module);
@@ -163,7 +163,7 @@ public class OrderReadHelper {
         String productStoreId = orderHeader.getString("productStoreId");
         try {
             Delegator delegator = orderHeader.getDelegator();
-            GenericValue productStore = delegator.findOne("ProductStore", UtilMisc.toMap("productStoreId", productStoreId), true);
+            GenericValue productStore = delegator.findByPrimaryKeyCache("ProductStore", UtilMisc.toMap("productStoreId", productStoreId));
             return productStore;
         } catch (GenericEntityException ex) {
             Debug.logError(ex, "Failed to get product store for order header [" + orderHeader + "] due to exception "+ ex.getMessage(), module);
@@ -186,7 +186,7 @@ public class OrderReadHelper {
     public List<GenericValue> getAdjustments() {
         if (adjustments == null) {
             try {
-                adjustments = orderHeader.getRelated("OrderAdjustment", null, null, false);
+                adjustments = orderHeader.getRelated("OrderAdjustment");
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }
@@ -199,7 +199,7 @@ public class OrderReadHelper {
     public List<GenericValue> getPaymentPreferences() {
         if (paymentPrefs == null) {
             try {
-                paymentPrefs = orderHeader.getRelated("OrderPaymentPreference", null, UtilMisc.toList("orderPaymentPreferenceId"), false);
+                paymentPrefs = orderHeader.getRelated("OrderPaymentPreference", UtilMisc.toList("orderPaymentPreferenceId"));
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }
@@ -219,7 +219,7 @@ public class OrderReadHelper {
             try {
                 List<EntityExpr> exprs = UtilMisc.toList(EntityCondition.makeCondition("statusId", EntityOperator.EQUALS, "PMNT_RECEIVED"),
                                             EntityCondition.makeCondition("statusId", EntityOperator.EQUALS, "PMNT_CONFIRMED"));
-                payments = paymentPref.getRelated("Payment", null, null, false);
+                payments = paymentPref.getRelated("Payment");
                 payments = EntityUtil.filterByOr(payments, exprs);
                 List<EntityExpr> conds = UtilMisc.toList(EntityCondition.makeCondition("paymentTypeId", EntityOperator.EQUALS, "CUSTOMER_PAYMENT"),
                                             EntityCondition.makeCondition("paymentTypeId", EntityOperator.EQUALS, "CUSTOMER_DEPOSIT"),
@@ -262,7 +262,7 @@ public class OrderReadHelper {
         for(GenericValue paymentPref : paymentPrefs) {
             List<GenericValue> returnItemResponses = FastList.newInstance();
             try {
-                returnItemResponses = orderHeader.getDelegator().findByAnd("ReturnItemResponse", UtilMisc.toMap("orderPaymentPreferenceId", paymentPref.getString("orderPaymentPreferenceId")), null, false);
+                returnItemResponses = orderHeader.getDelegator().findByAnd("ReturnItemResponse", UtilMisc.toMap("orderPaymentPreferenceId", paymentPref.getString("orderPaymentPreferenceId")));
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }
@@ -296,7 +296,7 @@ public class OrderReadHelper {
         if (prefs != null) {
             for(GenericValue payPref : prefs) {
                 try {
-                    orderPayments.addAll(payPref.getRelated("Payment", null, null, false));
+                    orderPayments.addAll(payPref.getRelated("Payment"));
                 } catch (GenericEntityException e) {
                     Debug.logError(e, module);
                     return null;
@@ -309,7 +309,7 @@ public class OrderReadHelper {
     public List<GenericValue> getOrderStatuses() {
         if (orderStatuses == null) {
             try {
-                orderStatuses = orderHeader.getRelated("OrderStatus", null, null, false);
+                orderStatuses = orderHeader.getRelated("OrderStatus");
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }
@@ -319,7 +319,7 @@ public class OrderReadHelper {
 
     public List<GenericValue> getOrderTerms() {
         try {
-           return orderHeader.getRelated("OrderTerm", null, null, false);
+           return orderHeader.getRelated("OrderTerm");
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
             return null;
@@ -342,14 +342,14 @@ public class OrderReadHelper {
 
     public String getShippingMethod(String shipGroupSeqId) {
         try {
-            GenericValue shipGroup = orderHeader.getDelegator().findOne("OrderItemShipGroup",
-                    UtilMisc.toMap("orderId", orderHeader.getString("orderId"), "shipGroupSeqId", shipGroupSeqId), false);
+            GenericValue shipGroup = orderHeader.getDelegator().findByPrimaryKey("OrderItemShipGroup",
+                    UtilMisc.toMap("orderId", orderHeader.getString("orderId"), "shipGroupSeqId", shipGroupSeqId));
 
             if (shipGroup != null) {
-                GenericValue carrierShipmentMethod = shipGroup.getRelatedOne("CarrierShipmentMethod", false);
+                GenericValue carrierShipmentMethod = shipGroup.getRelatedOne("CarrierShipmentMethod");
 
                 if (carrierShipmentMethod != null) {
-                    GenericValue shipmentMethodType = carrierShipmentMethod.getRelatedOne("ShipmentMethodType", false);
+                    GenericValue shipmentMethodType = carrierShipmentMethod.getRelatedOne("ShipmentMethodType");
 
                     if (shipmentMethodType != null) {
                         return UtilFormatOut.checkNull(shipGroup.getString("carrierPartyId")) + " " +
@@ -366,14 +366,14 @@ public class OrderReadHelper {
 
     public String getShippingMethodCode(String shipGroupSeqId) {
         try {
-            GenericValue shipGroup = orderHeader.getDelegator().findOne("OrderItemShipGroup",
-                    UtilMisc.toMap("orderId", orderHeader.getString("orderId"), "shipGroupSeqId", shipGroupSeqId), false);
+            GenericValue shipGroup = orderHeader.getDelegator().findByPrimaryKey("OrderItemShipGroup",
+                    UtilMisc.toMap("orderId", orderHeader.getString("orderId"), "shipGroupSeqId", shipGroupSeqId));
 
             if (shipGroup != null) {
-                GenericValue carrierShipmentMethod = shipGroup.getRelatedOne("CarrierShipmentMethod", false);
+                GenericValue carrierShipmentMethod = shipGroup.getRelatedOne("CarrierShipmentMethod");
 
                 if (carrierShipmentMethod != null) {
-                    GenericValue shipmentMethodType = carrierShipmentMethod.getRelatedOne("ShipmentMethodType", false);
+                    GenericValue shipmentMethodType = carrierShipmentMethod.getRelatedOne("ShipmentMethodType");
 
                     if (shipmentMethodType != null) {
                         return UtilFormatOut.checkNull(shipmentMethodType.getString("shipmentMethodTypeId")) + "@" + UtilFormatOut.checkNull(shipGroup.getString("carrierPartyId"));
@@ -396,9 +396,9 @@ public class OrderReadHelper {
 
     public boolean hasPhysicalProductItems() throws GenericEntityException {
         for(GenericValue orderItem : this.getOrderItems()) {
-            GenericValue product = orderItem.getRelatedOne("Product", true);
+            GenericValue product = orderItem.getRelatedOneCache("Product");
             if (product != null) {
-                GenericValue productType = product.getRelatedOne("ProductType", true);
+                GenericValue productType = product.getRelatedOneCache("ProductType");
                 if ("Y".equals(productType.getString("isPhysical"))) {
                     return true;
                 }
@@ -409,8 +409,8 @@ public class OrderReadHelper {
 
     public GenericValue getOrderItemShipGroup(String shipGroupSeqId) {
         try {
-            return orderHeader.getDelegator().findOne("OrderItemShipGroup",
-                    UtilMisc.toMap("orderId", orderHeader.getString("orderId"), "shipGroupSeqId", shipGroupSeqId), false);
+            return orderHeader.getDelegator().findByPrimaryKey("OrderItemShipGroup",
+                    UtilMisc.toMap("orderId", orderHeader.getString("orderId"), "shipGroupSeqId", shipGroupSeqId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e, module);
         }
@@ -419,7 +419,7 @@ public class OrderReadHelper {
 
     public List<GenericValue> getOrderItemShipGroups() {
         try {
-            return orderHeader.getRelated("OrderItemShipGroup", null, UtilMisc.toList("shipGroupSeqId"), false);
+            return orderHeader.getRelated("OrderItemShipGroup", UtilMisc.toList("shipGroupSeqId"));
         } catch (GenericEntityException e) {
             Debug.logWarning(e, module);
         }
@@ -433,8 +433,8 @@ public class OrderReadHelper {
             for(GenericValue ocm : shippingCms) {
                 if (ocm != null) {
                     try {
-                        GenericValue addr = ocm.getDelegator().findOne("PostalAddress",
-                                UtilMisc.toMap("contactMechId", ocm.getString("contactMechId")), false);
+                        GenericValue addr = ocm.getDelegator().findByPrimaryKey("PostalAddress",
+                                UtilMisc.toMap("contactMechId", ocm.getString("contactMechId")));
                         if (addr != null) {
                             shippingLocations.add(addr);
                         }
@@ -449,11 +449,11 @@ public class OrderReadHelper {
 
     public GenericValue getShippingAddress(String shipGroupSeqId) {
         try {
-            GenericValue shipGroup = orderHeader.getDelegator().findOne("OrderItemShipGroup",
-                    UtilMisc.toMap("orderId", orderHeader.getString("orderId"), "shipGroupSeqId", shipGroupSeqId), false);
+            GenericValue shipGroup = orderHeader.getDelegator().findByPrimaryKey("OrderItemShipGroup",
+                    UtilMisc.toMap("orderId", orderHeader.getString("orderId"), "shipGroupSeqId", shipGroupSeqId));
 
             if (shipGroup != null) {
-                return shipGroup.getRelatedOne("PostalAddress", false);
+                return shipGroup.getRelatedOne("PostalAddress");
 
             }
         } catch (GenericEntityException e) {
@@ -466,13 +466,14 @@ public class OrderReadHelper {
     @Deprecated
     public GenericValue getShippingAddress() {
         try {
-            GenericValue orderContactMech = EntityUtil.getFirst(orderHeader.getRelated("OrderContactMech", UtilMisc.toMap("contactMechPurposeTypeId", "SHIPPING_LOCATION"), null, false));
+            GenericValue orderContactMech = EntityUtil.getFirst(orderHeader.getRelatedByAnd("OrderContactMech", UtilMisc.toMap(
+                            "contactMechPurposeTypeId", "SHIPPING_LOCATION")));
 
             if (orderContactMech != null) {
-                GenericValue contactMech = orderContactMech.getRelatedOne("ContactMech", false);
+                GenericValue contactMech = orderContactMech.getRelatedOne("ContactMech");
 
                 if (contactMech != null) {
-                    return contactMech.getRelatedOne("PostalAddress", false);
+                    return contactMech.getRelatedOne("PostalAddress");
                 }
             }
         } catch (GenericEntityException e) {
@@ -488,8 +489,8 @@ public class OrderReadHelper {
             for(GenericValue ocm : billingCms) {
                 if (ocm != null) {
                     try {
-                        GenericValue addr = ocm.getDelegator().findOne("PostalAddress",
-                                UtilMisc.toMap("contactMechId", ocm.getString("contactMechId")), false);
+                        GenericValue addr = ocm.getDelegator().findByPrimaryKey("PostalAddress",
+                                UtilMisc.toMap("contactMechId", ocm.getString("contactMechId")));
                         if (addr != null) {
                             billingLocations.add(addr);
                         }
@@ -507,13 +508,13 @@ public class OrderReadHelper {
     public GenericValue getBillingAddress() {
         GenericValue billingAddress = null;
         try {
-            GenericValue orderContactMech = EntityUtil.getFirst(orderHeader.getRelated("OrderContactMech", UtilMisc.toMap("contactMechPurposeTypeId", "BILLING_LOCATION"), null, false));
+            GenericValue orderContactMech = EntityUtil.getFirst(orderHeader.getRelatedByAnd("OrderContactMech", UtilMisc.toMap("contactMechPurposeTypeId", "BILLING_LOCATION")));
 
             if (orderContactMech != null) {
-                GenericValue contactMech = orderContactMech.getRelatedOne("ContactMech", false);
+                GenericValue contactMech = orderContactMech.getRelatedOne("ContactMech");
 
                 if (contactMech != null) {
-                    billingAddress = contactMech.getRelatedOne("PostalAddress", false);
+                    billingAddress = contactMech.getRelatedOne("PostalAddress");
                 }
             }
         } catch (GenericEntityException e) {
@@ -525,7 +526,7 @@ public class OrderReadHelper {
             GenericValue billingAccount = getBillingAccount();
             if (billingAccount != null) {
                 try {
-                    billingAddress = billingAccount.getRelatedOne("PostalAddress", false);
+                    billingAddress = billingAccount.getRelatedOne("PostalAddress");
                 } catch (GenericEntityException e) {
                     Debug.logWarning(e, module);
                 }
@@ -534,15 +535,15 @@ public class OrderReadHelper {
                 GenericValue paymentPreference = EntityUtil.getFirst(getPaymentPreferences());
                 if (paymentPreference != null) {
                     try {
-                        GenericValue paymentMethod = paymentPreference.getRelatedOne("PaymentMethod", false);
+                        GenericValue paymentMethod = paymentPreference.getRelatedOne("PaymentMethod");
                         if (paymentMethod != null) {
-                            GenericValue creditCard = paymentMethod.getRelatedOne("CreditCard", false);
+                            GenericValue creditCard = paymentMethod.getRelatedOne("CreditCard");
                             if (creditCard != null) {
-                                billingAddress = creditCard.getRelatedOne("PostalAddress", false);
+                                billingAddress = creditCard.getRelatedOne("PostalAddress");
                             } else {
-                                GenericValue eftAccount = paymentMethod.getRelatedOne("EftAccount", false);
+                                GenericValue eftAccount = paymentMethod.getRelatedOne("EftAccount");
                                 if (eftAccount != null) {
-                                    billingAddress = eftAccount.getRelatedOne("PostalAddress", false);
+                                    billingAddress = eftAccount.getRelatedOne("PostalAddress");
                                 }
                             }
                         }
@@ -557,7 +558,8 @@ public class OrderReadHelper {
 
     public List<GenericValue> getOrderContactMechs(String purposeTypeId) {
         try {
-            return orderHeader.getRelated("OrderContactMech", UtilMisc.toMap("contactMechPurposeTypeId", purposeTypeId), null, false);
+            return orderHeader.getRelatedByAnd("OrderContactMech",
+                    UtilMisc.toMap("contactMechPurposeTypeId", purposeTypeId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e, module);
         }
@@ -566,7 +568,7 @@ public class OrderReadHelper {
 
     public Timestamp getEarliestShipByDate() {
         try {
-            List<GenericValue> groups = orderHeader.getRelated("OrderItemShipGroup", null, UtilMisc.toList("shipByDate"), false);
+            List<GenericValue> groups = orderHeader.getRelated("OrderItemShipGroup", UtilMisc.toList("shipByDate"));
             if (groups.size() > 0) {
                 GenericValue group = groups.get(0);
                 return group.getTimestamp("shipByDate");
@@ -579,7 +581,7 @@ public class OrderReadHelper {
 
     public Timestamp getLatestShipAfterDate() {
         try {
-            List<GenericValue> groups = orderHeader.getRelated("OrderItemShipGroup", null, UtilMisc.toList("shipAfterDate DESC"), false);
+            List<GenericValue> groups = orderHeader.getRelated("OrderItemShipGroup", UtilMisc.toList("shipAfterDate DESC"));
             if (groups.size() > 0) {
                 GenericValue group = groups.get(0);
                 return group.getTimestamp("shipAfterDate");
@@ -593,7 +595,7 @@ public class OrderReadHelper {
     public String getCurrentStatusString() {
         GenericValue statusItem = null;
         try {
-            statusItem = orderHeader.getRelatedOne("StatusItem", true);
+            statusItem = orderHeader.getRelatedOneCache("StatusItem");
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -616,7 +618,7 @@ public class OrderReadHelper {
             boolean isCurrent = true;
             while (orderStatusIter.hasNext()) {
                 GenericValue orderStatus = orderStatusIter.next();
-                GenericValue statusItem = orderStatus.getRelatedOne("StatusItem", true);
+                GenericValue statusItem = orderStatus.getRelatedOneCache("StatusItem");
 
                 if (statusItem != null) {
                     orderStatusString.append(statusItem.get("description", locale));
@@ -647,7 +649,7 @@ public class OrderReadHelper {
     public GenericValue getBillingAccount() {
         GenericValue billingAccount = null;
         try {
-            billingAccount = orderHeader.getRelatedOne("BillingAccount", false);
+            billingAccount = orderHeader.getRelatedOne("BillingAccount");
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -665,7 +667,7 @@ public class OrderReadHelper {
             List<GenericValue> paymentPreferences = null;
             try {
                 Delegator delegator = orderHeader.getDelegator();
-                paymentPreferences = delegator.findByAnd("OrderPurchasePaymentSummary", UtilMisc.toMap("orderId", orderHeader.getString("orderId")), null, false);
+                paymentPreferences = delegator.findByAnd("OrderPurchasePaymentSummary", UtilMisc.toMap("orderId", orderHeader.getString("orderId")));
             } catch (GenericEntityException e) {
                 Debug.logWarning(e, module);
             }
@@ -727,13 +729,13 @@ public class OrderReadHelper {
         Delegator delegator = orderHeader.getDelegator();
         GenericValue partyObject = null;
         try {
-            GenericValue orderRole = EntityUtil.getFirst(orderHeader.getRelated("OrderRole", UtilMisc.toMap("roleTypeId", roleTypeId), null, false));
+            GenericValue orderRole = EntityUtil.getFirst(orderHeader.getRelatedByAnd("OrderRole", UtilMisc.toMap("roleTypeId", roleTypeId)));
 
             if (orderRole != null) {
-                partyObject = delegator.findOne("Person", UtilMisc.toMap("partyId", orderRole.getString("partyId")), false);
+                partyObject = delegator.findByPrimaryKey("Person", UtilMisc.toMap("partyId", orderRole.getString("partyId")));
 
                 if (partyObject == null) {
-                    partyObject = delegator.findOne("PartyGroup", UtilMisc.toMap("partyId", orderRole.getString("partyId")), false);
+                    partyObject = delegator.findByPrimaryKey("PartyGroup", UtilMisc.toMap("partyId", orderRole.getString("partyId")));
                 }
             }
         } catch (GenericEntityException e) {
@@ -744,7 +746,7 @@ public class OrderReadHelper {
 
     public String getDistributorId() {
         try {
-            GenericEntity distributorRole = EntityUtil.getFirst(orderHeader.getRelated("OrderRole", UtilMisc.toMap("roleTypeId", "DISTRIBUTOR"), null, false));
+            GenericEntity distributorRole = EntityUtil.getFirst(orderHeader.getRelatedByAnd("OrderRole", UtilMisc.toMap("roleTypeId", "DISTRIBUTOR")));
 
             return distributorRole == null ? null : distributorRole.getString("partyId");
         } catch (GenericEntityException e) {
@@ -755,7 +757,7 @@ public class OrderReadHelper {
 
     public String getAffiliateId() {
         try {
-            GenericEntity distributorRole = EntityUtil.getFirst(orderHeader.getRelated("OrderRole", UtilMisc.toMap("roleTypeId", "AFFILIATE"), null, false));
+            GenericEntity distributorRole = EntityUtil.getFirst(orderHeader.getRelatedByAnd("OrderRole", UtilMisc.toMap("roleTypeId", "AFFILIATE")));
 
             return distributorRole == null ? null : distributorRole.getString("partyId");
         } catch (GenericEntityException e) {
@@ -781,7 +783,7 @@ public class OrderReadHelper {
         List<GenericValue> featureAppls = null;
         if (item.get("productId") != null) {
             try {
-                featureAppls = item.getDelegator().findByAnd("ProductFeatureAppl", UtilMisc.toMap("productId", item.getString("productId")), null, true);
+                featureAppls = item.getDelegator().findByAndCache("ProductFeatureAppl", UtilMisc.toMap("productId", item.getString("productId")));
                 List<EntityExpr> filterExprs = UtilMisc.toList(EntityCondition.makeCondition("productFeatureApplTypeId", EntityOperator.EQUALS, "STANDARD_FEATURE"));
                 filterExprs.add(EntityCondition.makeCondition("productFeatureApplTypeId", EntityOperator.EQUALS, "REQUIRED_FEATURE"));
                 featureAppls = EntityUtil.filterByOr(featureAppls, filterExprs);
@@ -798,7 +800,7 @@ public class OrderReadHelper {
         // get the ADDITIONAL_FEATURE adjustments
         List<GenericValue> additionalFeatures = null;
         try {
-            additionalFeatures = item.getRelated("OrderAdjustment", UtilMisc.toMap("orderAdjustmentTypeId", "ADDITIONAL_FEATURE"), null, false);
+            additionalFeatures = item.getRelatedByAnd("OrderAdjustment", UtilMisc.toMap("orderAdjustmentTypeId", "ADDITIONAL_FEATURE"));
         } catch (GenericEntityException e) {
             Debug.logError(e, "Unable to get OrderAdjustment from item : " + item, module);
         }
@@ -822,7 +824,7 @@ public class OrderReadHelper {
                 List<GenericValue> featureAppls = null;
                 if (item.get("productId") != null) {
                     try {
-                        featureAppls = item.getDelegator().findByAnd("ProductFeatureAppl", UtilMisc.toMap("productId", item.getString("productId")), null, true);
+                        featureAppls = item.getDelegator().findByAndCache("ProductFeatureAppl", UtilMisc.toMap("productId", item.getString("productId")));
                         List<EntityExpr> filterExprs = UtilMisc.toList(EntityCondition.makeCondition("productFeatureApplTypeId", EntityOperator.EQUALS, "STANDARD_FEATURE"));
                         filterExprs.add(EntityCondition.makeCondition("productFeatureApplTypeId", EntityOperator.EQUALS, "REQUIRED_FEATURE"));
                         featureAppls = EntityUtil.filterByOr(featureAppls, filterExprs);
@@ -844,7 +846,7 @@ public class OrderReadHelper {
                 // get the ADDITIONAL_FEATURE adjustments
                 List<GenericValue> additionalFeatures = null;
                 try {
-                    additionalFeatures = item.getRelated("OrderAdjustment", UtilMisc.toMap("orderAdjustmentTypeId", "ADDITIONAL_FEATURE"), null, false);
+                    additionalFeatures = item.getRelatedByAnd("OrderAdjustment", UtilMisc.toMap("orderAdjustmentTypeId", "ADDITIONAL_FEATURE"));
                 } catch (GenericEntityException e) {
                     Debug.logError(e, "Unable to get OrderAdjustment from item : " + item, module);
                 }
@@ -874,7 +876,7 @@ public class OrderReadHelper {
             for(GenericValue item : validItems) {
                 GenericValue product = null;
                 try {
-                    product = item.getRelatedOne("Product", false);
+                    product = item.getRelatedOne("Product");
                 } catch (GenericEntityException e) {
                     Debug.logError(e, "Problem getting Product from OrderItem; returning 0", module);
                 }
@@ -896,7 +898,7 @@ public class OrderReadHelper {
             for(GenericValue item : validItems) {
                 GenericValue product = null;
                 try {
-                    product = item.getRelatedOne("Product", false);
+                    product = item.getRelatedOne("Product");
                 } catch (GenericEntityException e) {
                     Debug.logError(e, "Problem getting Product from OrderItem; returning 0", module);
                 }
@@ -918,7 +920,7 @@ public class OrderReadHelper {
             for(GenericValue item : validItems) {
                 GenericValue product = null;
                 try {
-                    product = item.getRelatedOne("Product", false);
+                    product = item.getRelatedOne("Product");
                 } catch (GenericEntityException e) {
                     Debug.logError(e, "Problem getting Product from OrderItem; returning 0", module);
                     return ZERO;
@@ -951,7 +953,7 @@ public class OrderReadHelper {
             for(GenericValue item : validItems) {
                 GenericValue product = null;
                 try {
-                    product = item.getRelatedOne("Product", false);
+                    product = item.getRelatedOne("Product");
                 } catch (GenericEntityException e) {
                     Debug.logError(e, "Problem getting Product from OrderItem; returning 0", module);
                     return ZERO;
@@ -984,7 +986,7 @@ public class OrderReadHelper {
 
         GenericValue product = null;
         try {
-            product = item.getRelatedOne("Product", false);
+            product = item.getRelatedOne("Product");
         } catch (GenericEntityException e) {
             Debug.logError(e, "Problem getting Product from OrderItem; returning 0", module);
             return BigDecimal.ZERO;
@@ -998,7 +1000,7 @@ public class OrderReadHelper {
                     try {
                         String virtualId = ProductWorker.getVariantVirtualId(product);
                         if (UtilValidate.isNotEmpty(virtualId)) {
-                            GenericValue virtual = delegator.findOne("Product", UtilMisc.toMap("productId", virtualId), true);
+                            GenericValue virtual = delegator.findByPrimaryKeyCache("Product", UtilMisc.toMap("productId", virtualId));
                             if (virtual != null) {
                                 weight = virtual.getBigDecimal("weight");
                             }
@@ -1066,7 +1068,7 @@ public class OrderReadHelper {
 
         try {
             // get a set of invoice IDs that belong to the order
-            List<GenericValue> orderItemBillings = orderHeader.getRelated("OrderItemBilling", null, null, true);
+            List<GenericValue> orderItemBillings = orderHeader.getRelatedCache("OrderItemBilling");
             Set<String> invoiceIds = new HashSet<String>();
             for(GenericValue orderItemBilling : orderItemBillings) {
                 invoiceIds.add(orderItemBilling.getString("invoiceId"));
@@ -1098,7 +1100,7 @@ public class OrderReadHelper {
 
         GenericValue product = null;
         try {
-            product = item.getRelatedOne("Product", false);
+            product = item.getRelatedOne("Product");
         } catch (GenericEntityException e) {
             Debug.logError(e, "Problem getting Product from OrderItem", module);
             return BigDecimal.ZERO;
@@ -1114,7 +1116,7 @@ public class OrderReadHelper {
                     try {
                         String virtualId = ProductWorker.getVariantVirtualId(product);
                         if (UtilValidate.isNotEmpty(virtualId)) {
-                            GenericValue virtual = delegator.findOne("Product", UtilMisc.toMap("productId", virtualId), true);
+                            GenericValue virtual = delegator.findByPrimaryKeyCache("Product", UtilMisc.toMap("productId", virtualId));
                             if (virtual != null) {
                                 if (height == null) height = virtual.getBigDecimal("shippingHeight");
                                 if (width == null) width = virtual.getBigDecimal("shippingWidth");
@@ -1147,7 +1149,7 @@ public class OrderReadHelper {
 
         GenericValue product = null;
         try {
-            product = item.getRelatedOne("Product", false);
+            product = item.getRelatedOne("Product");
         } catch (GenericEntityException e) {
             Debug.logError(e, "Problem getting Product from OrderItem; returning 1", module);
             return 1;
@@ -1160,7 +1162,7 @@ public class OrderReadHelper {
                     // get the virtual product and check its weight
                     GenericValue virtual = null;
                     try {
-                        List<GenericValue> virtuals = delegator.findByAnd("ProductAssoc", UtilMisc.toMap("productIdTo", product.getString("productId"), "productAssocTypeId", "PRODUCT_VARIANT"), UtilMisc.toList("-fromDate"), false);
+                        List<GenericValue> virtuals = delegator.findByAnd("ProductAssoc", UtilMisc.toMap("productIdTo", product.getString("productId"), "productAssocTypeId", "PRODUCT_VARIANT"), UtilMisc.toList("-fromDate"));
                         virtuals = EntityUtil.filterByDate(virtuals);
                         virtual = EntityUtil.getFirst(virtuals);
                     } catch (GenericEntityException e) {
@@ -1168,7 +1170,7 @@ public class OrderReadHelper {
                     }
                     if (virtual != null) {
                         try {
-                            GenericValue virtualProduct = virtual.getRelatedOne("MainProduct", false);
+                            GenericValue virtualProduct = virtual.getRelatedOne("MainProduct");
                             pieces = virtualProduct.getLong("piecesIncluded");
                         } catch (GenericEntityException e) {
                             Debug.logError(e, "Problem getting virtual product");
@@ -1215,7 +1217,7 @@ public class OrderReadHelper {
         List<GenericValue> orderContactMechs = null;
         try {
             Map<String, Object> ocFields = UtilMisc.toMap("orderId", orderHeader.get("orderId"), "contactMechPurposeTypeId", "ORDER_EMAIL");
-            orderContactMechs = delegator.findByAnd("OrderContactMech", ocFields, null, false);
+            orderContactMechs = delegator.findByAnd("OrderContactMech", ocFields);
         } catch (GenericEntityException e) {
             Debug.logWarning(e, "Problems getting order contact mechs", module);
         }
@@ -1224,7 +1226,7 @@ public class OrderReadHelper {
         if (orderContactMechs != null) {
             for(GenericValue orderContactMech : orderContactMechs) {
                 try {
-                    GenericValue contactMech = orderContactMech.getRelatedOne("ContactMech", false);
+                    GenericValue contactMech = orderContactMech.getRelatedOne("ContactMech");
                     emails.append(emails.length() > 0 ? "," : "").append(contactMech.getString("infoString"));
                 } catch (GenericEntityException e) {
                     Debug.logWarning(e, "Problems getting contact mech from order contact mech", module);
@@ -1256,14 +1258,14 @@ public class OrderReadHelper {
             if ("PAYMENT_CANCELLED".equals(pref.get("statusId")) || "PAYMENT_DECLINED".equals(pref.get("statusId"))) {
                 continue;
             } else if ("PAYMENT_SETTLED".equals(pref.get("statusId"))) {
-                List<GenericValue> responses = pref.getRelated("PaymentGatewayResponse", UtilMisc.toMap("transCodeEnumId", "PGT_CAPTURE"), null, false);
+                List<GenericValue> responses = pref.getRelatedByAnd("PaymentGatewayResponse", UtilMisc.toMap("transCodeEnumId", "PGT_CAPTURE"));
                 for(GenericValue response : responses) {
                     BigDecimal amount = response.getBigDecimal("amount");
                     if (amount != null) {
                         openAmount = openAmount.add(amount);
                     }
                 }
-                responses = pref.getRelated("PaymentGatewayResponse", UtilMisc.toMap("transCodeEnumId", "PGT_REFUND"), null, false);
+                responses = pref.getRelatedByAnd("PaymentGatewayResponse", UtilMisc.toMap("transCodeEnumId", "PGT_REFUND"));
                 for(GenericValue response : responses) {
                     BigDecimal amount = response.getBigDecimal("amount");
                     if (amount != null) {
@@ -1315,7 +1317,7 @@ public class OrderReadHelper {
         Delegator delegator = orderHeader.getDelegator();
         List<GenericValue> surveys = null;
         try {
-            surveys = delegator.findByAnd("SurveyResponse", UtilMisc.toMap("orderId", orderHeader.getString("orderId")), null, false);
+            surveys = delegator.findByAnd("SurveyResponse", UtilMisc.toMap("orderId", orderHeader.getString("orderId")));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -1334,7 +1336,7 @@ public class OrderReadHelper {
     public List<GenericValue> getOrderItems() {
         if (orderItems == null) {
             try {
-                orderItems = orderHeader.getRelated("OrderItem", null, UtilMisc.toList("orderItemSeqId"), false);
+                orderItems = orderHeader.getRelated("OrderItem", UtilMisc.toList("orderItemSeqId"));
             } catch (GenericEntityException e) {
                 Debug.logWarning(e, module);
             }
@@ -1346,7 +1348,7 @@ public class OrderReadHelper {
         if (orderItemAndShipGrp == null) {
             try {
                 orderItemAndShipGrp = orderHeader.getDelegator().findByAnd("OrderItemAndShipGroupAssoc",
-                        UtilMisc.toMap("orderId", orderHeader.getString("orderId")), null, false);
+                        UtilMisc.toMap("orderId", orderHeader.getString("orderId")));
             } catch (GenericEntityException e) {
                 Debug.logWarning(e, module);
             }
@@ -1382,7 +1384,7 @@ public class OrderReadHelper {
         Delegator delegator = orderHeader.getDelegator();
         GenericValue orderDeliverySchedule = null;
         try {
-            orderDeliverySchedule = delegator.findOne("OrderDeliverySchedule", UtilMisc.toMap("orderId", orderId, "orderItemSeqId", "_NA_"), false);
+            orderDeliverySchedule = delegator.findByPrimaryKey("OrderDeliverySchedule", UtilMisc.toMap("orderId", orderId, "orderItemSeqId", "_NA_"));
         } catch (GenericEntityException e) {
         }
         Timestamp estimatedShipDate = null;
@@ -1400,7 +1402,7 @@ public class OrderReadHelper {
         for(GenericValue item : items) {
             List<GenericValue> receipts = null;
             try {
-                receipts = item.getRelated("ShipmentReceipt", null, null, false);
+                receipts = item.getRelated("ShipmentReceipt");
             } catch (GenericEntityException e) {
                 Debug.logWarning(e, module);
             }
@@ -1434,7 +1436,7 @@ public class OrderReadHelper {
         for(GenericValue item : items) {
             List<GenericValue> receipts = null;
             try {
-                receipts = item.getRelated("ShipmentReceipt", null, null, false);
+                receipts = item.getRelated("ShipmentReceipt");
             } catch (GenericEntityException e) {
                 Debug.logWarning(e, module);
             }
@@ -1476,14 +1478,14 @@ public class OrderReadHelper {
             if (item.get("productId") != null) {
                 GenericValue product = null;
                 try {
-                    product = item.getRelatedOne("Product", false);
+                    product = item.getRelatedOne("Product");
                 } catch (GenericEntityException e) {
                     Debug.logError(e, "Unable to get Product from OrderItem", module);
                 }
                 if (product != null) {
                     GenericValue productType = null;
                     try {
-                        productType = product.getRelatedOne("ProductType", false);
+                        productType = product.getRelatedOne("ProductType");
                     } catch (GenericEntityException e) {
                         Debug.logError(e, "ERROR: Unable to get ProductType from Product", module);
                     }
@@ -1495,7 +1497,7 @@ public class OrderReadHelper {
                             // make sure we have an OrderItemBilling record
                             List<GenericValue> orderItemBillings = null;
                             try {
-                                orderItemBillings = item.getRelated("OrderItemBilling", null, null, false);
+                                orderItemBillings = item.getRelated("OrderItemBilling");
                             } catch (GenericEntityException e) {
                                 Debug.logError(e, "Unable to get OrderItemBilling from OrderItem");
                             }
@@ -1504,7 +1506,7 @@ public class OrderReadHelper {
                                 // get the ProductContent records
                                 List<GenericValue> productContents = null;
                                 try {
-                                    productContents = product.getRelated("ProductContent", null, null, false);
+                                    productContents = product.getRelated("ProductContent");
                                 } catch (GenericEntityException e) {
                                     Debug.logError("Unable to get ProductContent from Product", module);
                                 }
@@ -1549,10 +1551,10 @@ public class OrderReadHelper {
         GenericValue workOrderItemFulFillment = null;
         GenericValue workEffort = null;
         try {
-            List<GenericValue> workOrderItemFulFillments = delegator.findByAnd("WorkOrderItemFulfillment", UtilMisc.toMap("orderId", orderId, "orderItemSeqId", orderItemSeqId), null, true);
+            List<GenericValue> workOrderItemFulFillments = delegator.findByAndCache("WorkOrderItemFulfillment", UtilMisc.toMap("orderId", orderId, "orderItemSeqId", orderItemSeqId));
             if (!UtilValidate.isEmpty(workOrderItemFulFillments)) {
                 workOrderItemFulFillment = EntityUtil.getFirst(workOrderItemFulFillments);
-                workEffort = workOrderItemFulFillment.getRelatedOne("WorkEffort", false);
+                workEffort = workOrderItemFulFillment.getRelatedOne("WorkEffort");
             }
         } catch (GenericEntityException e) {
             return null;
@@ -1567,7 +1569,7 @@ public class OrderReadHelper {
     public String getCurrentItemStatus(GenericValue orderItem) {
         GenericValue statusItem = null;
         try {
-            statusItem = orderItem.getRelatedOne("StatusItem", false);
+            statusItem = orderItem.getRelatedOne("StatusItem");
         } catch (GenericEntityException e) {
             Debug.logError(e, "Trouble getting StatusItem : " + orderItem, module);
         }
@@ -1584,7 +1586,7 @@ public class OrderReadHelper {
             Delegator delegator = orderHeader.getDelegator();
 
             try {
-                orderItemPriceInfos = delegator.findByAnd("OrderItemPriceInfo", UtilMisc.toMap("orderId", orderHeader.get("orderId")), null, false);
+                orderItemPriceInfos = delegator.findByAnd("OrderItemPriceInfo", UtilMisc.toMap("orderId", orderHeader.get("orderId")));
             } catch (GenericEntityException e) {
                 Debug.logWarning(e, module);
             }
@@ -1598,7 +1600,7 @@ public class OrderReadHelper {
         if (orderItem == null) return null;
         try {
             return orderHeader.getDelegator().findByAnd("OrderItemShipGroupAssoc",
-                    UtilMisc.toMap("orderId", orderItem.getString("orderId"), "orderItemSeqId", orderItem.getString("orderItemSeqId")), UtilMisc.toList("shipGroupSeqId"), false);
+                    UtilMisc.toMap("orderId", orderItem.getString("orderId"), "orderItemSeqId", orderItem.getString("orderItemSeqId")), UtilMisc.toList("shipGroupSeqId"));
         } catch (GenericEntityException e) {
             Debug.logWarning(e, module);
         }
@@ -1610,7 +1612,7 @@ public class OrderReadHelper {
         if (this.orderItemShipGrpInvResList == null) {
             Delegator delegator = orderItem.getDelegator();
             try {
-                orderItemShipGrpInvResList = delegator.findByAnd("OrderItemShipGrpInvRes", UtilMisc.toMap("orderId", orderItem.get("orderId")), null, false);
+                orderItemShipGrpInvResList = delegator.findByAnd("OrderItemShipGrpInvRes", UtilMisc.toMap("orderId", orderItem.get("orderId")));
             } catch (GenericEntityException e) {
                 Debug.logWarning(e, "Trouble getting OrderItemShipGrpInvRes List", module);
             }
@@ -1628,7 +1630,7 @@ public class OrderReadHelper {
             Delegator delegator = orderItem.getDelegator();
 
             try {
-                orderItemIssuances = delegator.findByAnd("ItemIssuance", UtilMisc.toMap("orderId", orderItem.get("orderId")), null, false);
+                orderItemIssuances = delegator.findByAnd("ItemIssuance", UtilMisc.toMap("orderId", orderItem.get("orderId")));
             } catch (GenericEntityException e) {
                 Debug.logWarning(e, "Trouble getting ItemIssuance(s)", module);
             }
@@ -1657,7 +1659,7 @@ public class OrderReadHelper {
         Delegator delegator = orderHeader.getDelegator();
         if (this.orderReturnItems == null) {
             try {
-                this.orderReturnItems = delegator.findByAnd("ReturnItem", UtilMisc.toMap("orderId", orderHeader.getString("orderId")), null, false);
+                this.orderReturnItems = delegator.findByAnd("ReturnItem", UtilMisc.toMap("orderId", orderHeader.getString("orderId")));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Problem getting ReturnItem from order", module);
                 return null;
@@ -1759,10 +1761,7 @@ public class OrderReadHelper {
             if ((returnedItem.get("returnPrice") != null) && (returnedItem.get("returnQuantity") != null)) {
                 returnedAmount = returnedAmount.add(returnedItem.getBigDecimal("returnPrice").multiply(returnedItem.getBigDecimal("returnQuantity")).setScale(scale, rounding));
             }
-            Map<String, Object> itemAdjustmentCondition = UtilMisc.toMap("returnId", returnedItem.get("returnId"), "returnItemSeqId", returnedItem.get("returnItemSeqId"));; 
-            if (UtilValidate.isNotEmpty(returnTypeId)) {
-                itemAdjustmentCondition.put("returnTypeId", returnTypeId);
-            }
+            Map<String, Object> itemAdjustmentCondition = UtilMisc.toMap("returnId", returnedItem.get("returnId"), "returnItemSeqId", returnedItem.get("returnItemSeqId"), "returnTypeId", returnTypeId);
             returnedAmount = returnedAmount.add(getReturnAdjustmentTotal(orderHeader.getDelegator(), itemAdjustmentCondition));
             if (orderId.equals(returnedItem.getString("orderId")) && (!returnHeaderList.contains(returnedItem.getString("returnId")))) {
                 returnHeaderList.add(returnedItem.getString("returnId"));
@@ -1887,7 +1886,7 @@ public class OrderReadHelper {
         // sum up the return items that have a return item response with a billing account defined
         try {
             for(GenericValue returnItem : returnedItems) {
-                GenericValue returnItemResponse = returnItem.getRelatedOne("ReturnItemResponse", false);
+                GenericValue returnItemResponse = returnItem.getRelatedOne("ReturnItemResponse");
                 if (returnItemResponse == null) continue;
                 if (returnItemResponse.get("billingAccountId") == null) continue;
 
@@ -2099,7 +2098,7 @@ public class OrderReadHelper {
     public String getAdjustmentType(GenericValue adjustment) {
         GenericValue adjustmentType = null;
         try {
-            adjustmentType = adjustment.getRelatedOne("OrderAdjustmentType", false);
+            adjustmentType = adjustment.getRelatedOne("OrderAdjustmentType");
         } catch (GenericEntityException e) {
             Debug.logError(e, "Problems with order adjustment", module);
         }
@@ -2117,7 +2116,7 @@ public class OrderReadHelper {
     public String getCurrentItemStatusString(GenericValue orderItem) {
         GenericValue statusItem = null;
         try {
-            statusItem = orderItem.getRelatedOne("StatusItem", true);
+            statusItem = orderItem.getRelatedOneCache("StatusItem");
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -2137,7 +2136,7 @@ public class OrderReadHelper {
         Delegator delegator = orderHeader.getDelegator();
         Set<String> productPromoCodesEntered = FastSet.newInstance();
         try {
-            for (GenericValue orderProductPromoCode: delegator.findByAnd("OrderProductPromoCode", UtilMisc.toMap("orderId", orderHeader.get("orderId")), null, true)) {
+            for (GenericValue orderProductPromoCode: delegator.findByAndCache("OrderProductPromoCode", UtilMisc.toMap("orderId", orderHeader.get("orderId")))) {
                 productPromoCodesEntered.add(orderProductPromoCode.getString("productPromoCodeId"));
             }
         } catch (GenericEntityException e) {
@@ -2149,7 +2148,7 @@ public class OrderReadHelper {
     public List<GenericValue> getProductPromoUse() {
         Delegator delegator = orderHeader.getDelegator();
         try {
-            return delegator.findByAnd("ProductPromoUse", UtilMisc.toMap("orderId", orderHeader.get("orderId")), null, true);
+            return delegator.findByAndCache("ProductPromoUse", UtilMisc.toMap("orderId", orderHeader.get("orderId")));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -2181,7 +2180,7 @@ public class OrderReadHelper {
         GenericValue orderHeader = null;
         if (orderId != null && delegator != null) {
             try {
-                orderHeader = delegator.findOne("OrderHeader", UtilMisc.toMap("orderId", orderId), false);
+                orderHeader = delegator.findByPrimaryKey("OrderHeader", UtilMisc.toMap("orderId", orderId));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Cannot get order header", module);
             }
@@ -2226,7 +2225,7 @@ public class OrderReadHelper {
         GenericValue productStore = null;
         if (orderHeader.get("productStoreId") != null) {
             try {
-                productStore = delegator.findOne("ProductStore", UtilMisc.toMap("productStoreId", orderHeader.getString("productStoreId")), true);
+                productStore = delegator.findByPrimaryKeyCache("ProductStore", UtilMisc.toMap("productStoreId", orderHeader.getString("productStoreId")));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Cannot locate ProductStore from OrderHeader", module);
             }
@@ -2292,7 +2291,7 @@ public class OrderReadHelper {
         String orderId = orderHeader.getString("orderId");
         List<GenericValue> responses = null;
         try {
-            responses = delegator.findByAnd("SurveyResponse", UtilMisc.toMap("orderId", orderId, "orderItemSeqId", "_NA_"), null, false);
+            responses = delegator.findByAnd("SurveyResponse", UtilMisc.toMap("orderId", orderId, "orderItemSeqId", "_NA_"));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -2309,7 +2308,7 @@ public class OrderReadHelper {
         String orderId = orderItem.getString("orderId");
         List<GenericValue> responses = null;
         try {
-            responses = delegator.findByAnd("SurveyResponse", UtilMisc.toMap("orderId", orderId, "orderItemSeqId", orderItemSeqId), null, false);
+            responses = delegator.findByAnd("SurveyResponse", UtilMisc.toMap("orderId", orderId, "orderItemSeqId", orderItemSeqId));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -2403,7 +2402,7 @@ public class OrderReadHelper {
                 // retrieve related work effort when required.
                 List<GenericValue> workOrderItemFulfillments = null;
                 try {
-                    workOrderItemFulfillments = orderItem.getDelegator().findByAnd("WorkOrderItemFulfillment", UtilMisc.toMap("orderId", orderItem.getString("orderId"), "orderItemSeqId", orderItem.getString("orderItemSeqId")), null, true);
+                    workOrderItemFulfillments = orderItem.getDelegator().findByAndCache("WorkOrderItemFulfillment", UtilMisc.toMap("orderId", orderItem.getString("orderId"), "orderItemSeqId", orderItem.getString("orderItemSeqId")));
                 } catch (GenericEntityException e) {}
                 if (workOrderItemFulfillments != null) {
                     Iterator<GenericValue> iter = workOrderItemFulfillments.iterator();
@@ -2411,7 +2410,7 @@ public class OrderReadHelper {
                         GenericValue WorkOrderItemFulfillment = iter.next();
                         GenericValue workEffort = null;
                         try {
-                            workEffort = WorkOrderItemFulfillment.getRelatedOne("WorkEffort", true);
+                            workEffort = WorkOrderItemFulfillment.getRelatedOneCache("WorkEffort");
                         } catch (GenericEntityException e) {}
                         result = result.multiply(getWorkEffortRentalQuantity(workEffort));
                     }
@@ -2670,7 +2669,8 @@ public class OrderReadHelper {
         } else if (security.hasEntityPermission("ORDERMGR", "_ROLEVIEW", userLogin)) {
             List<GenericValue> orderRoles = null;
             try {
-                orderRoles = orderHeader.getRelated("OrderRole", UtilMisc.toMap("partyId", userLogin.getString("partyId")), null, false);
+                orderRoles = orderHeader.getRelatedByAnd("OrderRole",
+                        UtilMisc.toMap("partyId", userLogin.getString("partyId")));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Cannot get OrderRole from OrderHeader", module);
             }
@@ -2722,7 +2722,7 @@ public class OrderReadHelper {
         List<GenericValue> adjustments;
         try {
             // TODO: find on a view-entity with a sum is probably more efficient
-            adjustments = delegator.findByAnd("ReturnAdjustment", condition, null, false);
+            adjustments = delegator.findByAnd("ReturnAdjustment", condition);
             if (adjustments != null) {
                 for(GenericValue returnAdjustment : adjustments) {
                     total = total.add(setScaleByType("RET_SALES_TAX_ADJ".equals(returnAdjustment.get("returnAdjustmentTypeId")),returnAdjustment.getBigDecimal("amount")));
@@ -2744,7 +2744,7 @@ public class OrderReadHelper {
        BigDecimal invoiced = BigDecimal.ZERO;
        try {
            // this is simply the sum of quantity billed in all related OrderItemBillings
-           List<GenericValue> billings = orderItem.getRelated("OrderItemBilling", null, null, false);
+           List<GenericValue> billings = orderItem.getRelated("OrderItemBilling");
            for(GenericValue billing : billings) {
                BigDecimal quantity = billing.getBigDecimal("quantity");
                if (quantity != null) {
@@ -2777,7 +2777,7 @@ public class OrderReadHelper {
         String attributeValue = null;
         if (orderItem != null) {
             try {
-                GenericValue orderItemAttribute = EntityUtil.getFirst(orderItem.getRelated("OrderItemAttribute", UtilMisc.toMap("attrName", attributeName), null, false));
+                GenericValue orderItemAttribute = EntityUtil.getFirst(orderItem.getRelatedByAnd("OrderItemAttribute", UtilMisc.toMap("attrName", attributeName)));
                 if (orderItemAttribute != null) {
                     attributeValue = orderItemAttribute.getString("attrValue");
                 }
@@ -2792,7 +2792,7 @@ public class OrderReadHelper {
         String attributeValue = null;
         if (orderHeader != null) {
             try {
-                GenericValue orderAttribute = EntityUtil.getFirst(orderHeader.getRelated("OrderAttribute", UtilMisc.toMap("attrName", attributeName), null, false));
+                GenericValue orderAttribute = EntityUtil.getFirst(orderHeader.getRelatedByAnd("OrderAttribute", UtilMisc.toMap("attrName", attributeName)));
                 if (orderAttribute != null) {
                     attributeValue = orderAttribute.getString("attrValue");
                 }
@@ -2916,17 +2916,4 @@ public class OrderReadHelper {
        result.put("taxGrandTotal", taxGrandTotal);
        return result;
    }
-   
-    public List<BigDecimal> getShippableSizes(String shipGrouSeqId) {
-        List<BigDecimal> shippableSizes = FastList.newInstance();
-        List<GenericValue> validItems = getValidOrderItems(shipGrouSeqId);
-        if (validItems != null) {
-            Iterator<GenericValue> i = validItems.iterator();
-            while (i.hasNext()) {
-                GenericValue item = i.next();
-                shippableSizes.add(this.getItemSize(item));
-            }
-        }
-        return shippableSizes;
-    }
 }

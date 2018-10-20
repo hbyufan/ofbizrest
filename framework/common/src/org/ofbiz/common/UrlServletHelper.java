@@ -155,7 +155,7 @@ public class UrlServletHelper extends ContextFilter {
         // check path alias
         GenericValue pathAlias = null;
         try {
-            pathAlias = delegator.findOne("WebSitePathAlias", UtilMisc.toMap("webSiteId", webSiteId, "pathAlias", pathInfo), true);
+            pathAlias = delegator.findByPrimaryKeyCache("WebSitePathAlias", UtilMisc.toMap("webSiteId", webSiteId, "pathAlias", pathInfo));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -180,7 +180,7 @@ public class UrlServletHelper extends ContextFilter {
         } else {
             // send 404 error if a URI is alias TO
             try {
-                List<GenericValue> aliasTos = delegator.findByAnd("WebSitePathAlias", UtilMisc.toMap("webSiteId", webSiteId, "aliasTo", httpRequest.getRequestURI()), null, false);
+                List<GenericValue> aliasTos = delegator.findByAndCache("WebSitePathAlias", UtilMisc.toMap("webSiteId", webSiteId, "aliasTo", httpRequest.getRequestURI()));
                 if (UtilValidate.isNotEmpty(aliasTos)) {
                     httpResponse.sendError(HttpServletResponse.SC_NOT_FOUND, "Not Found");
                     return;

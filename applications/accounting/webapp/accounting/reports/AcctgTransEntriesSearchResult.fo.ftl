@@ -27,7 +27,7 @@ under the License.
         </fo:layout-master-set>
         <fo:page-sequence master-reference="11x17-landscape">
             <fo:flow flow-name="xsl-region-body" font-family="Helvetica">
-                <fo:block text-align="center">${screens.render("component://order/widget/ordermgr/OrderPrintScreens.xml#CompanyLogo")}</fo:block>
+                <fo:block align="center">${screens.render("component://order/widget/ordermgr/OrderPrintScreens.xml#CompanyLogo")}</fo:block>
                 <#if acctgTransEntryList?has_content>
                     <fo:block>${uiLabelMap.AccountingAcctgTransEntriesFor}
                         <#assign partyName = (delegator.findOne("PartyNameView", {"partyId" : organizationPartyId}, false))!>
@@ -138,7 +138,7 @@ under the License.
                                         <fo:table-cell border="1pt solid" border-width=".1mm">
                                             <fo:block text-align="center" font-size="5pt">
                                                 <#if (acctgTransEntry.paymentId)??>
-                                                    <#assign paymentType = (delegator.findOne("Payment", {"paymentId" : (acctgTransEntry.paymentId)!}, false)).getRelatedOne("PaymentType", false)/>
+                                                    <#assign paymentType = (delegator.findOne("Payment", {"paymentId" : (acctgTransEntry.paymentId)!}, false)).getRelatedOne("PaymentType")/>
                                                     ${(acctgTransEntry.paymentId)!}<#if (paymentType?has_content)> -(${(paymentType.description)!})</#if>
                                                 </#if>
                                             </fo:block>

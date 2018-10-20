@@ -8,14 +8,13 @@
 		minuteText: 'Minutes',
 		secondText: 'Secondes',
 		millisecText: 'Millisecondes',
-		microsecText: 'Microsecondes',
 		timezoneText: 'Fuseau horaire',
 		currentText: 'Maintenant',
 		closeText: 'Terminé',
-		timeFormat: 'HH:mm',
+		timeFormat: 'hh:mm',
 		amNames: ['AM', 'A'],
 		pmNames: ['PM', 'P'],
-		isRTL: false
+		ampm: false
 	};
 	$.timepicker.setDefaults($.timepicker.regional['fr']);
 })(jQuery);

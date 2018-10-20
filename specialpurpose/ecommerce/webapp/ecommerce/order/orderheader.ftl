@@ -38,7 +38,7 @@ under the License.
     </#if>
     ${uiLabelMap.CommonInformation}
     <#if (orderHeader.orderId)?exists>
-      ${externalOrder!} [ <a href="<@ofbizUrl fullPath="true">order.pdf?orderId=${(orderHeader.orderId)!}</@ofbizUrl>" target="_BLANK" class="lightbuttontext">PDF</a> ]
+      ${externalOrder?if_exists} [ <a href="<@ofbizUrl fullPath="true">order.pdf?orderId=${(orderHeader.orderId)?if_exists}</@ofbizUrl>" class="lightbuttontext">PDF</a> ]
     </#if>
   </h3>
   <#-- placing customer information -->
@@ -109,18 +109,18 @@ under the License.
       <#if paymentMethods?has_content>
         <#list paymentMethods as paymentMethod>
           <#if "CREDIT_CARD" == paymentMethod.paymentMethodTypeId>
-            <#assign creditCard = paymentMethod.getRelatedOne("CreditCard", false)>
+            <#assign creditCard = paymentMethod.getRelatedOne("CreditCard")>
             <#assign formattedCardNumber = Static["org.ofbiz.party.contact.ContactHelper"].formatCreditCard(creditCard)>
           <#elseif "GIFT_CARD" == paymentMethod.paymentMethodTypeId>
-            <#assign giftCard = paymentMethod.getRelatedOne("GiftCard", false)>
+            <#assign giftCard = paymentMethod.getRelatedOne("GiftCard")>
           <#elseif "EFT_ACCOUNT" == paymentMethod.paymentMethodTypeId>
-            <#assign eftAccount = paymentMethod.getRelatedOne("EftAccount", false)>
+            <#assign eftAccount = paymentMethod.getRelatedOne("EftAccount")>
           </#if>
           <#-- credit card info -->
           <#if "CREDIT_CARD" == paymentMethod.paymentMethodTypeId && creditCard?has_content>
             <#if outputted?default(false)>
             </#if>
-            <#assign pmBillingAddress = creditCard.getRelatedOne("PostalAddress", false)?if_exists>
+            <#assign pmBillingAddress = creditCard.getRelatedOne("PostalAddress")?if_exists>
             <li>
               <ul>
                 <li> ${uiLabelMap.AccountingCreditCard}
@@ -139,7 +139,7 @@ under the License.
             <#if outputted?default(false)>
             </#if>
             <#if giftCard?has_content && giftCard.cardNumber?has_content>
-              <#assign pmBillingAddress = giftCard.getRelatedOne("PostalAddress", false)?if_exists>
+              <#assign pmBillingAddress = giftCard.getRelatedOne("PostalAddress")?if_exists>
               <#assign giftCardNumber = "">
               <#assign pcardNumber = giftCard.cardNumber>
               <#if pcardNumber?has_content>
@@ -162,7 +162,7 @@ under the License.
           <#elseif "EFT_ACCOUNT" == paymentMethod.paymentMethodTypeId && eftAccount?has_content>
             <#if outputted?default(false)>
             </#if>
-            <#assign pmBillingAddress = eftAccount.getRelatedOne("PostalAddress", false)?if_exists>
+            <#assign pmBillingAddress = eftAccount.getRelatedOne("PostalAddress")?if_exists>
             <li>
               <ul>
                 <li>
@@ -238,7 +238,7 @@ under the License.
     <#assign groupIdx = 0>
     <#list orderItemShipGroups as shipGroup>
       <#if orderHeader?has_content>
-        <#assign shippingAddress = shipGroup.getRelatedOne("PostalAddress", false)?if_exists>
+        <#assign shippingAddress = shipGroup.getRelatedOne("PostalAddress")?if_exists>
         <#assign groupNumber = shipGroup.shipGroupSeqId?if_exists>
       <#else>
         <#assign shippingAddress = cart.getShippingAddress(groupIdx)?if_exists>
@@ -277,7 +277,7 @@ under the License.
             <li>
               ${uiLabelMap.OrderMethod}:
               <#if orderHeader?has_content>
-                <#assign shipmentMethodType = shipGroup.getRelatedOne("ShipmentMethodType", false)?if_exists>
+                <#assign shipmentMethodType = shipGroup.getRelatedOne("ShipmentMethodType")?if_exists>
                 <#assign carrierPartyId = shipGroup.carrierPartyId?if_exists>
               <#else>
                 <#assign shipmentMethodType = cart.getShipmentMethodType(groupIdx)?if_exists>

@@ -33,15 +33,15 @@ if (!invoice) return;
 glAccountOrganizationAndClassList = null;
 if ("SALES_INVOICE".equals(invoice.invoiceTypeId)) {
     itemTypesCond = exprBldr.OR() {
-        EQUALS(invoiceItemTypeId: "SINVOICE_ADJ")
-        EQUALS(parentTypeId: "SINVOICE_ADJ")
-        EQUALS(invoiceItemTypeId: "SINVOICE_ITM_ADJ")
-        EQUALS(parentTypeId: "SINVOICE_ITM_ADJ")
+        EQUALS(invoiceItemTypeId: "INVOICE_ADJ")
+        EQUALS(parentTypeId: "INVOICE_ADJ")
+        EQUALS(invoiceItemTypeId: "INVOICE_ITM_ADJ")
+        EQUALS(parentTypeId: "INVOICE_ITM_ADJ")
         EQUALS(invoiceItemTypeId: "INV_PROD_ITEM")
         EQUALS(parentTypeId: "INV_PROD_ITEM")
     }
     invoiceItemTypes = delegator.findList("InvoiceItemType", itemTypesCond, null, ["parentTypeId", "invoiceItemTypeId"], null, false);
-    glAccountOrganizationAndClassList = delegator.findByAnd("GlAccountOrganizationAndClass", [organizationPartyId : invoice.partyIdFrom], null, false);
+    glAccountOrganizationAndClassList = delegator.findByAnd("GlAccountOrganizationAndClass", [organizationPartyId : invoice.partyIdFrom]);
 } else if ("PURCHASE_INVOICE".equals(invoice.invoiceTypeId)) {
     itemTypesCond = exprBldr.OR() {
         EQUALS(invoiceItemTypeId: "PINVOICE_ADJ")
@@ -52,7 +52,7 @@ if ("SALES_INVOICE".equals(invoice.invoiceTypeId)) {
         EQUALS(parentTypeId: "PINV_PROD_ITEM")
     }
     invoiceItemTypes = delegator.findList("InvoiceItemType", itemTypesCond, null, ["parentTypeId", "invoiceItemTypeId"], null, false);
-    glAccountOrganizationAndClassList = delegator.findByAnd("GlAccountOrganizationAndClass", [organizationPartyId : invoice.partyId], null, false);
+    glAccountOrganizationAndClassList = delegator.findByAnd("GlAccountOrganizationAndClass", [organizationPartyId : invoice.partyId]);
 } else if ("PAYROL_INVOICE".equals(invoice.invoiceTypeId)) {
     itemTypesCond = exprBldr.OR() {
         EQUALS(invoiceItemTypeId: "PAYROL_EARN_HOURS")
@@ -63,7 +63,7 @@ if ("SALES_INVOICE".equals(invoice.invoiceTypeId)) {
         EQUALS(parentTypeId: "PAYROL_TAXES")
     }
     invoiceItemTypes = delegator.findList("InvoiceItemType", itemTypesCond, null, ["parentTypeId", "invoiceItemTypeId"], null, false);
-    glAccountOrganizationAndClassList = delegator.findByAnd("GlAccountOrganizationAndClass", [organizationPartyId : invoice.partyId], null, false);
+    glAccountOrganizationAndClassList = delegator.findByAnd("GlAccountOrganizationAndClass", [organizationPartyId : invoice.partyId]);
 } else if ("COMMISSION_INVOICE".equals(invoice.invoiceTypeId)) {
     itemTypesCond = exprBldr.OR() {
         EQUALS(invoiceItemTypeId: "COMM_INV_ITEM")
@@ -72,10 +72,10 @@ if ("SALES_INVOICE".equals(invoice.invoiceTypeId)) {
         EQUALS(parentTypeId: "COMM_INV_ADJ")
     }
     invoiceItemTypes = delegator.findList("InvoiceItemType", itemTypesCond, null, ["parentTypeId", "invoiceItemTypeId"], null, false);
-    glAccountOrganizationAndClassList = delegator.findByAnd("GlAccountOrganizationAndClass", [organizationPartyId : invoice.partyId], null, false);
+    glAccountOrganizationAndClassList = delegator.findByAnd("GlAccountOrganizationAndClass", [organizationPartyId : invoice.partyId]);
 } else {
-    map = delegator.findByAnd("InvoiceItemTypeMap", [invoiceTypeId : invoice.invoiceTypeId], null, true);
-    invoiceItemTypes = EntityUtil.getRelated("InvoiceItemType", null, map, false);
+    map = delegator.findByAndCache("InvoiceItemTypeMap", [invoiceTypeId : invoice.invoiceTypeId]);
+    invoiceItemTypes = EntityUtil.getRelated("InvoiceItemType", map);
 }
 context.invoiceItemTypes = invoiceItemTypes;
 

@@ -39,6 +39,7 @@ public class WidgetContextCacheKey {
         fieldNamesToSkip.add("globalContext");
         fieldNamesToSkip.add("delegator");
         fieldNamesToSkip.add("dispatcher");
+        fieldNamesToSkip.add("authz");
         fieldNamesToSkip.add("security");
         fieldNamesToSkip.add("webSiteId");
         fieldNamesToSkip.add("userLogin");

@@ -18,6 +18,7 @@
  *******************************************************************************/
 package org.ofbiz.content.content;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -294,9 +295,9 @@ public class UploadContentAndImage {
 
             // Check for existing AUTHOR link
             String userLoginId = userLogin.getString("userLoginId");
-            GenericValue authorContent = delegator.findOne("Content", UtilMisc.toMap("contentId", userLoginId), true);
+            GenericValue authorContent = delegator.findByPrimaryKeyCache("Content", UtilMisc.toMap("contentId", userLoginId));
             if (authorContent != null) {
-                List<GenericValue> authorAssocList = delegator.findByAnd("ContentAssoc", UtilMisc.toMap("contentId", ftlContentId, "contentIdTo", userLoginId, "contentAssocTypeId", "AUTHOR"), null, false);
+                List<GenericValue> authorAssocList = delegator.findByAnd("ContentAssoc", UtilMisc.toMap("contentId", ftlContentId, "contentIdTo", userLoginId, "contentAssocTypeId", "AUTHOR"));
                 List<GenericValue> currentAuthorAssocList = EntityUtil.filterByDate(authorAssocList);
                 //if (Debug.infoOn()) Debug.logInfo("[UploadContentAndImage]currentAuthorAssocList " + currentAuthorAssocList, module);
                 if (currentAuthorAssocList.size() == 0) {

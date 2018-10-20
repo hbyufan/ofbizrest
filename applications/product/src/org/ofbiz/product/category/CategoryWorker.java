@@ -39,6 +39,7 @@ import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.Delegator;
+import org.ofbiz.entity.GenericDelegator;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
@@ -92,7 +93,7 @@ public class CategoryWorker {
             Collection<GenericValue> allCategories = delegator.findList("ProductCategory", null, null, null, null, false);
 
             for (GenericValue curCat: allCategories) {
-                Collection<GenericValue> parentCats = curCat.getRelated("CurrentProductCategoryRollup", null, null, true);
+                Collection<GenericValue> parentCats = curCat.getRelatedCache("CurrentProductCategoryRollup");
 
                 if (parentCats.isEmpty()) results.add(curCat);
             }
@@ -136,7 +137,7 @@ public class CategoryWorker {
     public static List<GenericValue> getRelatedCategoriesRet(ServletRequest request, String attributeName, String parentId, boolean limitView, boolean excludeEmpty, boolean recursive) {
       Delegator delegator = (Delegator) request.getAttribute("delegator");
 
-      return getRelatedCategoriesRet(delegator, attributeName, parentId, limitView, excludeEmpty, recursive);
+      return getRelatedCategoriesRet(delegator, attributeName, parentId, limitView, excludeEmpty, false);
     }
 
     public static List<GenericValue> getRelatedCategoriesRet(Delegator delegator, String attributeName, String parentId, boolean limitView, boolean excludeEmpty, boolean recursive) {
@@ -147,9 +148,9 @@ public class CategoryWorker {
         List<GenericValue> rollups = null;
 
         try {
-            rollups = delegator.findByAnd("ProductCategoryRollup",
+            rollups = delegator.findByAndCache("ProductCategoryRollup",
                         UtilMisc.toMap("parentProductCategoryId", parentId),
-                        UtilMisc.toList("sequenceNum"), true);
+                        UtilMisc.toList("sequenceNum"));
             if (limitView) {
                 rollups = EntityUtil.filterByDate(rollups, true);
             }
@@ -163,7 +164,7 @@ public class CategoryWorker {
                 GenericValue cv = null;
 
                 try {
-                    cv = parent.getRelatedOne("CurrentProductCategory", true);
+                    cv = parent.getRelatedOneCache("CurrentProductCategory");
                 } catch (GenericEntityException e) {
                     Debug.logWarning(e.getMessage(), module);
                 }
@@ -362,11 +363,11 @@ public class CategoryWorker {
         if (productCategoryId == null) return false;
         if (UtilValidate.isEmpty(productId)) return false;
 
-        List<GenericValue> productCategoryMembers = EntityUtil.filterByDate(delegator.findByAnd("ProductCategoryMember",
-                UtilMisc.toMap("productCategoryId", productCategoryId, "productId", productId), null, true), true);
+        List<GenericValue> productCategoryMembers = EntityUtil.filterByDate(delegator.findByAndCache("ProductCategoryMember",
+                UtilMisc.toMap("productCategoryId", productCategoryId, "productId", productId)), true);
         if (UtilValidate.isEmpty(productCategoryMembers)) {
             //before giving up see if this is a variant product, and if so look up the virtual product and check it...
-            GenericValue product = delegator.findOne("Product", UtilMisc.toMap("productId", productId), true);
+            GenericValue product = delegator.findByPrimaryKeyCache("Product", UtilMisc.toMap("productId", productId));
             List<GenericValue> productAssocs = ProductWorker.getVariantVirtualAssocs(product);
             //this does take into account that a product could be a variant of multiple products, but this shouldn't ever really happen...
             if (productAssocs != null) {
@@ -433,14 +434,13 @@ public class CategoryWorker {
      * Its best use is to generate the trail every so often and store somewhere 
      * (a lucene/solr tree, entities, cache or so). 
      * 
-     * @param dctx The DispatchContext that this service is operating in
-     * @param context Map containing the input parameters
-     * @return Map organized trail from root point to categoryId.
+     * @param  productCategoryId  id of category the trail should be generated for
+     * @returns List organized trail from root point to categoryId.
      * */
     public static Map getCategoryTrail(DispatchContext dctx, Map context) {
         String productCategoryId = (String) context.get("productCategoryId");
         Map<String, Object> results = ServiceUtil.returnSuccess();
-        Delegator delegator = dctx.getDelegator();
+        GenericDelegator delegator = (GenericDelegator) dctx.getDelegator();
         List<String> trailElements = FastList.newInstance();
         trailElements.add(productCategoryId);
         String parentProductCategoryId = productCategoryId;

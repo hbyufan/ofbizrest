@@ -8,14 +8,13 @@
 		minuteText: 'Minute',
 		secondText: 'Secunde',
 		millisecText: 'Milisecunde',
-		microsecText: 'Microsecunde',
 		timezoneText: 'Fus orar',
 		currentText: 'Acum',
 		closeText: 'Închide',
-		timeFormat: 'HH:mm',
+		timeFormat: 'hh:mm',
 		amNames: ['AM', 'A'],
 		pmNames: ['PM', 'P'],
-		isRTL: false
+		ampm: false
 	};
 	$.timepicker.setDefaults($.timepicker.regional['ro']);
 })(jQuery);

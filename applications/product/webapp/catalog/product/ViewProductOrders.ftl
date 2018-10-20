@@ -72,17 +72,17 @@ under the License.
       </tr>
       <#if orderList?has_content && productId?exists>
         <#list orderList as order>
-          <#assign orderItems = delegator.findByAnd("OrderItem", {"orderId" : order.orderId, "productId" : productId}, null, false)/>
+          <#assign orderItems = delegator.findByAnd("OrderItem", {"orderId" : order.orderId, "productId" : productId})/>
           <#list orderItems as orderItem>
             <tr>
               <td><a href="/ordermgr/control/orderview?orderId=${orderItem.orderId}" class='buttontext'>${orderItem.orderId}</a></td>
-              <#assign currentItemStatus = orderItem.getRelatedOne("StatusItem", false)/>
+              <#assign currentItemStatus = orderItem.getRelatedOne("StatusItem")/>
               <td>${currentItemStatus.get("description",locale)?default(currentItemStatus.statusId)}</td>
               <td>${orderItem.orderItemSeqId}</td>
               <td>${order.orderDate}</td>
               <td>${orderItem.unitPrice}</td>
               <td>${orderItem.quantity}</td>
-              <#assign currentOrderType = order.getRelatedOne("OrderType", false)/>
+              <#assign currentOrderType = order.getRelatedOne("OrderType")/>
               <td>${currentOrderType.get("description",locale)?default(currentOrderType.orderTypeId)}</td>
             </tr>
           </#list>

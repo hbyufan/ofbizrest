@@ -58,8 +58,8 @@ under the License.
                     <ul>
                     <#list invoiceIds as invoiceId>
                       <li>
-                        ${uiLabelMap.CommonNbr}<a href="/accounting/control/invoiceOverview?invoiceId=${invoiceId}${StringUtil.wrapString(externalKeyParam)}" target="_blank" class="buttontext">${invoiceId}</a>
-                        (<a href="/accounting/control/invoice.pdf?invoiceId=${invoiceId}${StringUtil.wrapString(externalKeyParam)}" target="_blank" class="buttontext">PDF</a>)
+                        ${uiLabelMap.CommonNbr}<a href="/accounting/control/invoiceOverview?invoiceId=${invoiceId}&amp;externalLoginKey=${externalLoginKey}" target="_blank" class="buttontext">${invoiceId}</a>
+                        (<a href="/accounting/control/invoice.pdf?invoiceId=${invoiceId}&amp;externalLoginKey=${externalLoginKey}" target="_blank" class="buttontext">PDF</a>)
                       </li>
                     </#list>
                     </ul>
@@ -150,33 +150,29 @@ under the License.
         </div>
         <div class="screenlet-body">
               <#if orderItemShipGroup?has_content>
-                <#if (orderItemShipGroup.contactMechId)?has_content>
-                  <#assign postalAddress = orderItemShipGroup.getRelatedOne("PostalAddress", false)>
-                </#if>
+                <#assign postalAddress = orderItemShipGroup.getRelatedOne("PostalAddress")>
                 <#assign carrier = orderItemShipGroup.carrierPartyId?default("N/A")>
                 <table cellpadding="4" cellspacing="4" class="basic-table">
                   <tr>
                     <td valign="top">
-                      <#if postalAddress?exists >
-                        <span class="label">${uiLabelMap.ProductShipToAddress}</span>
-                        <br />
-                        ${uiLabelMap.CommonTo}: ${postalAddress.toName?default("")}
-                        <br />
-                        <#if postalAddress.attnName?has_content>
-                            ${uiLabelMap.CommonAttn}: ${postalAddress.attnName}
-                            <br />
-                        </#if>
-                        ${postalAddress.address1}
-                        <br />
-                        <#if postalAddress.address2?has_content>
-                            ${postalAddress.address2}
-                            <br />
-                        </#if>
-                        ${postalAddress.city?if_exists}, ${postalAddress.stateProvinceGeoId?if_exists} ${postalAddress.postalCode?if_exists}
-                        <br />
-                        ${postalAddress.countryGeoId!}
-                        <br />
+                      <span class="label">${uiLabelMap.ProductShipToAddress}</span>
+                      <br />
+                      ${uiLabelMap.CommonTo}: ${postalAddress.toName?default("")}
+                      <br />
+                      <#if postalAddress.attnName?has_content>
+                          ${uiLabelMap.CommonAttn}: ${postalAddress.attnName}
+                          <br />
                       </#if>
+                      ${postalAddress.address1}
+                      <br />
+                      <#if postalAddress.address2?has_content>
+                          ${postalAddress.address2}
+                          <br />
+                      </#if>
+                      ${postalAddress.city?if_exists}, ${postalAddress.stateProvinceGeoId?if_exists} ${postalAddress.postalCode?if_exists}
+                      <br />
+                      ${postalAddress.countryGeoId}
+                      <br />
                     </td>
                     <td>&nbsp;</td>
                     <td valign="top">
@@ -193,8 +189,7 @@ under the License.
                         <font color="${color}">${carrier}</font>
                         &nbsp;
                       </#if>
-                      <#assign description = (delegator.findOne("ShipmentMethodType", {"shipmentMethodTypeId":orderItemShipGroup.shipmentMethodTypeId}, false)).description>
-                      ${description!"??"}
+                      ${orderItemShipGroup.shipmentMethodTypeId?default("??")}
                       <br />
                       <span class="label">${uiLabelMap.ProductEstimatedShipCostForShipGroup}</span>
                       <br />
@@ -266,6 +261,9 @@ under the License.
                       <td>&nbsp;</td>
                       <td align="center">${uiLabelMap.ProductPackQty}</td>
                       <td align="center">${uiLabelMap.ProductPackedWeight}&nbsp;(${("uiLabelMap.ProductShipmentUomAbbreviation_" + defaultWeightUomId)?eval})</td>
+                      <#if carrierShipmentBoxTypes?has_content>
+                        <td align="center">${uiLabelMap.ProductShipmentBoxType}</td>
+                      </#if>
                       <td align="center">${uiLabelMap.ProductPackage}</td>
                       <td align="right">&nbsp;<b>*</b>&nbsp;${uiLabelMap.ProductPackages}</td>
                     </tr>
@@ -277,7 +275,7 @@ under the License.
                         <#assign orderItem = itemInfo.orderItem/>
                         <#assign shippedQuantity = orderReadHelper.getItemShippedQuantity(orderItem)?if_exists>
                         <#assign orderItemQuantity = itemInfo.quantity/>
-                        <#assign orderProduct = orderItem.getRelatedOne("Product", false)?if_exists/>
+                        <#assign orderProduct = orderItem.getRelatedOne("Product")?if_exists/>
                         <#assign product = Static["org.ofbiz.product.product.ProductWorker"].findProduct(delegator, itemInfo.productId)?if_exists/>
                         <#--
                         <#if orderItem.cancelQuantity?exists>
@@ -297,9 +295,9 @@ under the License.
                               </#if>
                           </td>
                           <td>
-                              <a href="/catalog/control/EditProduct?productId=${orderProduct.productId?if_exists}${StringUtil.wrapString(externalKeyParam)}" class="buttontext" target="_blank">${(orderProduct.internalName)?if_exists}</a>
+                              <a href="/catalog/control/EditProduct?productId=${orderProduct.productId?if_exists}${externalKeyParam}" class="buttontext" target="_blank">${(orderProduct.internalName)?if_exists}</a>
                               <#if orderProduct.productId != product.productId>
-                                  &nbsp;[<a href="/catalog/control/EditProduct?productId=${product.productId?if_exists}${StringUtil.wrapString(externalKeyParam)}" class="buttontext" target="_blank">${(product.internalName)?if_exists}</a>]
+                                  &nbsp;[<a href="/catalog/control/EditProduct?productId=${product.productId?if_exists}${externalKeyParam}" class="buttontext" target="_blank">${(product.internalName)?if_exists}</a>]
                               </#if>
                           </td>
                           <td align="right">${orderItemQuantity}</td>
@@ -312,6 +310,17 @@ under the License.
                           <td align="center">
                             <input type="text" size="7" name="wgt_${rowKey}" value="" />
                           </td>
+                          <#if carrierShipmentBoxTypes?has_content>
+                            <td align="center">
+                              <select name="boxType_${rowKey}">
+                                <option value=""></option>
+                                <#list carrierShipmentBoxTypes as carrierShipmentBoxType>
+                                  <#assign shipmentBoxType = carrierShipmentBoxType.getRelatedOne("ShipmentBoxType") />
+                                  <option value="${shipmentBoxType.shipmentBoxTypeId}">${shipmentBoxType.description?default(shipmentBoxType.shipmentBoxTypeId)}</option>
+                                </#list>
+                              </select>
+                            </td>
+                          </#if>
                           <td align="center">
                             <select name="pkg_${rowKey}">
                               <#if packingSession.getPackageSeqIds()?exists>
@@ -381,22 +390,6 @@ under the License.
                                     <input type="hidden" name="productStoreId" value="${productStoreId?if_exists}"/>
                                 </#if>
                             </td>
-                            <#if carrierShipmentBoxTypes?has_content>
-                              <td>
-                                <span class="label">${uiLabelMap.ProductShipmentBoxType}</span>
-                                <br/>
-                                <#list packageSeqIds as packageSeqId>
-                                  <select name="boxType_${packageSeqId}">
-                                    <option value=""></option>
-                                    <#list carrierShipmentBoxTypes as carrierShipmentBoxType>
-                                      <#assign shipmentBoxType = carrierShipmentBoxType.getRelatedOne("ShipmentBoxType", false) />
-                                      <option value="${shipmentBoxType.shipmentBoxTypeId}">${shipmentBoxType.description?default(shipmentBoxType.shipmentBoxTypeId)}</option>
-                                    </#list>
-                                  </select>
-                                  <br/>
-                                </#list>
-                              </td>
-                            </#if>
                         </#if>
                         <td nowrap="nowrap">
                             <span class="label">${uiLabelMap.ProductAdditionalShippingCharge}:</span>
@@ -466,7 +459,7 @@ under the License.
                       <td>${line.getOrderItemSeqId()}</td>
                       <td>${line.getProductId()?default("N/A")}</td>
                       <td>
-                          <a href="/catalog/control/EditProduct?productId=${line.getProductId()?if_exists}${StringUtil.wrapString(externalKeyParam)}" class="buttontext" target="_blank">${product.internalName?if_exists?default("[N/A]")}</a>
+                          <a href="/catalog/control/EditProduct?productId=${line.getProductId()?if_exists}${externalKeyParam}" class="buttontext" target="_blank">${product.internalName?if_exists?default("[N/A]")}</a>
                       </td>
                       <td>${line.getInventoryItemId()}</td>
                       <td align="right">${line.getQuantity()}</td>
@@ -510,7 +503,7 @@ under the License.
                       <td>${line.getOrderItemSeqId()}</td>
                       <td>${line.getProductId()?default("N/A")}</td>
                       <td>
-                          <a href="/catalog/control/EditProduct?productId=${line.getProductId()?if_exists}${StringUtil.wrapString(externalKeyParam)}" class="buttontext" target="_blank">${product.internalName?if_exists?default("[N/A]")}</a>
+                          <a href="/catalog/control/EditProduct?productId=${line.getProductId()?if_exists}${externalKeyParam}" class="buttontext" target="_blank">${product.internalName?if_exists?default("[N/A]")}</a>
                       </td>
                       <td>${line.getInventoryItemId()}</td>
                       <td align="right">${line.getQuantity()}</td>

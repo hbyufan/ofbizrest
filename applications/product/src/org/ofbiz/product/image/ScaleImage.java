@@ -20,8 +20,11 @@ package org.ofbiz.product.image;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.ImagingOpException;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.NullPointerException;
+import java.lang.SecurityException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -37,6 +40,7 @@ import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.base.util.string.FlexibleStringExpander;
+import org.ofbiz.service.ServiceUtil;
 import org.ofbiz.common.image.ImageTransform;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.util.EntityUtilProperties;
@@ -327,8 +331,8 @@ public class ScaleImage {
             bufImg = (BufferedImage) resultBufImgMap.get("bufferedImage");
 
             // get Dimensions
-            imgHeight = bufImg.getHeight();
-            imgWidth = bufImg.getWidth();
+            imgHeight = (double) bufImg.getHeight();
+            imgWidth = (double) bufImg.getWidth();
             if (imgHeight == 0.0 || imgWidth == 0.0) {
                 String errMsg = UtilProperties.getMessage(resource, "ScaleImage.one_current_image_dimension_is_null", locale) + " : imgHeight = " + imgHeight + " ; imgWidth = " + imgWidth;
                 Debug.logError(errMsg, module);
@@ -375,7 +379,7 @@ public class ScaleImage {
 
                     // write new image
                     try {
-                        ImageIO.write(bufNewImg, imgExtension, new File(imageServerPath + "/" + newFilePathPrefix + filenameToUse));
+                        ImageIO.write((RenderedImage) bufNewImg, imgExtension, new File(imageServerPath + "/" + newFilePathPrefix + filenameToUse));
                     } catch (IllegalArgumentException e) {
                         String errMsg = UtilProperties.getMessage(resource, "ScaleImage.one_parameter_is_null", locale) + e.toString();
                         Debug.logError(errMsg, module);

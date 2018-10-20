@@ -50,7 +50,7 @@ public class OrderContentWrapper {
     public static final String module = OrderContentWrapper.class.getName();
     public static final String SEPARATOR = "::";    // cache key separator
 
-    private static final UtilCache<String, String> orderContentCache = UtilCache.createUtilCache("order.content", true); // use soft reference to free up memory if needed
+    public static UtilCache<String, String> orderContentCache;
 
     public static OrderContentWrapper makeOrderContentWrapper(GenericValue order, HttpServletRequest request) {
         return new OrderContentWrapper(order, request);
@@ -66,6 +66,9 @@ public class OrderContentWrapper {
         this.order = order;
         this.locale = locale;
         this.mimeTypeId = mimeTypeId;
+        if (orderContentCache == null) {
+            orderContentCache = UtilCache.createUtilCache("order.content", true);     // use soft reference to free up memory if needed
+        }
     }
 
     public OrderContentWrapper(GenericValue order, HttpServletRequest request) {
@@ -73,6 +76,9 @@ public class OrderContentWrapper {
         this.order = order;
         this.locale = UtilHttp.getLocale(request);
         this.mimeTypeId = "text/html";
+        if (orderContentCache == null) {
+            orderContentCache = UtilCache.createUtilCache("order.content", true);     // use soft reference to free up memory if needed
+        }
     }
 
     public String get(String orderContentTypeId) {
@@ -96,16 +102,17 @@ public class OrderContentWrapper {
 
         String cacheKey = orderContentTypeId + SEPARATOR + locale + SEPARATOR + mimeTypeId + SEPARATOR + order.get("orderId") + SEPARATOR + orderItemSeqId;
         try {
-            String cachedValue = orderContentCache.get(cacheKey);
-            if (cachedValue != null) {
-                return cachedValue;
+            if (orderContentCache != null && orderContentCache.get(cacheKey) != null) {
+                return orderContentCache.get(cacheKey);
             }
 
             Writer outWriter = new StringWriter();
             getOrderContentAsText(null, null, order, orderContentTypeId, locale, mimeTypeId, delegator, dispatcher, outWriter);
             String outString = outWriter.toString();
             if (outString.length() > 0) {
-                outString = orderContentCache.putIfAbsentAndGet(cacheKey, outString);
+                if (orderContentCache != null) {
+                    orderContentCache.put(cacheKey, outString);
+                }
             }
             return outString;
 
@@ -134,7 +141,7 @@ public class OrderContentWrapper {
             mimeTypeId = "text/html";
         }
 
-        List<GenericValue> orderContentList = delegator.findByAnd("OrderContent", UtilMisc.toMap("orderId", orderId, "orderItemSeqId", orderItemSeqId, "orderContentTypeId", orderContentTypeId), UtilMisc.toList("-fromDate"), true);
+        List<GenericValue> orderContentList = delegator.findByAndCache("OrderContent", UtilMisc.toMap("orderId", orderId, "orderItemSeqId", orderItemSeqId, "orderContentTypeId", orderContentTypeId), UtilMisc.toList("-fromDate"));
         orderContentList = EntityUtil.filterByDate(orderContentList);
         GenericValue orderContent = EntityUtil.getFirst(orderContentList);
         if (orderContent != null) {

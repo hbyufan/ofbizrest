@@ -38,7 +38,7 @@ if (("PAGE_TITLE".equals(prodCatContentTypeId))||("META_KEYWORD".equals(prodCatC
     context.contentFormTitle = "${uiLabelMap.ProductUpdateSEOContentCategory}";
 }
 if ("RELATED_URL".equals(prodCatContentTypeId)) {
-    contentList = delegator.findByAnd("ContentDataResourceView", UtilMisc.toMap("contentId", contentId), null, false);
+    contentList = delegator.findByAnd("ContentDataResourceView", UtilMisc.toMap("contentId", contentId));
     if (contentList) {
         context.contentId = contentList.get(0).contentId;
         context.dataResourceId = contentList.get(0).dataResourceId;

@@ -44,7 +44,7 @@ under the License.
               <td class="label align-top">${contactMechMap.contactMechType.get("description",locale)}</td>
               <td>
                 <#list contactMechMap.partyContactMechPurposes as partyContactMechPurpose>
-                  <#assign contactMechPurposeType = partyContactMechPurpose.getRelatedOne("ContactMechPurposeType", true)>
+                  <#assign contactMechPurposeType = partyContactMechPurpose.getRelatedOneCache("ContactMechPurposeType")>
                   <div>
                     <#if contactMechPurposeType?has_content>
                       <b>${contactMechPurposeType.get("description",locale)}</b>
@@ -66,12 +66,12 @@ under the License.
                     <#if postalAddress.address2?has_content>${postalAddress.address2}<br /></#if>
                     ${postalAddress.city?if_exists},
                     <#if postalAddress.stateProvinceGeoId?has_content>
-                      <#assign stateProvince = postalAddress.getRelatedOne("StateProvinceGeo", true)>
+                      <#assign stateProvince = postalAddress.getRelatedOneCache("StateProvinceGeo")>
                       ${stateProvince.abbreviation?default(stateProvince.geoId)}
                     </#if>
                     ${postalAddress.postalCode?if_exists}
                     <#if postalAddress.countryGeoId?has_content><br />
-                      <#assign country = postalAddress.getRelatedOne("CountryGeo", true)>
+                      <#assign country = postalAddress.getRelatedOneCache("CountryGeo")>
                       ${country.geoName?default(country.geoId)}
                     </#if>
                   </div>

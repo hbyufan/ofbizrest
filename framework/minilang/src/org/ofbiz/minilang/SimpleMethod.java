@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -33,6 +32,9 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import javolution.util.FastList;
+import javolution.util.FastMap;
 
 import org.ofbiz.base.location.FlexibleLocation;
 import org.ofbiz.base.util.Assert;
@@ -122,7 +124,7 @@ public final class SimpleMethod extends MiniLangElement {
         if (UtilValidate.isEmpty(fromLocation)) {
             fromLocation = "<location not known>";
         }
-        Map<String, SimpleMethod> simpleMethods = new HashMap<String, SimpleMethod>();
+        Map<String, SimpleMethod> simpleMethods = FastMap.newInstance();
         Document document = null;
         try {
             document = UtilXml.readXmlDocument(content, true, true);
@@ -134,7 +136,7 @@ public final class SimpleMethod extends MiniLangElement {
     }
 
     private static Map<String, SimpleMethod> getAllSimpleMethods(URL xmlURL) throws MiniLangException {
-        Map<String, SimpleMethod> simpleMethods = new HashMap<String, SimpleMethod>();
+        Map<String, SimpleMethod> simpleMethods = FastMap.newInstance();
         Document document = null;
         try {
             document = UtilXml.readXmlDocument(xmlURL, true, true);
@@ -153,7 +155,8 @@ public final class SimpleMethod extends MiniLangElement {
         Map<String, SimpleMethod> simpleMethods = simpleMethodsDirectCache.get(name);
         if (simpleMethods == null) {
             simpleMethods = getAllDirectSimpleMethods(name, content, fromLocation);
-            simpleMethods = simpleMethodsDirectCache.putIfAbsentAndGet(name, simpleMethods);
+            simpleMethodsDirectCache.putIfAbsent(name, simpleMethods);
+            simpleMethods = simpleMethodsDirectCache.get(name);
         }
         return simpleMethods;
     }
@@ -190,14 +193,15 @@ public final class SimpleMethod extends MiniLangElement {
         Map<String, SimpleMethod> simpleMethods = simpleMethodsResourceCache.get(cacheKey);
         if (simpleMethods == null) {
             simpleMethods = getAllSimpleMethods(xmlURL);
-            simpleMethods = simpleMethodsResourceCache.putIfAbsentAndGet(cacheKey, simpleMethods);
+            simpleMethodsResourceCache.putIfAbsent(cacheKey, simpleMethods);
+            simpleMethods = simpleMethodsResourceCache.get(cacheKey);
         }
         return simpleMethods;
     }
 
     public static List<SimpleMethod> getSimpleMethodsList(String xmlResource, ClassLoader loader) throws MiniLangException {
         Assert.notNull("xmlResource", xmlResource);
-        List<SimpleMethod> simpleMethods = new ArrayList<SimpleMethod>();
+        List<SimpleMethod> simpleMethods = FastList.newInstance();
         // Let the standard Map returning method take care of caching and compilation
         Map<String, SimpleMethod> simpleMethodMap = getSimpleMethods(xmlResource, loader);
         // Load and traverse the document again to get a correctly ordered list of methods
@@ -209,7 +213,7 @@ public final class SimpleMethod extends MiniLangElement {
         }
         Document document = null;
         try {
-            document = UtilXml.readXmlDocument(xmlURL, MiniLangValidate.validationOn(), true);
+            document = UtilXml.readXmlDocument(xmlURL, true, true);
         } catch (Exception e) {
             throw new MiniLangException("Could not read SimpleMethod XML document [" + xmlURL + "]: ", e);
         }
@@ -388,7 +392,7 @@ public final class SimpleMethod extends MiniLangElement {
     private void addMessage(MethodContext methodContext, String messageListName, String message) {
         List<String> messages = methodContext.getEnv(messageListName);
         if (messages == null) {
-            messages = new LinkedList<String>();
+            messages = FastList.newInstance();
             methodContext.putEnv(messageListName, messages);
         }
         messages.add(message);

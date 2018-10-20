@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.catalina.Container;
 import org.apache.catalina.Loader;
 import org.apache.catalina.Session;
+import org.apache.catalina.Store;
 import org.apache.catalina.session.StandardSession;
 import org.apache.catalina.session.StoreBase;
 import org.apache.catalina.util.CustomObjectInputStream;
@@ -38,7 +39,7 @@ import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
 
-public class OfbizStore extends StoreBase {
+public class OfbizStore extends StoreBase implements Store {
 
     public static final String module = OfbizStore.class.getName();
     public static final String entityName = "CatalinaSession";

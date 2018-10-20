@@ -18,13 +18,14 @@
  *******************************************************************************/
 package org.ofbiz.minilang.method;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import javolution.util.FastMap;
 
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilHttp;
@@ -34,6 +35,7 @@ import org.ofbiz.base.util.string.FlexibleStringExpander;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.security.Security;
+import org.ofbiz.security.authz.Authorization;
 import org.ofbiz.service.DispatchContext;
 import org.ofbiz.service.LocalDispatcher;
 
@@ -45,16 +47,17 @@ public final class MethodContext {
     public static final int EVENT = 1;
     public static final int SERVICE = 2;
 
+    private Authorization authz;
     private Delegator delegator;
     private LocalDispatcher dispatcher;
-    private Map<String, Object> env = new HashMap<String, Object>();
+    private Map<String, Object> env = FastMap.newInstance();
     private ClassLoader loader;
     private Locale locale;
     private int methodType;
     private Map<String, Object> parameters;
     private HttpServletRequest request = null;
     private HttpServletResponse response = null;
-    private Map<String, Object> results = new HashMap<String, Object>();
+    private Map<String, Object> results = FastMap.newInstance();
     private Security security;
     private TimeZone timeZone;
     private int traceCount = 0;
@@ -69,6 +72,7 @@ public final class MethodContext {
         this.timeZone = (TimeZone) context.get("timeZone");
         this.dispatcher = ctx.getDispatcher();
         this.delegator = ctx.getDelegator();
+        this.authz = ctx.getAuthorization();
         this.security = ctx.getSecurity();
         this.userLogin = (GenericValue) context.get("userLogin");
         if (this.loader == null) {
@@ -90,6 +94,7 @@ public final class MethodContext {
         this.timeZone = UtilHttp.getTimeZone(request);
         this.dispatcher = (LocalDispatcher) request.getAttribute("dispatcher");
         this.delegator = (Delegator) request.getAttribute("delegator");
+        this.authz = (Authorization) request.getAttribute("authz");
         this.security = (Security) request.getAttribute("security");
         this.userLogin = (GenericValue) request.getSession().getAttribute("userLogin");
         if (this.loader == null) {
@@ -102,7 +107,7 @@ public final class MethodContext {
     }
 
     /**
-     * This is a very simple constructor which assumes the needed objects (dispatcher, delegator, security, request, response, etc) are in the context. Will result in calling method as a
+     * This is a very simple constructor which assumes the needed objects (dispatcher, delegator, authz, security, request, response, etc) are in the context. Will result in calling method as a
      * service or event, as specified.
      */
     public MethodContext(Map<String, ? extends Object> context, ClassLoader loader, int methodType) {
@@ -113,6 +118,7 @@ public final class MethodContext {
         this.timeZone = (TimeZone) context.get("timeZone");
         this.dispatcher = (LocalDispatcher) context.get("dispatcher");
         this.delegator = (Delegator) context.get("delegator");
+        this.authz = (Authorization) context.get("authz");
         this.security = (Security) context.get("security");
         this.userLogin = (GenericValue) context.get("userLogin");
         if (methodType == MethodContext.EVENT) {
@@ -130,6 +136,8 @@ public final class MethodContext {
                     this.dispatcher = (LocalDispatcher) this.request.getAttribute("dispatcher");
                 if (this.delegator == null)
                     this.delegator = (Delegator) this.request.getAttribute("delegator");
+                if (this.authz == null)
+                    this.authz = (Authorization) this.request.getAttribute("authz");
                 if (this.security == null)
                     this.security = (Security) this.request.getAttribute("security");
                 if (this.userLogin == null)
@@ -143,6 +151,10 @@ public final class MethodContext {
                 this.loader = this.getClass().getClassLoader();
             }
         }
+    }
+
+    public Authorization getAuthz() {
+        return this.authz;
     }
 
     public Delegator getDelegator() {

@@ -32,15 +32,14 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.ofbiz.base.component.ComponentConfig;
 import org.ofbiz.base.component.ComponentConfig.WebappInfo;
-import org.ofbiz.base.container.ClassLoaderContainer;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilMisc;
+import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.base.util.UtilXml;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
-import org.ofbiz.entity.util.EntityUtilProperties;
 import org.ofbiz.webapp.control.RequestHandler;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -76,7 +75,6 @@ public class OfbizUrlTransform implements TemplateTransformModel {
         }
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public Writer getWriter(final Writer out, Map args) {
         final StringBuilder buf = new StringBuilder();
@@ -114,7 +112,7 @@ public class OfbizUrlTransform implements TemplateTransformModel {
                         StringBuilder newURL = new StringBuilder();
                         // make prefix url
                         try {
-                            GenericValue webSite = delegator.findOne("WebSite", UtilMisc.toMap("webSiteId", webSiteId), true);
+                            GenericValue webSite = delegator.findByPrimaryKeyCache("WebSite", UtilMisc.toMap("webSiteId", webSiteId));
                             if (webSite != null) {
                                 httpsPort = webSite.getString("httpsPort");
                                 httpsServer = webSite.getString("httpsHost");
@@ -127,30 +125,20 @@ public class OfbizUrlTransform implements TemplateTransformModel {
                         }
                         // fill in any missing properties with fields from the global file
                         if (UtilValidate.isEmpty(httpsPort)) {
-                            httpsPort = EntityUtilProperties.getPropertyValue("url.properties", "port.https", "443", delegator);
+                            httpsPort = UtilProperties.getPropertyValue("url.properties", "port.https", "443");
                         }
                         if (UtilValidate.isEmpty(httpsServer)) {
-                            httpsServer = EntityUtilProperties.getPropertyValue("url.properties", "force.https.host", delegator);
+                            httpsServer = UtilProperties.getPropertyValue("url.properties", "force.https.host");
                         }
                         if (UtilValidate.isEmpty(httpPort)) {
-                            httpPort = EntityUtilProperties.getPropertyValue("url.properties", "port.http", "80", delegator);
+                            httpPort = UtilProperties.getPropertyValue("url.properties", "port.http", "80");
                         }
                         if (UtilValidate.isEmpty(httpServer)) {
-                            httpServer = EntityUtilProperties.getPropertyValue("url.properties", "force.http.host", delegator);
+                            httpServer = UtilProperties.getPropertyValue("url.properties", "force.http.host");
                         }
                         if (enableHttps == null) {
-                            enableHttps = EntityUtilProperties.propertyValueEqualsIgnoreCase("url.properties", "port.https.enabled", "Y", delegator);
+                            enableHttps = UtilProperties.propertyValueEqualsIgnoreCase("url.properties", "port.https.enabled", "Y");
                         }
-                        
-                        if (ClassLoaderContainer.portOffset != 0) {
-                            Integer httpPortValue = Integer.valueOf(httpPort);
-                            httpPortValue += ClassLoaderContainer.portOffset;
-                            httpPort = httpPortValue.toString();
-                            Integer httpsPortValue = Integer.valueOf(httpsPort);
-                            httpsPortValue += ClassLoaderContainer.portOffset;
-                            httpsPort = httpsPortValue.toString();
-                        }
-
                         if (secure && enableHttps) {
                             String server = httpsServer;
                             if (UtilValidate.isEmpty(server)) {
@@ -273,7 +261,7 @@ public class OfbizUrlTransform implements TemplateTransformModel {
     String value = "";
         try{
             NodeList nlList= eElement.getElementsByTagName(sTag).item(0).getChildNodes();
-            Node nValue = nlList.item(0);
+            Node nValue = (Node) nlList.item(0);
             return value = nValue.getNodeValue();
         } catch (Exception e) {
             return value;

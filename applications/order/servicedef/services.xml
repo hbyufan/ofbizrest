@@ -25,6 +25,11 @@ under the License.
     <version>1.0</version>
 
     <!-- Order processing services -->
+    <service name="processOrderWf" engine="workflow" location="org.ofbiz.order" invoke="ProcessOrder">
+        <description>Service for testing the workflow engine</description>
+        <attribute name="orderId" type="String" mode="IN" optional="false"/>
+    </service>
+
     <service name="orderNotificationInterface" engine="interface" location="" invoke="">
         <attribute name="orderId" type="String" mode="IN" optional="false"/>
         <attribute name="orderItemSeqId" type="String" mode="IN" optional="true"/>
@@ -256,7 +261,6 @@ under the License.
             location="org.ofbiz.order.order.OrderServices" invoke="recalcOrderTax">
         <description>Adjust the order tax amount</description>
         <attribute name="orderId" type="String" mode="IN"/>
-        <attribute name="orderItemSeqId" type="String" mode="IN" optional="true"/>
     </service>
 
     <service name="changeOrderStatus" engine="java" auth="true"
@@ -821,10 +825,6 @@ under the License.
         <attribute name="budgetId" type="String" mode="IN" optional="true"/>
         <attribute name="quoteId" type="String" mode="IN" optional="true"/>
 
-        <!-- Product identification -->
-        <attribute name="goodIdentificationTypeId" type="String" mode="IN" optional="true"/>
-        <attribute name="goodIdentificationIdValue" type="String" mode="IN" optional="true"/>
-
         <attribute name="billingAccountId" type="String" mode="IN" optional="true"/>
         <attribute name="finAccountId" type="String" mode="IN" optional="true"/>
         <attribute name="cardNumber" type="String" mode="IN" optional="true"/>
@@ -1142,18 +1142,4 @@ under the License.
         <auto-attributes mode="IN" entity-name="OrderItemAttribute" include="pk" optional="false"/>
     </service>
     
-    <!-- Order Item Group Order -->
-    <service name="createOrderItemGroupOrder" engine="entity-auto" default-entity-name="OrderItemGroupOrder" invoke="create" auth="true">
-        <description>Create Order Item Group Order</description>
-        <auto-attributes mode="IN" entity-name="OrderItemGroupOrder" include="pk" optional="false"/>
-    </service>
-    
-    <service name="updateShipGroupShipInfo" engine="java" location="org.ofbiz.order.order.OrderServices" invoke="updateShipGroupShipInfo" auth="true">
-            <description>Update Shipping Information on Order View</description>
-         <attribute name="contactMechId" type="String" mode="IN" optional="false"/>
-         <attribute name="orderId" type="String" mode="IN" optional="true"/>
-         <attribute name="oldContactMechId" type="String" mode="IN" optional="true"/>
-         <attribute name="shipGroupSeqId" type="String" mode="IN" optional="true"/>
-         <attribute name="shipmentMethod" type="String" mode="IN" optional="true"/>
-    </service>
 </services>

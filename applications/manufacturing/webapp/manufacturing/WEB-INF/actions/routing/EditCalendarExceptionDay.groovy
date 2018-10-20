@@ -33,10 +33,10 @@ calendarExceptionDays = [];
 
 calendarId = parameters.calendarId ?: request.getAttribute("calendarId");
 if (calendarId) {
-    techDataCalendar = delegator.findOne("TechDataCalendar", [calendarId : calendarId], false);
+    techDataCalendar = delegator.findByPrimaryKey("TechDataCalendar", [calendarId : calendarId]);
 }
 if (techDataCalendar) {
-    calendarExceptionDays = techDataCalendar.getRelated("TechDataCalendarExcDay", null, null, false);
+    calendarExceptionDays = techDataCalendar.getRelated("TechDataCalendarExcDay");
 }
 HtmlFormWrapper listCalendarExceptionDayWrapper = new HtmlFormWrapper("component://manufacturing/widget/manufacturing/CalendarForms.xml", "ListCalendarExceptionDay", request, response);
 listCalendarExceptionDayWrapper.putInContext("calendarExceptionDays", calendarExceptionDays);
@@ -52,7 +52,7 @@ exceptionDateStartTime = parameters.exceptionDateStartTime ?: request.getAttribu
 exceptionDateStartTime = ObjectType.simpleTypeConvert(exceptionDateStartTime, "Timestamp", null, null);
 
 if (exceptionDateStartTime) {
-    calendarExceptionDay = delegator.findOne("TechDataCalendarExcDay", [calendarId : calendarId , exceptionDateStartTime : exceptionDateStartTime], false);
+    calendarExceptionDay = delegator.findByPrimaryKey("TechDataCalendarExcDay", [calendarId : calendarId , exceptionDateStartTime : exceptionDateStartTime]);
     if (calendarExceptionDay) {
         HtmlFormWrapper updateCalendarExceptionDayWrapper = new HtmlFormWrapper("component://manufacturing/widget/manufacturing/CalendarForms.xml", "UpdateCalendarExceptionDay", request, response);
         updateCalendarExceptionDayWrapper.putInContext("calendarExceptionDay", calendarExceptionDay);

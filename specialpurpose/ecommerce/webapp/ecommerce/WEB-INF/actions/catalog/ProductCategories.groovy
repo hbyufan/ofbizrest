@@ -36,8 +36,8 @@ List fillTree(rootCat ,CatLvl, parentCategoryId) {
         rootCat.sort{ it.productCategoryId }
         def listTree = FastList.newInstance();
         for(root in rootCat) {
-            preCatChilds = delegator.findByAnd("ProductCategoryRollup", ["parentProductCategoryId": root.productCategoryId], null, false);
-            catChilds = EntityUtil.getRelated("CurrentProductCategory",null,preCatChilds,false);
+            preCatChilds = delegator.findByAnd("ProductCategoryRollup", ["parentProductCategoryId": root.productCategoryId]);
+            catChilds = EntityUtil.getRelated("CurrentProductCategory",preCatChilds);
             def childList = FastList.newInstance();
             
             // CatLvl uses for identify the Category level for display different css class
@@ -51,12 +51,12 @@ List fillTree(rootCat ,CatLvl, parentCategoryId) {
                     childList = fillTree(catChilds,CatLvl+1, parentCategoryId+'/'+root.productCategoryId);
             }
             
-            productsInCat  = delegator.findByAnd("ProductCategoryAndMember", ["productCategoryId": root.productCategoryId], null, false);
+            productsInCat  = delegator.findByAnd("ProductCategoryAndMember", ["productCategoryId": root.productCategoryId]);
             
             // Display the category if this category containing products or contain the category that's containing products
             if(productsInCat || childList) {
                 def rootMap = FastMap.newInstance();
-                category = delegator.findOne("ProductCategory", ["productCategoryId": root.productCategoryId], false);
+                category = delegator.findByPrimaryKey("ProductCategory", ["productCategoryId": root.productCategoryId]);
                 categoryContentWrapper = new CategoryContentWrapper(category, request);
                 context.title = categoryContentWrapper.CATEGORY_NAME;
                 categoryDescription = categoryContentWrapper.DESCRIPTION;

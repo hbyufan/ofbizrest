@@ -21,11 +21,13 @@ package org.ofbiz.entity.condition;
 import java.util.List;
 import java.util.Map;
 
+import javolution.context.ObjectFactory;
+
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericEntity;
 import org.ofbiz.entity.GenericModelException;
-import org.ofbiz.entity.config.model.Datasource;
+import org.ofbiz.entity.config.DatasourceInfo;
 import org.ofbiz.entity.model.ModelEntity;
 
 /**
@@ -42,7 +44,16 @@ import org.ofbiz.entity.model.ModelEntity;
 @SuppressWarnings("serial")
 public class EntityWhereString extends EntityCondition {
 
+    protected static final ObjectFactory<EntityWhereString> entityWhereStringFactory = new ObjectFactory<EntityWhereString>() {
+        @Override
+        protected EntityWhereString create() {
+            return new EntityWhereString();
+        }
+    };
+
     protected String sqlString;
+
+    protected EntityWhereString() {}
 
     public void init(String sqlString) {
         this.sqlString = sqlString;
@@ -58,7 +69,7 @@ public class EntityWhereString extends EntityCondition {
     }
 
     @Override
-    public String makeWhereString(ModelEntity modelEntity, List<EntityConditionParam> entityConditionParams, Datasource datasourceInfo) {
+    public String makeWhereString(ModelEntity modelEntity, List<EntityConditionParam> entityConditionParams, DatasourceInfo datasourceInfo) {
         return sqlString;
     }
 

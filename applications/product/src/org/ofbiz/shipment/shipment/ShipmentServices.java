@@ -74,7 +74,7 @@ public class ShipmentServices {
 
         GenericValue productStoreShipMeth = null;
         try {
-            productStoreShipMeth = delegator.findOne("ProductStoreShipmentMeth", UtilMisc.toMap("productStoreShipMethId", productStoreShipMethId), false);
+            productStoreShipMeth = delegator.findByPrimaryKey("ProductStoreShipmentMeth", UtilMisc.toMap("productStoreShipMethId", productStoreShipMethId));
         } catch (GenericEntityException e) {
             return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
                     "ProductStoreShipmentMethodCannotRetrieve", 
@@ -148,7 +148,7 @@ public class ShipmentServices {
         GenericValue estimate = null;
 
         try {
-            estimate = delegator.findOne("ShipmentCostEstimate", UtilMisc.toMap("shipmentCostEstimateId", shipmentCostEstimateId), false);
+            estimate = delegator.findByPrimaryKey("ShipmentCostEstimate", UtilMisc.toMap("shipmentCostEstimateId", shipmentCostEstimateId));
             estimate.remove();
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
@@ -293,7 +293,7 @@ public class ShipmentServices {
         GenericValue shipAddress = null;
         if (shippingContactMechId != null) {
             try {
-                shipAddress = delegator.findOne("PostalAddress", UtilMisc.toMap("contactMechId", shippingContactMechId), false);
+                shipAddress = delegator.findByPrimaryKey("PostalAddress", UtilMisc.toMap("contactMechId", shippingContactMechId));
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
                 return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
@@ -341,15 +341,15 @@ public class ShipmentServices {
                 GenericValue pv = null;
 
                 try {
-                    wv = thisEstimate.getRelatedOne("WeightQuantityBreak", false);
+                    wv = thisEstimate.getRelatedOne("WeightQuantityBreak");
                 } catch (GenericEntityException e) {
                 }
                 try {
-                    qv = thisEstimate.getRelatedOne("QuantityQuantityBreak", false);
+                    qv = thisEstimate.getRelatedOne("QuantityQuantityBreak");
                 } catch (GenericEntityException e) {
                 }
                 try {
-                    pv = thisEstimate.getRelatedOne("PriceQuantityBreak", false);
+                    pv = thisEstimate.getRelatedOne("PriceQuantityBreak");
                 } catch (GenericEntityException e) {
                 }
                 if (wv == null && qv == null && pv == null) {
@@ -427,26 +427,22 @@ public class ShipmentServices {
         if (shippableItemInfo != null) {
             for (Map<String, Object> itemMap: shippableItemInfo) {
                 // add the item sizes
-                if (itemMap.containsKey("size")) {
-                    BigDecimal itemSize = (BigDecimal) itemMap.get("size");
-                    if (itemSize != null) {
-                        shippableItemSizes.add(itemSize);
-                    }
+                BigDecimal itemSize = (BigDecimal) itemMap.get("size");
+                if (itemSize != null) {
+                    shippableItemSizes.add(itemSize);
                 }
 
                 // add the feature quantities
                 BigDecimal quantity = (BigDecimal) itemMap.get("quantity");
-                if (itemMap.containsKey("featureSet")) {
-                    Set<String> featureSet = UtilGenerics.checkSet(itemMap.get("featureSet"));
-                    if (UtilValidate.isNotEmpty(featureSet)) {
-                        for (String featureId: featureSet) {
-                            BigDecimal featureQuantity = shippableFeatureMap.get(featureId);
-                            if (featureQuantity == null) {
-                                featureQuantity = BigDecimal.ZERO;
-                            }
-                            featureQuantity = featureQuantity.add(quantity);
-                            shippableFeatureMap.put(featureId, featureQuantity);
+                Set<String> featureSet = UtilGenerics.checkSet(itemMap.get("featureSet"));
+                if (UtilValidate.isNotEmpty(featureSet)) {
+                    for (String featureId: featureSet) {
+                        BigDecimal featureQuantity = shippableFeatureMap.get(featureId);
+                        if (featureQuantity == null) {
+                            featureQuantity = BigDecimal.ZERO;
                         }
+                        featureQuantity = featureQuantity.add(quantity);
+                        shippableFeatureMap.put(featureId, featureQuantity);
                     }
                 }
 
@@ -566,7 +562,7 @@ public class ShipmentServices {
                 GenericValue appl = null;
                 Map<String, String> fields = UtilMisc.toMap("productFeatureGroupId", featureGroupId, "productFeatureId", featureId);
                 try {
-                    List<GenericValue> appls = delegator.findByAnd("ProductFeatureGroupAppl", fields, null, true);
+                    List<GenericValue> appls = delegator.findByAndCache("ProductFeatureGroupAppl", fields);
                     appls = EntityUtil.filterByDate(appls);
                     appl = EntityUtil.getFirst(appls);
                 } catch (GenericEntityException e) {
@@ -622,7 +618,7 @@ public class ShipmentServices {
         GenericValue shipment = null;
         if (shipmentId != null) {
             try {
-                shipment = delegator.findOne("Shipment", UtilMisc.toMap("shipmentId", shipmentId), false);
+                shipment = delegator.findByPrimaryKey("Shipment", UtilMisc.toMap("shipmentId", shipmentId));
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
                 return ServiceUtil.returnError(e.getMessage());
@@ -637,7 +633,7 @@ public class ShipmentServices {
         if ("SHIPMENT_PACKED".equals(shipmentStatusId)) {
             GenericValue address = null;
             try {
-                address = shipment.getRelatedOne("DestinationPostalAddress", false);
+                address = shipment.getRelatedOne("DestinationPostalAddress");
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
                 return ServiceUtil.returnError(e.getMessage());
@@ -649,7 +645,7 @@ public class ShipmentServices {
 
             List<GenericValue> packages = null;
             try {
-                packages = shipment.getRelated("ShipmentPackage", null, null, false) ;
+                packages = shipment.getRelated("ShipmentPackage") ;
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
                 return ServiceUtil.returnError(e.getMessage());
@@ -662,7 +658,7 @@ public class ShipmentServices {
 
             List<GenericValue> routeSegs = null;
             try {
-                routeSegs = shipment.getRelated("ShipmentRouteSegment", null, null, false);
+                routeSegs = shipment.getRelated("ShipmentRouteSegment");
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
                 return ServiceUtil.returnError(e.getMessage());
@@ -738,15 +734,15 @@ public class ShipmentServices {
                 String shipmentId = pkgInfo.getString("shipmentId");
 
                 // locate the shipment package
-                GenericValue shipmentPackage = delegator.findOne("ShipmentPackage",
-                        UtilMisc.toMap("shipmentId", shipmentId, "shipmentPackageSeqId", packageSeqId), false);
+                GenericValue shipmentPackage = delegator.findByPrimaryKey("ShipmentPackage",
+                        UtilMisc.toMap("shipmentId", shipmentId, "shipmentPackageSeqId", packageSeqId));
 
                 if (shipmentPackage != null) {
                     if ("00001".equals(packageSeqId)) {
                         // only need to do this for the first package
                         GenericValue rtSeg = null;
                         try {
-                            rtSeg = delegator.findOne("ShipmentRouteSegment", UtilMisc.toMap("shipmentId", shipmentId, "shipmentRouteSegmentId", "00001"), false);
+                            rtSeg = delegator.findByPrimaryKey("ShipmentRouteSegment", UtilMisc.toMap("shipmentId", shipmentId, "shipmentRouteSegmentId", "00001"));
                         } catch (GenericEntityException e) {
                             Debug.logError(e, module);
                             return ServiceUtil.returnError(e.getMessage());
@@ -781,7 +777,7 @@ public class ShipmentServices {
                     // first update the weight of the package
                     GenericValue pkg = null;
                     try {
-                        pkg = delegator.findOne("ShipmentPackage", pkgCtx, false);
+                        pkg = delegator.findByPrimaryKey("ShipmentPackage", pkgCtx);
                     } catch (GenericEntityException e) {
                         Debug.logError(e, module);
                         return ServiceUtil.returnError(e.getMessage());
@@ -806,7 +802,7 @@ public class ShipmentServices {
                     pkgCtx.put("shipmentRouteSegmentId", "00001");
                     GenericValue pkgRtSeg = null;
                     try {
-                        pkgRtSeg = delegator.findOne("ShipmentPackageRouteSeg", pkgCtx, false);
+                        pkgRtSeg = delegator.findByPrimaryKey("ShipmentPackageRouteSeg", pkgCtx);
                     } catch (GenericEntityException e) {
                         Debug.logError(e, module);
                         return ServiceUtil.returnError(e.getMessage());
@@ -914,11 +910,11 @@ public class ShipmentServices {
         GenericValue userLogin = (GenericValue) context.get("userLogin");
         try {
 
-            List<GenericValue> shipmentReceipts = delegator.findByAnd("ShipmentReceipt", UtilMisc.toMap("shipmentId", shipmentId), null, false);
+            List<GenericValue> shipmentReceipts = delegator.findByAnd("ShipmentReceipt", UtilMisc.toMap("shipmentId", shipmentId));
             if (shipmentReceipts.size() == 0) return ServiceUtil.returnSuccess();
 
             // If there are shipment receipts, the shipment must have been shipped, so set the shipment status to PURCH_SHIP_SHIPPED if it's only PURCH_SHIP_CREATED
-            GenericValue shipment = delegator.findOne("Shipment", UtilMisc.toMap("shipmentId", shipmentId), false);
+            GenericValue shipment = delegator.findByPrimaryKey("Shipment", UtilMisc.toMap("shipmentId", shipmentId));
             if ((! UtilValidate.isEmpty(shipment)) && "PURCH_SHIP_CREATED".equals(shipment.getString("statusId"))) {
                 Map<String, Object> updateShipmentMap = dispatcher.runSync("updateShipment", UtilMisc.<String, Object>toMap("shipmentId", shipmentId, "statusId", "PURCH_SHIP_SHIPPED", "userLogin", userLogin));
                 if (ServiceUtil.isError(updateShipmentMap)) {
@@ -926,7 +922,7 @@ public class ShipmentServices {
                 }
             }
 
-            List<GenericValue> shipmentAndItems = delegator.findByAnd("ShipmentAndItem", UtilMisc.toMap("shipmentId", shipmentId, "statusId", "PURCH_SHIP_SHIPPED"), null, false);
+            List<GenericValue> shipmentAndItems = delegator.findByAnd("ShipmentAndItem", UtilMisc.toMap("shipmentId", shipmentId, "statusId", "PURCH_SHIP_SHIPPED"));
             if (shipmentAndItems.size() == 0) {
                 return ServiceUtil.returnSuccess();
             }
@@ -977,7 +973,7 @@ public class ShipmentServices {
         Map<String, Object> results = ServiceUtil.returnSuccess();
 
         try {
-            GenericValue shipmentRouteSeg = delegator.findOne("ShipmentRouteSegment", UtilMisc.toMap("shipmentId", shipmentId, "shipmentRouteSegmentId", shipmentRouteSegmentId), false);
+            GenericValue shipmentRouteSeg = delegator.findByPrimaryKey("ShipmentRouteSegment", UtilMisc.toMap("shipmentId", shipmentId, "shipmentRouteSegmentId", shipmentRouteSegmentId));
             if (shipmentRouteSeg == null) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
                         "ProductShipmentRouteSegmentNotFound", 
@@ -1022,8 +1018,8 @@ public class ShipmentServices {
 
         // get the carrierPartyId
         try {
-            GenericValue shipmentRouteSegment = delegator.findOne("ShipmentRouteSegment",
-                    UtilMisc.toMap("shipmentId", shipmentId, "shipmentRouteSegmentId", shipmentRouteSegmentId), true);
+            GenericValue shipmentRouteSegment = delegator.findByPrimaryKeyCache("ShipmentRouteSegment",
+                    UtilMisc.toMap("shipmentId", shipmentId, "shipmentRouteSegmentId", shipmentRouteSegmentId));
             carrierPartyId = shipmentRouteSegment.getString("carrierPartyId");
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
@@ -1073,21 +1069,21 @@ public class ShipmentServices {
         GenericValue shipmentPackage = null;
         try {
 
-            shipment = delegator.findOne("Shipment", UtilMisc.toMap("shipmentId", shipmentId), false);
+            shipment = delegator.findByPrimaryKey("Shipment", UtilMisc.toMap("shipmentId", shipmentId));
             if (UtilValidate.isEmpty(shipment)) {
                 String errorMessage = UtilProperties.getMessage(resource, "ProductShipmentNotFoundId", locale);
                 Debug.logError(errorMessage, module);
                 return ServiceUtil.returnError(errorMessage);
             }
 
-            shipmentPackage = delegator.findOne("ShipmentPackage", UtilMisc.toMap("shipmentId", shipmentId, "shipmentPackageSeqId", shipmentPackageSeqId), false);
+            shipmentPackage = delegator.findByPrimaryKey("ShipmentPackage", UtilMisc.toMap("shipmentId", shipmentId, "shipmentPackageSeqId", shipmentPackageSeqId));
             if (UtilValidate.isEmpty(shipmentPackage)) {
                 String errorMessage = UtilProperties.getMessage(resource, "ProductShipmentPackageNotFound", context, locale);
                 Debug.logError(errorMessage, module);
                 return ServiceUtil.returnError(errorMessage);
             }
 
-            List<GenericValue> packageContents = delegator.findByAnd("PackedQtyVsOrderItemQuantity", UtilMisc.toMap("shipmentId", shipmentId, "shipmentPackageSeqId", shipmentPackageSeqId), null, false);
+            List<GenericValue> packageContents = delegator.findByAnd("PackedQtyVsOrderItemQuantity", UtilMisc.toMap("shipmentId", shipmentId, "shipmentPackageSeqId", shipmentPackageSeqId));
             for (GenericValue packageContent: packageContents) {
                 String orderId = packageContent.getString("orderId");
                 String orderItemSeqId = packageContent.getString("orderItemSeqId");
@@ -1106,7 +1102,7 @@ public class ShipmentServices {
                 BigDecimal packageContentValue = proportionOfInvoicedQuantity.multiply(invoicedAmount).setScale(decimals, rounding);
 
                 // Convert the value to the shipment currency, if necessary
-                GenericValue orderHeader = packageContent.getRelatedOne("OrderHeader", false);
+                GenericValue orderHeader = packageContent.getRelatedOne("OrderHeader");
                 Map<String, Object> convertUomResult = dispatcher.runSync("convertUom", UtilMisc.<String, Object>toMap("uomId", orderHeader.getString("currencyUom"), "uomIdTo", currencyUomId, "originalValue", packageContentValue));
                 if (ServiceUtil.isError(convertUomResult)) {
                     return convertUomResult;
@@ -1145,14 +1141,14 @@ public class ShipmentServices {
         GenericValue shipment = null ;
         GenericValue orderHeader = null;
         try {
-            shipment = delegator.findOne("Shipment", UtilMisc.toMap("shipmentId", shipmentId), false);
-            orderHeader = delegator.findOne("OrderHeader", UtilMisc.toMap("orderId", shipment.getString("primaryOrderId")), false);
+            shipment = delegator.findByPrimaryKey("Shipment", UtilMisc.toMap("shipmentId", shipmentId));
+            orderHeader = delegator.findByPrimaryKey("OrderHeader", UtilMisc.toMap("orderId", shipment.getString("primaryOrderId")));
         } catch (GenericEntityException e) {
             Debug.logError(e, "Problem getting info from database", module);
         }
         GenericValue productStoreEmail = null;
         try {
-            productStoreEmail = delegator.findOne("ProductStoreEmailSetting", UtilMisc.toMap("productStoreId", orderHeader.get("productStoreId"), "emailType", "PRDS_ODR_SHIP_COMPLT"), false);
+            productStoreEmail = delegator.findByPrimaryKey("ProductStoreEmailSetting", UtilMisc.toMap("productStoreId", orderHeader.get("productStoreId"), "emailType", "PRDS_ODR_SHIP_COMPLT"));
         } catch (GenericEntityException e) {
             Debug.logError(e, "Problem getting the ProductStoreEmailSetting for productStoreId =" + orderHeader.get("productStoreId") + " and emailType = PRDS_ODR_SHIP_COMPLT", module);
         }
@@ -1230,7 +1226,7 @@ public class ShipmentServices {
                 return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
                         "ProductShipmentNotFoundId", locale) + shipmentId);
             }
-            GenericValue primaryOrderHeader = shipment.getRelatedOne("PrimaryOrderHeader", false);
+            GenericValue primaryOrderHeader = shipment.getRelatedOne("PrimaryOrderHeader");
             if (primaryOrderHeader == null) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
                         "ProductShipmentPrimaryOrderHeaderNotFound", 
@@ -1242,7 +1238,7 @@ public class ShipmentServices {
                         "ProductShipmentPrimaryOrderHeaderProductStoreNotFound", 
                         UtilMisc.toMap("productStoreId", productStoreId, "shipmentId", shipmentId), locale));
             }
-            GenericValue primaryOrderItemShipGroup = shipment.getRelatedOne("PrimaryOrderItemShipGroup", false);
+            GenericValue primaryOrderItemShipGroup = shipment.getRelatedOne("PrimaryOrderItemShipGroup");
             if (primaryOrderItemShipGroup == null) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(resource, 
                         "ProductShipmentPrimaryOrderHeaderItemShipGroupNotFound", 

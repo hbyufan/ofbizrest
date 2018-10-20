@@ -65,20 +65,20 @@ public class SupplierProductServices {
         BigDecimal quantity =(BigDecimal) context.get("quantity");
         String canDropShip = (String) context.get("canDropShip");
         try {
-            product = delegator.findOne("Product", UtilMisc.toMap("productId", productId), true);
+            product = delegator.findByPrimaryKeyCache("Product", UtilMisc.toMap("productId", productId));
             if (product == null) {
                 results = ServiceUtil.returnSuccess();
                 results.put("supplierProducts",null);
                 return results;
             }
-            List<GenericValue> supplierProducts = product.getRelated("SupplierProduct", null, null, true);
+            List<GenericValue> supplierProducts = product.getRelatedCache("SupplierProduct");
 
             // if there were no related SupplierProduct entities and the item is a variant, then get the SupplierProducts of the virtual parent product
             if (supplierProducts.size() == 0 && product.getString("isVariant") != null && product.getString("isVariant").equals("Y")) {
                 String virtualProductId = ProductWorker.getVariantVirtualId(product);
-                GenericValue virtualProduct = delegator.findOne("Product", UtilMisc.toMap("productId", virtualProductId), true);
+                GenericValue virtualProduct = delegator.findByPrimaryKeyCache("Product", UtilMisc.toMap("productId", virtualProductId));
                 if (virtualProduct != null) {
-                    supplierProducts = virtualProduct.getRelated("SupplierProduct", null, null, true);
+                    supplierProducts = virtualProduct.getRelatedCache("SupplierProduct");
                 }
             }
 
@@ -136,7 +136,7 @@ public class SupplierProductServices {
                 // loop through all the features, find the related SupplierProductFeature for the given partyId, and
                 // substitue description and idCode
                 for (GenericValue nextFeature: features) {
-                    List<GenericValue> supplierFeatures = EntityUtil.filterByAnd(nextFeature.getRelated("SupplierProductFeature", null, null, false),
+                    List<GenericValue> supplierFeatures = EntityUtil.filterByAnd(nextFeature.getRelated("SupplierProductFeature"),
                                                                    UtilMisc.toMap("partyId", partyId));
                     GenericValue supplierFeature = null;
 

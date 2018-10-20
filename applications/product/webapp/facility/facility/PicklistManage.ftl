@@ -16,41 +16,14 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-<script language="JavaScript" type="text/javascript">
-    function paginateOrderList(viewSize, viewIndex) {
-        document.paginationForm.viewSize.value = viewSize;
-        document.paginationForm.viewIndex.value = viewIndex;
-        document.paginationForm.submit();
-    }
-</script>
 
 <div class="screenlet">
   <div class="screenlet-title-bar">
     <ul>
       <li class="h3">${uiLabelMap.ProductPicklistManage}</li>
-      <#if (picklistInfoList?has_content && 0 < picklistInfoList?size)>
-        <#if (picklistCount > highIndex)>
-          <li><a href="javascript:paginateOrderList('${viewSize}', '${viewIndex+1}')">${uiLabelMap.CommonNext}</a></li>
-        <#else>
-          <li><span class="disabled">${uiLabelMap.CommonNext}</span></li>
-        </#if>
-        <#if (picklistCount > 0)>
-          <li><span>${lowIndex} - ${highIndex} ${uiLabelMap.CommonOf} ${picklistCount}</span></li>
-        </#if>
-        <#if (viewIndex > 0)>
-          <li><a href="javascript:paginateOrderList('${viewSize}', '${viewIndex-1}')">${uiLabelMap.CommonPrevious}</a></li>
-        <#else>
-          <li><span class="disabled">${uiLabelMap.CommonPrevious}</span></li>
-        </#if>
-      </#if>
     </ul>
     <br class="clear"/>
   </div>
-  <form name="paginationForm" method="post" action="<@ofbizUrl>PicklistManage</@ofbizUrl>">
-    <input type="hidden" name="viewSize" value="${viewSize}"/>
-    <input type="hidden" name="viewIndex" value="${viewIndex}"/>
-    <input type="hidden" name="facilityId" value="${facilityId}"/>
-  </form>
   <div class="screenlet-body">
     <#if picklistInfoList?has_content>
       <#list picklistInfoList as picklistInfo>
@@ -140,7 +113,7 @@ under the License.
                 <span class="label">${uiLabelMap.PageTitlePickList}</span>
                 <select name="picklistId">
                   <#list picklistActiveList as picklistActive>
-                    <#assign picklistActiveStatusItem = picklistActive.getRelatedOne("StatusItem", true)>
+                    <#assign picklistActiveStatusItem = picklistActive.getRelatedOneCache("StatusItem")>
                     <option value="${picklistActive.picklistId}"<#if picklistActive.picklistId == picklist.picklistId> selected="selected"</#if>>${picklistActive.picklistId} [${uiLabelMap.CommonDate}:${picklistActive.picklistDate},${uiLabelMap.CommonStatus}:${picklistActiveStatusItem.get("description",locale)}]</option>
                   </#list>
                 </select>

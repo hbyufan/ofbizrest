@@ -63,7 +63,7 @@ public class QuoteServices {
         // get the quote and store
         GenericValue quote = null;
         try {
-            quote = delegator.findOne("Quote", UtilMisc.toMap("quoteId", quoteId), false);
+            quote = delegator.findByPrimaryKey("Quote", UtilMisc.toMap("quoteId", quoteId));
         } catch (GenericEntityException e) {
             Debug.logError(e, "Problem getting Quote", module);
         }
@@ -76,7 +76,7 @@ public class QuoteServices {
 
         GenericValue productStoreEmail = null;
         try {
-            productStoreEmail = delegator.findOne("ProductStoreEmailSetting", UtilMisc.toMap("productStoreId", quote.get("productStoreId"), "emailType", emailType), false);
+            productStoreEmail = delegator.findByPrimaryKey("ProductStoreEmailSetting", UtilMisc.toMap("productStoreId", quote.get("productStoreId"), "emailType", emailType));
         } catch (GenericEntityException e) {
             Debug.logError(e, "Problem getting the ProductStoreEmailSetting for productStoreId=" + quote.get("productStoreId") + " and emailType=" + emailType, module);
         }

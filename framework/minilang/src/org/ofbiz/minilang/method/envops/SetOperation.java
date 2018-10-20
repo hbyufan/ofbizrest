@@ -18,8 +18,8 @@
  *******************************************************************************/
 package org.ofbiz.minilang.method.envops;
 
-import java.util.HashMap;
-import java.util.LinkedList;
+import javolution.util.FastList;
+import javolution.util.FastMap;
 
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.ObjectType;
@@ -116,7 +116,7 @@ public final class SetOperation extends MethodOperation {
         this.formatFse = FlexibleStringExpander.getInstance(element.getAttribute("format"));
         this.type = element.getAttribute("type");
         Class<?> targetClass = null;
-        if (!this.type.isEmpty() && !"NewList".equals(this.type) && !"NewMap".equals(this.type)) {
+        if (!this.type.isEmpty()) {
             try {
                 targetClass = ObjectType.loadClass(this.type);
             } catch (ClassNotFoundException e) {
@@ -163,9 +163,9 @@ public final class SetOperation extends MethodOperation {
         }
         if (this.type.length() > 0) {
             if ("NewMap".equals(this.type)) {
-                newValue = new HashMap<String, Object>();
+                newValue = FastMap.newInstance();
             } else if ("NewList".equals(this.type)) {
-                newValue = new LinkedList<Object>();
+                newValue = FastList.newInstance();
             } else {
                 try {
                     String format = null;

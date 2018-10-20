@@ -43,7 +43,7 @@ public class GenericHelperInfo {
 
     public String getHelperFullName() {
         if (UtilValidate.isNotEmpty(tenantId)) {
-            return helperBaseName.concat("#").concat(tenantId);
+            return helperBaseName + "#" + tenantId;
         } else {
             return helperBaseName;
         }

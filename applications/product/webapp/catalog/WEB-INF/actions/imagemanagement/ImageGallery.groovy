@@ -28,15 +28,15 @@ import org.ofbiz.entity.condition.*;
 import org.ofbiz.entity.util.*;
 
 productImageList = [];
-productContentAndInfoImageManamentList = delegator.findByAnd("ProductContentAndInfo", ["productId": productId, productContentTypeId : "IMAGE", "statusId" : "IM_APPROVED"], ["sequenceNum"], false);
+productContentAndInfoImageManamentList = delegator.findByAnd("ProductContentAndInfo", ["productId": productId, productContentTypeId : "IMAGE", "statusId" : "IM_APPROVED"], ["sequenceNum"]);
 if(productContentAndInfoImageManamentList) {
     productContentAndInfoImageManamentList.each { productContentAndInfoImageManament ->
-        contentAssocThumbList = delegator.findByAnd("ContentAssoc", [contentId : productContentAndInfoImageManament.contentId, contentAssocTypeId : "IMAGE_THUMBNAIL"], null, false);
+        contentAssocThumbList = delegator.findByAnd("ContentAssoc", [contentId : productContentAndInfoImageManament.contentId, contentAssocTypeId : "IMAGE_THUMBNAIL"]);
         contentAssocThumb = EntityUtil.getFirst(contentAssocThumbList);
         if(contentAssocThumb) {
-            imageContentThumb = delegator.findOne("Content", [contentId : contentAssocThumb.contentIdTo], false);
+            imageContentThumb = delegator.findByPrimaryKey("Content", [contentId : contentAssocThumb.contentIdTo]);
             if(imageContentThumb) {
-                productImageThumb = delegator.findOne("ContentDataResourceView", [contentId : imageContentThumb.contentId, drDataResourceId : imageContentThumb.dataResourceId], false);
+                productImageThumb = delegator.findByPrimaryKey("ContentDataResourceView", [contentId : imageContentThumb.contentId, drDataResourceId : imageContentThumb.dataResourceId]);
                 productImageMap = [:];
                 productImageMap.contentId = productContentAndInfoImageManament.contentId;
                 productImageMap.dataResourceId = productContentAndInfoImageManament.dataResourceId;

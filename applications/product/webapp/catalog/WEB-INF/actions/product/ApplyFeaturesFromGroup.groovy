@@ -28,10 +28,10 @@ productFeatureGroupId = parameters.get("productFeatureGroupId");
 if (productFeatureGroupId) {
     productFeatureGroup = delegator.findOne("ProductFeatureGroup", [productFeatureGroupId : productFeatureGroupId], false);
     productFeatures = [];
-    productFeatureGroupAppls = productFeatureGroup.getRelated("ProductFeatureGroupAppl", null, ['sequenceNum'], false);
+    productFeatureGroupAppls = productFeatureGroup.getRelated("ProductFeatureGroupAppl", ['sequenceNum']);
     for (pFGAi = productFeatureGroupAppls.iterator(); pFGAi;) {
         productFeatureGroupAppl = (GenericEntity)pFGAi.next();
-        productFeature = (GenericEntity)productFeatureGroupAppl.getRelatedOne("ProductFeature", false);
+        productFeature = (GenericEntity)productFeatureGroupAppl.getRelatedOne("ProductFeature");
         productFeature.set("defaultSequenceNum", productFeatureGroupAppl.getLong("sequenceNum"));
         productFeatures.add(productFeature);
     }

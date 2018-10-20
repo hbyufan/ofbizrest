@@ -29,7 +29,6 @@ import java.util.Map;
 
 import javolution.util.FastMap;
 
-import org.ofbiz.base.container.ClassLoaderContainer;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilGenerics;
 import org.ofbiz.base.util.UtilMisc;
@@ -40,7 +39,6 @@ import org.ofbiz.base.util.template.FreeMarkerWorker;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
-import org.ofbiz.entity.util.EntityUtilProperties;
 import org.ofbiz.service.DispatchContext;
 import org.ofbiz.service.GenericServiceException;
 import org.ofbiz.service.LocalDispatcher;
@@ -179,7 +177,7 @@ public class NotificationServices {
      * the message body of the notification.
      * <p>
      * The result returned will contain the appropriate response
-     * messages indicating success or failure and the OUT parameter,
+     * messages indicating succes or failure and the OUT parameter,
      * "body" containing the generated message.
      *
      * @param ctx   The dispatching context of the service
@@ -219,7 +217,7 @@ public class NotificationServices {
             // extract the newly created body for the notification email
             String notificationBody = writer.toString();
 
-            // generate the successful response
+            // generate the successfull reponse
             result = ServiceUtil.returnSuccess(UtilProperties.getMessage(resource, "CommonNotifyEmailMessageBodyGeneratedSuccessfully", locale));
             result.put("body", notificationBody);
         } catch (IOException ie) {
@@ -281,7 +279,7 @@ public class NotificationServices {
             GenericValue webSite = null;
             if (webSiteId != null) {
                 try {
-                    webSite = delegator.findOne("WebSite", UtilMisc.toMap("webSiteId", webSiteId), true);
+                    webSite = delegator.findByPrimaryKeyCache("WebSite", UtilMisc.toMap("webSiteId", webSiteId));
                     if (webSite != null) {
                         httpsPort = webSite.getString("httpsPort");
                         httpsServer = webSite.getString("httpsHost");
@@ -296,28 +294,19 @@ public class NotificationServices {
 
             // fill in any missing properties with fields from the global file
             if (UtilValidate.isEmpty(httpsPort)) {
-                httpsPort = EntityUtilProperties.getPropertyValue("url.properties", "port.https", "443", delegator);
+                httpsPort = UtilProperties.getPropertyValue("url.properties", "port.https", "443");
             }
             if (UtilValidate.isEmpty(httpsServer)) {
-                httpsServer = EntityUtilProperties.getPropertyValue("url.properties", "force.https.host", localServer, delegator);
+                httpsServer = UtilProperties.getPropertyValue("url.properties", "force.https.host", localServer);
             }
             if (UtilValidate.isEmpty(httpPort)) {
-                httpPort = EntityUtilProperties.getPropertyValue("url.properties", "port.http", "80", delegator);
+                httpPort = UtilProperties.getPropertyValue("url.properties", "port.http", "80");
             }
             if (UtilValidate.isEmpty(httpServer)) {
-                httpServer = EntityUtilProperties.getPropertyValue("url.properties", "force.http.host", localServer, delegator);
+                httpServer = UtilProperties.getPropertyValue("url.properties", "force.http.host", localServer);
             }
             if (UtilValidate.isEmpty(enableHttps)) {
-                enableHttps = (EntityUtilProperties.propertyValueEqualsIgnoreCase("url.properties", "port.https.enabled", "Y", delegator)) ? Boolean.TRUE : Boolean.FALSE;
-            }
-
-            if (ClassLoaderContainer.portOffset != 0) {
-                Integer httpPortValue = Integer.valueOf(httpPort);
-                httpPortValue += ClassLoaderContainer.portOffset;
-                httpPort = httpPortValue.toString();
-                Integer httpsPortValue = Integer.valueOf(httpsPort);
-                httpsPortValue += ClassLoaderContainer.portOffset;
-                httpsPort = httpsPortValue.toString();
+                enableHttps = (UtilProperties.propertyValueEqualsIgnoreCase("url.properties", "port.https.enabled", "Y")) ? Boolean.TRUE : Boolean.FALSE;
             }
 
             // prepare the (non-secure) URL

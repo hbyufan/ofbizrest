@@ -40,47 +40,43 @@ if ("Y".equals(createNewShipGroup)) {
 orderPartyId = cart.getPartyId();
 shipToPartyId = parameters.shipToPartyId;
 context.cart = cart;
-if(shipToPartyId) {
-    context.shipToPartyId = shipToPartyId;
-} else {
-    context.shipToPartyId = cart.getShipToCustomerPartyId();
-}
 
 // nuke the event messages
 request.removeAttribute("_EVENT_MESSAGE_");
 
 if ("SALES_ORDER".equals(cart.getOrderType())) {
     if (!"_NA_".equals(orderPartyId)) {
-        orderParty = delegator.findOne("Party", [partyId : orderPartyId], false);
+        orderParty = delegator.findByPrimaryKey("Party", [partyId : orderPartyId]);
         if (orderParty) {
             shippingContactMechList = ContactHelper.getContactMech(orderParty, "SHIPPING_LOCATION", "POSTAL_ADDRESS", false);
-            orderPerson = orderParty.getRelatedOne("Person", false);
+            orderPerson = orderParty.getRelatedOne("Person");
             context.orderParty = orderParty;
             context.orderPerson = orderPerson;
             context.shippingContactMechList = shippingContactMechList;
         }
     }
     // Ship to another party
-    if (!context.shipToPartyId.equals(orderPartyId)) {
-        shipToParty = delegator.findOne("Party", [partyId : context.shipToPartyId], false);
+    if (shipToPartyId) {
+        shipToParty = delegator.findByPrimaryKey("Party", [partyId : shipToPartyId]);
         if (shipToParty) {
+            context.shipToParty = shipToParty;
             shipToPartyShippingContactMechList = ContactHelper.getContactMech(shipToParty, "SHIPPING_LOCATION", "POSTAL_ADDRESS", false);
             context.shipToPartyShippingContactMechList = shipToPartyShippingContactMechList;
         }
     }
     // suppliers for the drop-ship select box
-    suppliers = delegator.findByAnd("PartyRole", [roleTypeId : "SUPPLIER"], null, false);
+    suppliers = delegator.findByAnd("PartyRole", [roleTypeId : "SUPPLIER"]);
     context.suppliers = suppliers;
 
     // facilities used to reserve the items per ship group
-    productStoreFacilities = delegator.findByAnd("ProductStoreFacility", [productStoreId : cart.getProductStoreId()], null, false);
+    productStoreFacilities = delegator.findByAnd("ProductStoreFacility", [productStoreId : cart.getProductStoreId()]);
     context.productStoreFacilities = productStoreFacilities;
 } else {
     // Purchase order
     if (!"_NA_".equals(orderPartyId)) {
-        orderParty = delegator.findOne("Party", [partyId : orderPartyId], false);
+        orderParty = delegator.findByPrimaryKey("Party", [partyId : orderPartyId]);
         if (orderParty) {
-           orderPerson = orderParty.getRelatedOne("Person", false);
+           orderPerson = orderParty.getRelatedOne("Person");
            context.orderParty = orderParty;
            context.orderPerson = orderPerson;
          }
@@ -89,14 +85,14 @@ if ("SALES_ORDER".equals(cart.getOrderType())) {
     companyId = cart.getBillToCustomerPartyId();
     if (companyId) {
         facilityMaps = FastList.newInstance();
-        facilities = delegator.findByAnd("Facility", [ownerPartyId : companyId], null, true);
+        facilities = delegator.findByAndCache("Facility", [ownerPartyId : companyId]);
 
         // if facilites is null then check the PartyRelationship where there is a relationship set for Parent & Child organization. Then also fetch the value of companyId from there.
         if (UtilValidate.isEmpty(facilities)) {
             partyRelationship = EntityUtil.getFirst(delegator.findList("PartyRelationship", EntityCondition.makeCondition(["roleTypeIdFrom": "PARENT_ORGANIZATION", "partyIdTo": companyId]), null, null, null, false));
             if (UtilValidate.isNotEmpty(partyRelationship)) {
                 companyId = partyRelationship.partyIdFrom;
-                facilities = delegator.findByAnd("Facility", [ownerPartyId : companyId], null, true);
+                facilities = delegator.findByAndCache("Facility", [ownerPartyId : companyId]);
             }
         }
         facilities.each { facility ->
@@ -107,15 +103,6 @@ if ("SALES_ORDER".equals(cart.getOrderType())) {
             facilityMaps.add(facilityMap);
         }
         context.facilityMaps = facilityMaps;
-    }
-    // Ship to another party
-    if (!context.shipToPartyId.equals(orderPartyId)) {
-        shipToParty = delegator.findOne("Party", [partyId : context.shipToPartyId], false);
-        if (shipToParty)
-        {
-            shipToPartyShippingContactMechList = ContactHelper.getContactMech(shipToParty, "SHIPPING_LOCATION", "POSTAL_ADDRESS", false);
-            context.shipToPartyShippingContactMechList = shipToPartyShippingContactMechList;
-        }
     }
 }
 }

@@ -19,10 +19,10 @@
 package org.ofbiz.base.container;
 
 import java.net.UnknownHostException;
-import java.rmi.NoSuchObjectException;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.RemoteException;
+import java.rmi.NoSuchObjectException;
 import java.rmi.server.UnicastRemoteObject;
 
 import org.ofbiz.base.util.RMIExtendedSocketFactory;
@@ -44,26 +44,22 @@ public class NamingServiceContainer implements Container {
 
     protected RMIExtendedSocketFactory rmiSocketFactory;
 
-    private String name;
-
-    public void init(String[] args, String name, String configFile) throws ContainerException {
-        this.name =name;
+    public void init(String[] args, String configFile) throws ContainerException {
         this.configFileLocation = configFile;
 
-        ContainerConfig.Container cfg = ContainerConfig.getContainer(name, configFileLocation);
+        ContainerConfig.Container cfg = ContainerConfig.getContainer("naming-container", configFileLocation);
 
-        // get the naming (JNDI) port
-        
+        // get the telnet-port
         ContainerConfig.Container.Property port = cfg.getProperty("port");
         if (port.value != null) {
             try {
-                this.namingPort = Integer.parseInt(port.value) + ClassLoaderContainer.portOffset;
+                this.namingPort = Integer.parseInt(port.value);
             } catch (Exception e) {
-                throw new ContainerException("Invalid port defined in container [naming-container] configuration or as portOffset; not a valid int");
+                throw new ContainerException("Invalid port defined in container [naming-container] configuration; not a valid int");
             }
         }
 
-        // get the naming (JNDI) server
+        // get the telnet-host
         ContainerConfig.Container.Property host = cfg.getProperty("host");
         if (host != null && host.value != null) {
             this.namingHost =  host.value ;
@@ -96,9 +92,5 @@ public class NamingServiceContainer implements Container {
                 throw new ContainerException("Unable to shutdown naming registry");
             }
         }
-    }
-
-    public String getName() {
-        return name;
     }
 }

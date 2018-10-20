@@ -59,7 +59,6 @@ import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilURL;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.base.util.UtilProperties.UtilResourceBundle;
-import org.ofbiz.base.util.template.FreeMarkerWorker;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.DelegatorFactory;
 import org.ofbiz.entity.GenericEntityException;
@@ -90,6 +89,7 @@ import org.ofbiz.webtools.artifactinfo.ServiceArtifactInfo;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import freemarker.ext.beans.BeansWrapper;
 import freemarker.ext.dom.NodeModel;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -171,7 +171,8 @@ public class WebToolsServices {
                     }
                 }
                 fmcontext.put("doc", nodeModel);
-                TemplateHashModel staticModels = FreeMarkerWorker.getDefaultOfbizWrapper().getStaticModels();
+                BeansWrapper wrapper = BeansWrapper.getDefaultInstance();
+                TemplateHashModel staticModels = wrapper.getStaticModels();
                 fmcontext.put("Static", staticModels);
 
                 template.process(fmcontext, outWriter);
@@ -721,9 +722,9 @@ public class WebToolsServices {
                             Map<String, Object> relationMap = FastMap.newInstance();
                             ModelRelation relation = entity.getRelation(r);
                             List<Map<String, Object>> keysList = FastList.newInstance();
-                            int row = 1;
-                            for (ModelKeyMap keyMap : relation.getKeyMaps()) {
+                            for (int km = 0; km < relation.getKeyMapsSize(); km++) {
                                 Map<String, Object> keysMap = FastMap.newInstance();
+                                ModelKeyMap keyMap = relation.getKeyMap(km);
                                 String fieldName = null;
                                 String relFieldName = null;
                                 if (keyMap.getFieldName().equals(keyMap.getRelFieldName())) {
@@ -733,7 +734,7 @@ public class WebToolsServices {
                                     fieldName = keyMap.getFieldName();
                                     relFieldName = keyMap.getRelFieldName();
                                 }
-                                keysMap.put("row", row++);
+                                keysMap.put("row", km + 1);
                                 keysMap.put("fieldName", fieldName);
                                 keysMap.put("relFieldName", relFieldName);
                                 keysList.add(keysMap);
@@ -754,7 +755,7 @@ public class WebToolsServices {
                             List<String> fieldNameList = FastList.newInstance();
 
                             ModelIndex index = entity.getIndex(r);
-                            for (Iterator<ModelIndex.Field> fieldIterator = index.getFields().iterator(); fieldIterator.hasNext();) {
+                            for (Iterator<ModelIndex.Field> fieldIterator = index.getFieldsIterator(); fieldIterator.hasNext();) {
                                 fieldNameList.add(fieldIterator.next().getFieldName());
                             }
 

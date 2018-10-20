@@ -18,21 +18,17 @@
  *******************************************************************************/
 package org.ofbiz.common;
 
-import static org.ofbiz.base.util.UtilGenerics.checkList;
-import static org.ofbiz.base.util.UtilGenerics.checkMap;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.io.Writer;
 import java.nio.ByteBuffer;
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -45,16 +41,17 @@ import javax.transaction.xa.XAException;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.ofbiz.base.metrics.Metrics;
-import org.ofbiz.base.metrics.MetricsFactory;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.ofbiz.base.util.Debug;
-import org.ofbiz.base.util.StringUtil;
 import org.ofbiz.base.util.UtilDateTime;
+import org.ofbiz.base.util.UtilValidate;
+
+import static org.ofbiz.base.util.UtilGenerics.checkList;
+import static org.ofbiz.base.util.UtilGenerics.checkMap;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilProperties;
-import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.Delegator;
-import org.ofbiz.entity.GenericEntityConfException;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.model.ModelEntity;
@@ -66,7 +63,6 @@ import org.ofbiz.service.ModelService;
 import org.ofbiz.service.ServiceUtil;
 import org.ofbiz.service.ServiceXaWrapper;
 import org.ofbiz.service.mail.MimeMessageWrapper;
-import org.owasp.esapi.errors.EncodingException;
 
 /**
  * Common Services
@@ -223,6 +219,23 @@ public class CommonServices {
         return ServiceUtil.returnSuccess();
     }
 
+    public static Map<String, Object> addOrUpdateLogger(DispatchContext dctc, Map<String, ?> context) {
+        String name = (String) context.get("name");
+        String level = (String) context.get("level");
+        boolean additivity = "Y".equalsIgnoreCase((String) context.get("additivity"));
+
+        Logger logger = null;
+        if ("root".equals(name)) {
+            logger = Logger.getRootLogger();
+        } else {
+            logger = Logger.getLogger(name);
+        }
+        logger.setLevel(Level.toLevel(level));
+        logger.setAdditivity(additivity);
+
+        return ServiceUtil.returnSuccess();
+    }
+
     public static Map<String, Object> forceGc(DispatchContext dctx, Map<String, ?> context) {
         System.gc();
         return ServiceUtil.returnSuccess();
@@ -349,18 +362,14 @@ public class CommonServices {
     }
 
     public static Map<String, Object> displayXaDebugInfo(DispatchContext dctx, Map<String, ?> context) {
-        try {
-            if (TransactionUtil.debugResources()) {
-                if (UtilValidate.isNotEmpty(TransactionUtil.debugResMap)) {
-                    TransactionUtil.logRunningTx();
-                } else {
-                    Debug.logInfo("No running transaction to display.", module);
-                }
+        if (TransactionUtil.debugResources) {
+            if (UtilValidate.isNotEmpty(TransactionUtil.debugResMap)) {
+                TransactionUtil.logRunningTx();
             } else {
-                Debug.logInfo("Debug resources is disabled.", module);
+                Debug.logInfo("No running transaction to display.", module);
             }
-        } catch (GenericEntityConfException e) {
-            return ServiceUtil.returnError(e.getMessage());
+        } else {
+            Debug.logInfo("Debug resources is disabled.", module);
         }
 
         return ServiceUtil.returnSuccess();
@@ -532,35 +541,4 @@ public class CommonServices {
         }
     }
 
-    public static Map<String, Object> getAllMetrics(DispatchContext dctx, Map<String, ?> context) {
-        List<Map<String, Object>> metricsMapList = FastList.newInstance();
-        Collection<Metrics> metricsList = MetricsFactory.getMetrics();
-        for (Metrics metrics : metricsList) {
-            Map<String, Object> metricsMap = FastMap.newInstance();
-            metricsMap.put("name", metrics.getName());
-            metricsMap.put("serviceRate", metrics.getServiceRate());
-            metricsMap.put("threshold", metrics.getThreshold());
-            metricsMap.put("totalEvents", metrics.getTotalEvents());
-            metricsMapList.add(metricsMap);
-        }
-        Map<String, Object> result = ServiceUtil.returnSuccess();
-        result.put("metricsList", metricsMapList);
-        return result;
-    }
-
-    public static Map<String, Object> resetMetric(DispatchContext dctx, Map<String, ?> context) {
-        String name = (String) context.get("name");
-        try {
-            name = StringUtil.defaultWebEncoder.decodeFromURL(name);
-        } catch (EncodingException e) {
-            return ServiceUtil.returnError("Exception thrown while decoding metric name \"" + name + "\"");
-        }
-        Metrics metric = MetricsFactory.getMetric(name);
-        if (metric != null) {
-            metric.reset();
-            return ServiceUtil.returnSuccess();
-
-        }
-        return ServiceUtil.returnError("Metric \"" + name + "\" not found.");
-    }
 }

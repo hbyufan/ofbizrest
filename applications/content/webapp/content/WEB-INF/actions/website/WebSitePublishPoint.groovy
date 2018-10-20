@@ -25,7 +25,7 @@ webSiteContents = delegator.findList("WebSiteContent", EntityCondition.makeCondi
 webSiteContents = EntityUtil.filterByDate(webSiteContents);
 webSiteContent = EntityUtil.getFirst(webSiteContents);
 if (webSiteContent) {
-    content = webSiteContent.getRelatedOne("Content", false);
+    content = webSiteContent.getRelatedOne("Content");
     contentRoot = content.contentId;
     context.content = content;
     context.contentRoot = contentRoot;
@@ -39,7 +39,7 @@ mnlookupMap = [webSiteId : webSiteId, webSiteContentTypeId : 'MENU_ROOT'];
 webSiteMenus = delegator.findList("WebSiteContent", EntityCondition.makeCondition(mnlookupMap), null, ['-fromDate'], null, false);
 webSiteMenu = EntityUtil.getFirst(webSiteMenus);
 if (webSiteMenu) {
-    menu = webSiteMenu.getRelatedOne("Content", false);
+    menu = webSiteMenu.getRelatedOne("Content");
     menuRoot = menu.contentId;
     context.menu = menu;
     context.menuRoot = menuRoot;
@@ -53,7 +53,7 @@ erlookupMap = [webSiteId : webSiteId, webSiteContentTypeId : 'ERROR_ROOT'];
 webSiteErrors = delegator.findList("WebSiteContent", EntityCondition.makeCondition(erlookupMap), null, ['-fromDate'], null, false);
 webSiteError = EntityUtil.getFirst(webSiteErrors);
 if (webSiteError) {
-    error = webSiteError.getRelatedOne("Content", false);
+    error = webSiteError.getRelatedOne("Content");
     errorRoot = error.contentId;
     context.error = error;
     context.errorRoot = errorRoot;

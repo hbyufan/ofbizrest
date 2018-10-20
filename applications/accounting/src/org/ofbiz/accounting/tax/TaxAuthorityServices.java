@@ -20,6 +20,7 @@ package org.ofbiz.accounting.tax;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -82,8 +83,8 @@ public class TaxAuthorityServices {
         if (shippingPrice != null) priceWithTax = priceWithTax.add(shippingPrice);
 
         try {
-            GenericValue product = delegator.findOne("Product", UtilMisc.toMap("productId", productId), true);
-            GenericValue productStore = delegator.findOne("ProductStore", UtilMisc.toMap("productStoreId", productStoreId), true);
+            GenericValue product = delegator.findByPrimaryKeyCache("Product", UtilMisc.toMap("productId", productId));
+            GenericValue productStore = delegator.findByPrimaryKeyCache("ProductStore", UtilMisc.toMap("productStoreId", productStoreId));
             if (productStore == null) {
                 throw new IllegalArgumentException("Could not find ProductStore with ID [" + productStoreId + "] for tax calculation");
             }
@@ -94,7 +95,7 @@ public class TaxAuthorityServices {
                     List<GenericValue> taxAuthorityRawList = delegator.findList("TaxAuthority", EntityCondition.makeCondition("taxAuthGeoId", EntityOperator.EQUALS, productStore.get("vatTaxAuthGeoId")), null, null, null, true);
                     taxAuthoritySet.addAll(taxAuthorityRawList);
                 } else {
-                    GenericValue taxAuthority = delegator.findOne("TaxAuthority", UtilMisc.toMap("taxAuthGeoId", productStore.get("vatTaxAuthGeoId"), "taxAuthPartyId", productStore.get("vatTaxAuthPartyId")), true);
+                    GenericValue taxAuthority = delegator.findByPrimaryKeyCache("TaxAuthority", UtilMisc.toMap("taxAuthGeoId", productStore.get("vatTaxAuthGeoId"), "taxAuthPartyId", productStore.get("vatTaxAuthPartyId")));
                     taxAuthoritySet.add(taxAuthority);
                 }
 
@@ -154,10 +155,10 @@ public class TaxAuthorityServices {
         GenericValue facility = null;
         try {
             if (productStoreId != null) {
-                productStore = delegator.findOne("ProductStore", UtilMisc.toMap("productStoreId", productStoreId), false);
+                productStore = delegator.findByPrimaryKey("ProductStore", UtilMisc.toMap("productStoreId", productStoreId));
             }
             if (facilityId != null) {
-                facility = delegator.findOne("Facility", UtilMisc.toMap("facilityId", facilityId), false);
+                facility = delegator.findByPrimaryKey("Facility", UtilMisc.toMap("facilityId", facilityId));
             }
         } catch (GenericEntityException e) {
             Debug.logError(e, "Data error getting tax settings: " + e.toString(), module);
@@ -173,8 +174,8 @@ public class TaxAuthorityServices {
             try {
                 GenericValue facilityContactMech = ContactMechWorker.getFacilityContactMechByPurpose(delegator, facilityId, UtilMisc.toList("SHIP_ORIG_LOCATION", "PRIMARY_LOCATION"));
                 if (facilityContactMech != null) {
-                    shippingAddress = delegator.findOne("PostalAddress",
-                            UtilMisc.toMap("contactMechId", facilityContactMech.getString("contactMechId")), false);
+                    shippingAddress = delegator.findByPrimaryKey("PostalAddress",
+                            UtilMisc.toMap("contactMechId", facilityContactMech.getString("contactMechId")));
                 }
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Data error getting tax settings: " + e.toString(), module);
@@ -415,7 +416,7 @@ public class TaxAuthorityServices {
                 String taxAuthPartyId = taxAuthorityRateProduct.getString("taxAuthPartyId");
 
                 // get glAccountId from TaxAuthorityGlAccount entity using the payToPartyId as the organizationPartyId
-                GenericValue taxAuthorityGlAccount = delegator.findOne("TaxAuthorityGlAccount", UtilMisc.toMap("taxAuthPartyId", taxAuthPartyId, "taxAuthGeoId", taxAuthGeoId, "organizationPartyId", payToPartyId), false);
+                GenericValue taxAuthorityGlAccount = delegator.findByPrimaryKey("TaxAuthorityGlAccount", UtilMisc.toMap("taxAuthPartyId", taxAuthPartyId, "taxAuthGeoId", taxAuthGeoId, "organizationPartyId", payToPartyId));
                 String taxAuthGlAccountId = null;
                 if (taxAuthorityGlAccount != null) {
                     taxAuthGlAccountId = taxAuthorityGlAccount.getString("glAccountId");
@@ -429,7 +430,7 @@ public class TaxAuthorityServices {
                     Map<String, String> priceFindMap = UtilMisc.toMap("productId", product.getString("productId"), 
                             "taxAuthPartyId", taxAuthPartyId, "taxAuthGeoId", taxAuthGeoId, 
                             "productPricePurposeId", "PURCHASE");
-                    List<GenericValue> productPriceList = delegator.findByAnd("ProductPrice", priceFindMap, UtilMisc.toList("-fromDate"), false);
+                    List<GenericValue> productPriceList = delegator.findByAnd("ProductPrice", priceFindMap, UtilMisc.toList("-fromDate"));
                     productPriceList = EntityUtil.filterByDate(productPriceList, true);
                     productPrice = (productPriceList != null && productPriceList.size() > 0) ? productPriceList.get(0): null;
                     //Debug.logInfo("=================== productId=" + product.getString("productId"), module);
@@ -468,7 +469,7 @@ public class TaxAuthorityServices {
                     // look for PartyRelationship with partyRelationshipTypeId=GROUP_ROLLUP, the partyIdTo is the group member, so the partyIdFrom is the groupPartyId
                     Set<String> billToPartyIdSet = FastSet.newInstance();
                     billToPartyIdSet.add(billToPartyId);
-                    List<GenericValue> partyRelationshipList = EntityUtil.filterByDate(delegator.findByAnd("PartyRelationship", UtilMisc.toMap("partyIdTo", billToPartyId, "partyRelationshipTypeId", "GROUP_ROLLUP"), null, true), true);
+                    List<GenericValue> partyRelationshipList = EntityUtil.filterByDate(delegator.findByAndCache("PartyRelationship", UtilMisc.toMap("partyIdTo", billToPartyId, "partyRelationshipTypeId", "GROUP_ROLLUP")), true);
                     for(GenericValue partyRelationship : partyRelationshipList) {
                         billToPartyIdSet.add(partyRelationship.getString("partyIdFrom"));
                     }
@@ -559,9 +560,9 @@ public class TaxAuthorityServices {
         // if no exceptions were found for the current; try the parent
         if (!foundExemption) {
             // try the "parent" TaxAuthority
-            List<GenericValue> taxAuthorityAssocList = delegator.findByAnd("TaxAuthorityAssoc",
+            List<GenericValue> taxAuthorityAssocList = delegator.findByAndCache("TaxAuthorityAssoc",
                     UtilMisc.toMap("toTaxAuthGeoId", taxAuthGeoId, "toTaxAuthPartyId", taxAuthPartyId, "taxAuthorityAssocTypeId", "EXEMPT_INHER"),
-                    UtilMisc.toList("-fromDate"), true);
+                    UtilMisc.toList("-fromDate"));
             taxAuthorityAssocList = EntityUtil.filterByDate(taxAuthorityAssocList, true);
             GenericValue taxAuthorityAssoc = EntityUtil.getFirst(taxAuthorityAssocList);
             // Debug.logInfo("Parent assoc to " + taxAuthGeoId + " : " + taxAuthorityAssoc, module);

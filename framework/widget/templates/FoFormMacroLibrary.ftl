@@ -33,10 +33,8 @@ under the License.
         "h2":"font-weight=\"bold\"",
         "h3":"font-weight=\"bold\" font-style=\"italic\"",
         "error":"color=\"red\""}/>
-    <#list style?split(' ') as styleItem>
-        <#assign foStyle = foStyles[styleItem]?default("")/>
-        ${foStyle?default("")}
-    </#list>
+    <#assign foStyle = foStyles[style]?default("")/>
+    ${foStyle?default("")}
 </#macro>
 
 <#escape x as x?xml>
@@ -135,7 +133,7 @@ under the License.
 <#macro renderFieldGroupClose style id title></#macro>
 
 <#macro renderHyperlinkTitle name title showSelectAll="N"></#macro>
-<#macro renderSortField style title linkUrl ajaxEnabled tooltip=""><@renderFieldTitle style title /></#macro>
+<#macro renderSortField style title linkUrl ajaxEnabled><@renderFieldTitle style title /></#macro>
 <#macro formatBoundaryComment boundaryType widgetType widgetName></#macro>
 <#macro makeHiddenFormLinkAnchor linkStyle hiddenFormName event action imgSrc description><@renderField description /></#macro>
 <#macro makeHyperlinkString linkStyle hiddenFormName event action imgSrc title alternate linkUrl targetWindow description confirmation><@makeBlock linkStyle description /></#macro>

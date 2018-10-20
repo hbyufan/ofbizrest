@@ -62,7 +62,7 @@ public class FinAccountProductServices {
         // the order header for store info
         GenericValue orderHeader;
         try {
-            orderHeader = orderItem.getRelatedOne("OrderHeader", false);
+            orderHeader = orderItem.getRelatedOne("OrderHeader");
         } catch (GenericEntityException e) {
             Debug.logError(e, "Unable to get OrderHeader from OrderItem", module);
             return ServiceUtil.returnError(UtilProperties.getMessage(resourceOrderError, 
@@ -73,7 +73,7 @@ public class FinAccountProductServices {
         GenericValue featureAndAppl;
         try {
             List<GenericValue> featureAndAppls = delegator.findByAnd("ProductFeatureAndAppl", UtilMisc.toMap("productId", productId,
-                    "productFeatureTypeId", "TYPE", "productFeatureApplTypeId", "STANDARD_FEATURE"), null, false);
+                    "productFeatureTypeId", "TYPE", "productFeatureApplTypeId", "STANDARD_FEATURE"));
             featureAndAppls = EntityUtil.filterByDate(featureAndAppls);
             featureAndAppl = EntityUtil.getFirst(featureAndAppls);
         } catch (GenericEntityException e) {
@@ -96,7 +96,7 @@ public class FinAccountProductServices {
         // locate the financial account type
         GenericValue finAccountType;
         try {
-            finAccountType = delegator.findOne("FinAccountType", UtilMisc.toMap("finAccountTypeId", finAccountTypeId), false);
+            finAccountType = delegator.findByPrimaryKey("FinAccountType", UtilMisc.toMap("finAccountTypeId", finAccountTypeId));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
             return ServiceUtil.returnError(e.getMessage());
@@ -152,7 +152,7 @@ public class FinAccountProductServices {
 
         if (billToParty != null) {
             try {
-                party = billToParty.getRelatedOne("Party", false);
+                party = billToParty.getRelatedOne("Party");
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }

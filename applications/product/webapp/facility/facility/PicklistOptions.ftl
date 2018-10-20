@@ -38,8 +38,6 @@ under the License.
       <tr><td>&nbsp;</td></tr>
     </table>
     <div align ='right'>
-      <span class="label">${uiLabelMap.FacilityGroupFirst}</span>
-      <input type="text" size="4" name="maxNumberOfOrders" value="50"/>
       <input type="submit" value="Submit" class="buttontext" align='right'/>
     </div>
   </form>
@@ -270,19 +268,19 @@ under the License.
         <#list toPickList as toPick>
           <#assign oiasgal = toPick.orderItemShipGrpInvResList>
           <#assign header = toPick.orderHeader>
-          <#assign channel = header.getRelatedOne("SalesChannelEnumeration", false)?if_exists>
+          <#assign channel = header.getRelatedOne("SalesChannelEnumeration")?if_exists>
           <#list oiasgal as oiasga>
-            <#assign orderProduct = oiasga.getRelatedOne("OrderItem", false).getRelatedOne("Product", false)?if_exists>
-            <#assign product = oiasga.getRelatedOne("InventoryItem", false).getRelatedOne("Product", false)?if_exists>
+            <#assign orderProduct = oiasga.getRelatedOne("OrderItem").getRelatedOne("Product")?if_exists>
+            <#assign product = oiasga.getRelatedOne("InventoryItem").getRelatedOne("Product")?if_exists>
             <tr valign="middle"<#if alt_row> class="alternate-row"</#if>>
-              <td><a href="/ordermgr/control/orderview?orderId=${oiasga.orderId}${StringUtil.wrapString(externalKeyParam)}" class="buttontext" target="_blank">${oiasga.orderId}</a></td>
+              <td><a href="/ordermgr/control/orderview?orderId=${oiasga.orderId}${externalKeyParam}" class="buttontext" target="_blank">${oiasga.orderId}</a></td>
               <td>${header.orderDate?string}</td>
               <td>${(channel.description)?if_exists}</td>
               <td>${oiasga.orderItemSeqId}</td>
               <td>
-                <a href="/catalog/control/EditProduct?productId=${orderProduct.productId?if_exists}${StringUtil.wrapString(externalKeyParam)}" class="buttontext" target="_blank">${(orderProduct.internalName)?if_exists}</a>
+                <a href="/catalog/control/EditProduct?productId=${orderProduct.productId?if_exists}${externalKeyParam}" class="buttontext" target="_blank">${(orderProduct.internalName)?if_exists}</a>
                 <#if orderProduct.productId != product.productId>
-                  &nbsp;[<a href="/catalog/control/EditProduct?productId=${product.productId?if_exists}${StringUtil.wrapString(externalKeyParam)}" class="buttontext" target="_blank">${(product.internalName)?if_exists}</a>]
+                  &nbsp;[<a href="/catalog/control/EditProduct?productId=${product.productId?if_exists}${externalKeyParam}" class="buttontext" target="_blank">${(product.internalName)?if_exists}</a>]
                 </#if>
               </td>
               <td>${oiasga.shipGroupSeqId}</td>

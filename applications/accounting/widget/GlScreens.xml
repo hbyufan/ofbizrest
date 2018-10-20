@@ -242,7 +242,7 @@ under the License.
                                         <parameter param-name="thruDate" from-field="parameters.thruDate"/>
                                         <parameter param-name="paymentId" from-field="parameters.paymentId"/>
                                     </link>
-                                    <link text="${uiLabelMap.AccountingExportAsPdf}" style="buttontext" target="AcctgTransEntriesSearchResultsPdf.pdf" target-window="_BLANK">
+                                    <link text="${uiLabelMap.AccountingExportAsPdf}" style="buttontext" target="AcctgTransEntriesSearchResultsPDF.pdf" target-window="_BLANK">
                                         <parameter param-name="organizationPartyId"/>
                                         <parameter param-name="productId" from-field="parameters.productId"/>
                                         <parameter param-name="isPosted" from-field="parameters.isPosted"/>
@@ -445,12 +445,7 @@ under the License.
                 <decorator-screen name="CommonAdminChecksDecorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="checks-body">
                         <section>
-                        <condition>
-                            <or>
-                                <if-has-permission permission="ACCOUNTING" action="_UPDATE"/>
-                                <if-has-permission permission="PAY_INFO" action="_UPDATE"/>
-                            </or>
-                        </condition>
+                        <condition><if-has-permission permission="PAY_INFO" action="_UPDATE"/></condition>
                         <widgets>
                             <screenlet title="${uiLabelMap.AccountingSendChecks}">
                                 <include-form name="ListChecksToSend" location="component://accounting/widget/PaymentForms.xml"/>

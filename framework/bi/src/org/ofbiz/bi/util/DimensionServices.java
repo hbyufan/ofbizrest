@@ -48,7 +48,7 @@ public class DimensionServices {
         GenericValue lastDimensionValue = null;
         try {
             // TODO: improve performance
-            lastDimensionValue = EntityUtil.getFirst(delegator.findByAnd(dimensionEntityName, UtilMisc.toMap(naturalKeyFields), UtilMisc.toList("-createdTxStamp"), false));
+            lastDimensionValue = EntityUtil.getFirst(delegator.findByAnd(dimensionEntityName, naturalKeyFields, UtilMisc.toList("-createdTxStamp")));
         } catch (GenericEntityException gee) {
             return ServiceUtil.returnError(gee.getMessage());
         }
@@ -75,7 +75,7 @@ public class DimensionServices {
             }
             List<GenericValue> existingDimensionValues = null;
             try {
-                existingDimensionValues = delegator.findByAnd(dimensionValue.getEntityName(), UtilMisc.toMap(andCondition), null, false);
+                existingDimensionValues = delegator.findByAnd(dimensionValue.getEntityName(), andCondition);
             } catch (GenericEntityException gee) {
                 return ServiceUtil.returnError(gee.getMessage());
             }

@@ -40,13 +40,12 @@ under the License.
                 <fo:table-body>
                     <#assign rowColor = "white">
                     <#assign totalQuoteAmount = 0.0>
-                    <#if quoteItems?has_content>
                     <#list quoteItems as quoteItem>
                         <#if quoteItem.productId?exists>
-                            <#assign product = quoteItem.getRelatedOne("Product", false)>
+                            <#assign product = quoteItem.getRelatedOne("Product")>
                         </#if>
                         <#assign quoteItemAmount = quoteItem.quoteUnitPrice?default(0) * quoteItem.quantity?default(0)>
-                        <#assign quoteItemAdjustments = quoteItem.getRelated("QuoteAdjustment", null, null, false)>
+                        <#assign quoteItemAdjustments = quoteItem.getRelated("QuoteAdjustment")>
                         <#assign totalQuoteItemAdjustmentAmount = 0.0>
                         <#list quoteItemAdjustments as quoteItemAdjustment>
                             <#assign totalQuoteItemAdjustmentAmount = quoteItemAdjustment.amount?default(0) + totalQuoteItemAdjustmentAmount>
@@ -79,7 +78,7 @@ under the License.
 
                         </fo:table-row>
                         <#list quoteItemAdjustments as quoteItemAdjustment>
-                            <#assign adjustmentType = quoteItemAdjustment.getRelatedOne("OrderAdjustmentType", false)>
+                            <#assign adjustmentType = quoteItemAdjustment.getRelatedOne("OrderAdjustmentType")>
                             <fo:table-row>
                                 <fo:table-cell padding="2pt" background-color="${rowColor}">
                                 </fo:table-cell>
@@ -106,13 +105,6 @@ under the License.
                             <#assign rowColor = "white">
                         </#if>
                     </#list>
-                    <#else>
-                      <fo:table-row>
-                         <fo:table-cell number-columns-spanned="7" padding="2pt" background-color="${rowColor}">
-                             <fo:block>${uiLabelMap.OrderNoItemsQuote}</fo:block>
-                         </fo:table-cell>
-                      </fo:table-row>
-                    </#if>
                 </fo:table-body>
             </fo:table>
 
@@ -134,7 +126,7 @@ under the License.
                         </fo:table-row>
                         <#assign totalQuoteHeaderAdjustmentAmount = 0.0>
                         <#list quoteAdjustments as quoteAdjustment>
-                            <#assign adjustmentType = quoteAdjustment.getRelatedOne("OrderAdjustmentType", false)>
+                            <#assign adjustmentType = quoteAdjustment.getRelatedOne("OrderAdjustmentType")>
                             <#if !quoteAdjustment.quoteItemSeqId?exists>
                                 <#assign totalQuoteHeaderAdjustmentAmount = quoteAdjustment.amount?default(0) + totalQuoteHeaderAdjustmentAmount>
                                 <fo:table-row>

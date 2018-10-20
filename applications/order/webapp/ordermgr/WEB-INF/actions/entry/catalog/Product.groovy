@@ -42,15 +42,15 @@ metaKeywords = null;
 
 // get the product entity
 if (productId) {
-    product = delegator.findOne("Product", [productId : productId], true);
+    product = delegator.findByPrimaryKeyCache("Product", [productId : productId]);
     if (product) {
         // first make sure this isn't a virtual-variant that has an associated virtual product, if it does show that instead of the variant
         if("Y".equals(product.isVirtual) && "Y".equals(product.isVariant)){
-            virtualVariantProductAssocs = delegator.findByAnd("ProductAssoc", ["productId": productId, "productAssocTypeId": "ALTERNATIVE_PACKAGE"], ["-fromDate"], true);
+            virtualVariantProductAssocs = delegator.findByAndCache("ProductAssoc", ["productId": productId, "productAssocTypeId": "ALTERNATIVE_PACKAGE"], ["-fromDate"]);
             virtualVariantProductAssocs = EntityUtil.filterByDate(virtualVariantProductAssocs);
             if (virtualVariantProductAssocs) {
                 productAssoc = EntityUtil.getFirst(virtualVariantProductAssocs);
-                product = productAssoc.getRelatedOne("AssocProduct", true);
+                product = productAssoc.getRelatedOneCache("AssocProduct");
             }
         }
     }
@@ -59,20 +59,20 @@ if (productId) {
     virtualProductId = ProductWorker.getVariantVirtualId(product);
     if (virtualProductId) {
         productId = virtualProductId;
-        product = delegator.findOne("Product", [productId : productId], true);
+        product = delegator.findByPrimaryKeyCache("Product", [productId : productId]);
     }
 
-    productPageTitle = delegator.findByAnd("ProductContentAndInfo", [productId : productId, productContentTypeId : "PAGE_TITLE"], null, true);
+    productPageTitle = delegator.findByAndCache("ProductContentAndInfo", [productId : productId, productContentTypeId : "PAGE_TITLE"]);
     if (productPageTitle) {
-        pageTitle = delegator.findOne("ElectronicText", [dataResourceId : productPageTitle.get(0).dataResourceId], true);
+        pageTitle = delegator.findByPrimaryKeyCache("ElectronicText", [dataResourceId : productPageTitle.get(0).dataResourceId]);
     }
-    productMetaDescription = delegator.findByAnd("ProductContentAndInfo", [productId : productId, productContentTypeId : "META_DESCRIPTION"], null, true);
+    productMetaDescription = delegator.findByAndCache("ProductContentAndInfo", [productId : productId, productContentTypeId : "META_DESCRIPTION"]);
     if (productMetaDescription) {
-        metaDescription = delegator.findOne("ElectronicText", [dataResourceId : productMetaDescription.get(0).dataResourceId], true);
+        metaDescription = delegator.findByPrimaryKeyCache("ElectronicText", [dataResourceId : productMetaDescription.get(0).dataResourceId]);
     }
-    productMetaKeywords = delegator.findByAnd("ProductContentAndInfo", [productId : productId, productContentTypeId : "META_KEYWORD"], null, true);
+    productMetaKeywords = delegator.findByAndCache("ProductContentAndInfo", [productId : productId, productContentTypeId : "META_KEYWORD"]);
     if (productMetaKeywords) {
-        metaKeywords = delegator.findOne("ElectronicText", [dataResourceId : productMetaKeywords.get(0).dataResourceId], true);
+        metaKeywords = delegator.findByPrimaryKeyCache("ElectronicText", [dataResourceId : productMetaKeywords.get(0).dataResourceId]);
     }
 
     context.productId = productId;
@@ -110,9 +110,9 @@ if (productId) {
             keywords = [];
             keywords.add(contentWrapper.get("PRODUCT_NAME"));
             keywords.add(catalogName);
-            members = delegator.findByAnd("ProductCategoryMember", [productId : productId], null, true);
+            members = delegator.findByAndCache("ProductCategoryMember", [productId : productId]);
             members.each { member ->
-                category = member.getRelatedOne("ProductCategory", true);
+                category = member.getRelatedOneCache("ProductCategory");
                 if (category.description) {
                     categoryContentWrapper = new CategoryContentWrapper(category, request);
                     categoryDescription = categoryContentWrapper.DESCRIPTION;

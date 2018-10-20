@@ -30,12 +30,12 @@ if (!shipment) {
 }
 
 // get the packages related to this shipment in order of packages
-shipmentPackages = shipment.getRelated("ShipmentPackage", null, ['shipmentPackageSeqId'], false);
+shipmentPackages = shipment.getRelated("ShipmentPackage", ['shipmentPackageSeqId']);
 
 // first we scan the shipment items and count the quantity of each product that is being shipped
 quantityShippedByProduct = [:];
 quantityInShipmentByProduct = [:];
-shipmentItems = shipment.getRelated("ShipmentItem", null, null, false);
+shipmentItems = shipment.getRelated("ShipmentItem");
 shipmentItems.each { shipmentItem ->
     productId = shipmentItem.productId;
     shipped = quantityShippedByProduct.get(productId);
@@ -60,7 +60,7 @@ previousShipmentIter = delegator.find("Shipment",
 
 while (previousShipmentItem = previousShipmentIter.next()) {
     if (!previousShipmentItem.shipmentId.equals(shipment.shipmentId)) {
-        previousShipmentItems = previousShipmentItem.getRelated("ShipmentItem", null, null, false);
+        previousShipmentItems = previousShipmentItem.getRelated("ShipmentItem");
         previousShipmentItems.each { shipmentItem ->
             productId = shipmentItem.productId;
             shipped = quantityShippedByProduct.get(productId);
@@ -77,10 +77,10 @@ previousShipmentIter.close();
 // next scan the order items (via issuances) to count the quantity of each product requested
 quantityRequestedByProduct = [:];
 countedOrderItems = [:]; // this map is only used to keep track of the order items already counted
-order = shipment.getRelatedOne("PrimaryOrderHeader", false);
-issuances = order.getRelated("ItemIssuance", null, null, false);
+order = shipment.getRelatedOne("PrimaryOrderHeader");
+issuances = order.getRelated("ItemIssuance");
 issuances.each { issuance ->
-    orderItem = issuance.getRelatedOne("OrderItem", false);
+    orderItem = issuance.getRelatedOne("OrderItem");
     productId = orderItem.productId;
     if (!countedOrderItems.containsKey(orderItem.orderId + orderItem.orderItemSeqId)) {
         countedOrderItems.put(orderItem.orderId + orderItem.orderItemSeqId, null);
@@ -98,13 +98,13 @@ issuances.each { issuance ->
 // for each package, we want to list the quantities and details of each product
 packages = []; // note we assume that the package number is simply the index + 1 of this list
 shipmentPackages.each { shipmentPackage ->
-    contents = shipmentPackage.getRelated("ShipmentPackageContent", null, ['shipmentItemSeqId'], false);
+    contents = shipmentPackage.getRelated("ShipmentPackageContent", ['shipmentItemSeqId']);
 
     // each line is one logical Product and the quantities associated with it
     lines = [];
     contents.each { content ->
-        shipmentItem = content.getRelatedOne("ShipmentItem", false);
-        product = shipmentItem.getRelatedOne("Product", false);
+        shipmentItem = content.getRelatedOne("ShipmentItem");
+        product = shipmentItem.getRelatedOne("Product");
         productTypeId = product.get("productTypeId");
 
         line = [:];

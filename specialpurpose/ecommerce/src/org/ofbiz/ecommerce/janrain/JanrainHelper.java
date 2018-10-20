@@ -173,7 +173,7 @@ public class JanrainHelper {
             }
             post.close();
             Document tagXml = UtilXml.readXmlDocument(buf.toString());
-            Element response = tagXml.getDocumentElement();
+            Element response = (Element) tagXml.getDocumentElement();
             if (!response.getAttribute("stat").equals("ok")) {
                 throw new RuntimeException("Unexpected API error");
             }
@@ -231,7 +231,7 @@ public class JanrainHelper {
             request.setAttribute("userInfoMap", result);
             
             try {
-                GenericValue userLogin = delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", preferredUsername), true);
+                GenericValue userLogin = delegator.findByPrimaryKeyCache("UserLogin", UtilMisc.toMap("userLoginId", preferredUsername));
                 if (UtilValidate.isNotEmpty(userLogin)) {
                     LoginWorker.doBasicLogin(userLogin, request);
                     LoginWorker.autoLoginSet(request, response);

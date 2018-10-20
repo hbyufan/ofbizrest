@@ -28,13 +28,13 @@ if (partyIdFrom && partyIdTo) {
     partyList = [partyIdTo, partyIdFrom];
     partyList.each { partyId ->
         party = delegator.findOne("Party", [partyId : partyId], false);
-        person =  party.getRelatedOne("Person", false);
+        person =  party.getRelatedOne("Person");
         contactDetailMap = [partyId : partyId, firstName : person.firstName, lastName : person.lastName];
 
         generalContactMech = EntityUtil.getFirst(ContactHelper.getContactMech(party, "GENERAL_LOCATION", "POSTAL_ADDRESS", false));
         if (generalContactMech) {
             contactDetailMap.addrContactMechId = generalContactMech.contactMechId;
-            postalAddress = generalContactMech.getRelatedOne("PostalAddress", false);
+            postalAddress = generalContactMech.getRelatedOne("PostalAddress");
             if (postalAddress) {
                 contactDetailMap.address1 = postalAddress.address1;
                 contactDetailMap.city = postalAddress.city;
@@ -57,7 +57,7 @@ if (partyIdFrom && partyIdTo) {
         phoneContactMech = EntityUtil.getFirst(ContactHelper.getContactMech(party, "PRIMARY_PHONE", "TELECOM_NUMBER", false));
         if (phoneContactMech) {
             contactDetailMap.phoneContactMechId = phoneContactMech.contactMechId;
-            telecomNumber = phoneContactMech.getRelatedOne("TelecomNumber", false);
+            telecomNumber = phoneContactMech.getRelatedOne("TelecomNumber");
             if (telecomNumber) {
                 countryCode = telecomNumber.countryCode;
                 if (countryCode) {

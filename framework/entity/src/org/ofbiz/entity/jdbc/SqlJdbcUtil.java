@@ -31,9 +31,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +39,9 @@ import java.util.TreeSet;
 
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
+
+import javolution.util.FastList;
+import javolution.util.FastMap;
 
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.ObjectType;
@@ -56,7 +57,8 @@ import org.ofbiz.entity.condition.EntityCondition;
 import org.ofbiz.entity.condition.EntityConditionParam;
 import org.ofbiz.entity.condition.EntityOperator;
 import org.ofbiz.entity.condition.OrderByList;
-import org.ofbiz.entity.config.model.Datasource;
+import org.ofbiz.entity.config.DatasourceInfo;
+import org.ofbiz.entity.jdbc.JdbcValueHandler;
 import org.ofbiz.entity.model.ModelEntity;
 import org.ofbiz.entity.model.ModelField;
 import org.ofbiz.entity.model.ModelFieldType;
@@ -74,15 +76,15 @@ public class SqlJdbcUtil {
     public static final int CHAR_BUFFER_SIZE = 4096;
 
     /** Makes the FROM clause and when necessary the JOIN clause(s) as well */
-    public static String makeFromClause(ModelEntity modelEntity, ModelFieldTypeReader modelFieldTypeReader, Datasource datasourceInfo) throws GenericEntityException {
+    public static String makeFromClause(ModelEntity modelEntity, ModelFieldTypeReader modelFieldTypeReader, DatasourceInfo datasourceInfo) throws GenericEntityException {
         StringBuilder sql = new StringBuilder(" FROM ");
 
         if (modelEntity instanceof ModelViewEntity) {
             ModelViewEntity modelViewEntity = (ModelViewEntity) modelEntity;
 
-            if ("ansi".equals(datasourceInfo.getJoinStyle()) || "ansi-no-parenthesis".equals(datasourceInfo.getJoinStyle())) {
+            if ("ansi".equals(datasourceInfo.joinStyle) || "ansi-no-parenthesis".equals(datasourceInfo.joinStyle)) {
                 boolean useParenthesis = true;
-                if ("ansi-no-parenthesis".equals(datasourceInfo.getJoinStyle())) {
+                if ("ansi-no-parenthesis".equals(datasourceInfo.joinStyle)) {
                     useParenthesis = false;
                 }
 
@@ -212,7 +214,7 @@ public class SqlJdbcUtil {
                 }
 
 
-            } else if ("theta-oracle".equals(datasourceInfo.getJoinStyle()) || "theta-mssql".equals(datasourceInfo.getJoinStyle())) {
+            } else if ("theta-oracle".equals(datasourceInfo.joinStyle) || "theta-mssql".equals(datasourceInfo.joinStyle)) {
                 // FROM clause
                 Iterator<String> meIter = modelViewEntity.getMemberModelMemberEntities().keySet().iterator();
 
@@ -228,7 +230,7 @@ public class SqlJdbcUtil {
 
                 // JOIN clause(s): none needed, all the work done in the where clause for theta-oracle
             } else {
-                throw new GenericModelException("The join-style " + datasourceInfo.getJoinStyle() + " is not yet supported");
+                throw new GenericModelException("The join-style " + datasourceInfo.joinStyle + " is not yet supported");
             }
         } else {
             sql.append(modelEntity.getTableName(datasourceInfo));
@@ -383,11 +385,11 @@ public class SqlJdbcUtil {
         return "";
     }
 
-    public static String makeOrderByClause(ModelEntity modelEntity, List<String> orderBy, Datasource datasourceInfo) throws GenericModelException {
+    public static String makeOrderByClause(ModelEntity modelEntity, List<String> orderBy, DatasourceInfo datasourceInfo) throws GenericModelException {
         return makeOrderByClause(modelEntity, orderBy, false, datasourceInfo);
     }
 
-    public static String makeOrderByClause(ModelEntity modelEntity, List<String> orderBy, boolean includeTablenamePrefix, Datasource datasourceInfo) throws GenericModelException {
+    public static String makeOrderByClause(ModelEntity modelEntity, List<String> orderBy, boolean includeTablenamePrefix, DatasourceInfo datasourceInfo) throws GenericModelException {
         StringBuilder sql = new StringBuilder("");
         //String fieldPrefix = includeTablenamePrefix ? (modelEntity.getTableName(datasourceInfo) + ".") : "";
 
@@ -401,7 +403,7 @@ public class SqlJdbcUtil {
         return sql.toString();
     }
 
-    public static String makeViewTable(ModelEntity modelEntity, ModelFieldTypeReader modelFieldTypeReader, Datasource datasourceInfo) throws GenericEntityException {
+    public static String makeViewTable(ModelEntity modelEntity, ModelFieldTypeReader modelFieldTypeReader, DatasourceInfo datasourceInfo) throws GenericEntityException {
         if (modelEntity instanceof ModelViewEntity) {
             StringBuilder sql = new StringBuilder("(SELECT ");
             Iterator<ModelField> fieldsIter = modelEntity.getFieldsIterator();
@@ -419,11 +421,11 @@ public class SqlJdbcUtil {
                 }
             }
             sql.append(makeFromClause(modelEntity, modelFieldTypeReader, datasourceInfo));
-            String viewWhereClause = makeViewWhereClause(modelEntity, datasourceInfo.getJoinStyle());
+            String viewWhereClause = makeViewWhereClause(modelEntity, datasourceInfo.joinStyle);
             ModelViewEntity modelViewEntity = (ModelViewEntity)modelEntity;
-            List<EntityCondition> whereConditions = new LinkedList<EntityCondition>();
-            List<EntityCondition> havingConditions = new LinkedList<EntityCondition>();
-            List<String> orderByList = new LinkedList<String>();
+            List<EntityCondition> whereConditions = FastList.newInstance();
+            List<EntityCondition> havingConditions = FastList.newInstance();
+            List<String> orderByList = FastList.newInstance();
 
             modelViewEntity.populateViewEntityConditionInformation(modelFieldTypeReader, whereConditions, havingConditions, orderByList, null);
             String viewConditionClause;
@@ -895,7 +897,7 @@ public class SqlJdbcUtil {
         }
     }
 
-    protected static Map<String, Integer> fieldTypeMap = new HashMap<String, Integer>();
+    protected static Map<String, Integer> fieldTypeMap = FastMap.newInstance();
     static {
         fieldTypeMap.put("java.lang.String", 1);
         fieldTypeMap.put("String", 1);

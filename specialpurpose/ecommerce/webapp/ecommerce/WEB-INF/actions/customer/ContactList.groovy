@@ -28,7 +28,7 @@ import org.ofbiz.product.store.ProductStoreWorker;
 import org.ofbiz.webapp.website.WebSiteWorker;
 import org.ofbiz.accounting.payment.PaymentWorker;
 
-/*publicEmailContactLists = delegator.findByAnd("ContactList", [isPublic : "Y", contactMechTypeId : "EMAIL_ADDRESS"], ["contactListName"], false);
+/*publicEmailContactLists = delegator.findByAnd("ContactList", [isPublic : "Y", contactMechTypeId : "EMAIL_ADDRESS"], ["contactListName"]);
 context.publicEmailContactLists = publicEmailContactLists;*/
 
 webSiteId = WebSiteWorker.getWebSiteId(request);
@@ -44,8 +44,8 @@ webSiteContactList = delegator.findList("WebSiteContactList", topCond, null, nul
 
 publicEmailContactLists = [];
 webSiteContactList.each { webSiteContactList ->
-    contactList = webSiteContactList.getRelatedOne("ContactList", false);
-    contactListType = contactList.getRelatedOne("ContactListType", false);
+    contactList = webSiteContactList.getRelatedOne("ContactList");
+    contactListType = contactList.getRelatedOne("ContactListType");
     temp = [:];
     temp.contactList = contactList;
     temp.contactListType = contactListType;
@@ -54,7 +54,7 @@ webSiteContactList.each { webSiteContactList ->
 context.publicEmailContactLists = publicEmailContactLists;
 
 if (userLogin) {
-    partyAndContactMechList = delegator.findByAnd("PartyAndContactMech", [partyId : partyId, contactMechTypeId : "EMAIL_ADDRESS"], ["-fromDate"], false);
+    partyAndContactMechList = delegator.findByAnd("PartyAndContactMech", [partyId : partyId, contactMechTypeId : "EMAIL_ADDRESS"], ["-fromDate"]);
     partyAndContactMechList = EntityUtil.filterByDate(partyAndContactMechList);
     context.partyAndContactMechList = partyAndContactMechList;
 }

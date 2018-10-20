@@ -38,7 +38,6 @@ import org.ofbiz.base.util.UtilHttp;
 import org.ofbiz.base.util.UtilJ2eeCompat;
 import org.ofbiz.base.util.UtilTimer;
 import org.ofbiz.base.util.UtilValidate;
-import org.ofbiz.base.util.template.FreeMarkerWorker;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.DelegatorFactory;
 import org.ofbiz.entity.GenericDelegator;
@@ -46,10 +45,12 @@ import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.transaction.GenericTransactionException;
 import org.ofbiz.entity.transaction.TransactionUtil;
 import org.ofbiz.security.Security;
+import org.ofbiz.security.authz.Authorization;
 import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.webapp.stats.ServerHitBin;
 import org.ofbiz.webapp.stats.VisitHandler;
 
+import freemarker.ext.beans.BeansWrapper;
 import freemarker.ext.servlet.ServletContextHashModel;
 
 /**
@@ -99,12 +100,19 @@ public class ControlServlet extends HttpServlet {
         RequestHandler requestHandler = this.getRequestHandler();
         HttpSession session = request.getSession();
 
-        // setup DEFAULT character encoding and content type, this will be overridden in the RequestHandler for view rendering
-        String charset = request.getCharacterEncoding();
+        // setup DEFAULT chararcter encoding and content type, this will be overridden in the RequestHandler for view rendering
+        String charset = getServletContext().getInitParameter("charset");
+        if (UtilValidate.isEmpty(charset)) charset = request.getCharacterEncoding();
+        if (UtilValidate.isEmpty(charset)) charset = "UTF-8";
+        if (Debug.verboseOn()) Debug.logVerbose("The character encoding of the request is: [" + request.getCharacterEncoding() + "]. The character encoding we will use for the request and response is: [" + charset + "]", module);
+
+        if (!"none".equals(charset)) {
+            request.setCharacterEncoding(charset);
+        }
 
         // setup content type
         String contentType = "text/html";
-        if (UtilValidate.isNotEmpty(charset) && !"none".equals(charset)) {
+        if (charset.length() > 0 && !"none".equals(charset)) {
             response.setContentType(contentType + "; charset=" + charset);
             response.setCharacterEncoding(charset);
         } else {
@@ -173,6 +181,15 @@ public class ControlServlet extends HttpServlet {
         }
         request.setAttribute("dispatcher", dispatcher);
 
+        Authorization authz = (Authorization) session.getAttribute("authz");
+        if (authz == null) {
+            authz = (Authorization) getServletContext().getAttribute("authz");
+        }
+        if (authz == null) {
+            Debug.logError("[ControlServlet] ERROR: authorization not found in ServletContext", module);
+        }
+        request.setAttribute("authz", authz); // maybe we should also add the value to 'security'
+
         Security security = (Security) session.getAttribute("security");
         if (security == null) {
             security = (Security) getServletContext().getAttribute("security");
@@ -184,7 +201,7 @@ public class ControlServlet extends HttpServlet {
 
         request.setAttribute("_REQUEST_HANDLER_", requestHandler);
         
-        ServletContextHashModel ftlServletContext = new ServletContextHashModel(this, FreeMarkerWorker.getDefaultOfbizWrapper());
+        ServletContextHashModel ftlServletContext = new ServletContextHashModel(this, BeansWrapper.getDefaultInstance());
         request.setAttribute("ftlServletContext", ftlServletContext);
 
         // setup some things that should always be there
@@ -222,9 +239,6 @@ public class ControlServlet extends HttpServlet {
                 request.setAttribute("_ERROR_MESSAGE_", encoder.encode(throwable.toString()));
                 errorPage = requestHandler.getDefaultErrorPage(request);
             }
-         } catch (RequestHandlerExceptionAllowExternalRequests e) {
-              errorPage = requestHandler.getDefaultErrorPage(request);
-              Debug.logInfo("Going to external page: " + request.getPathInfo(), module);
         } catch (Exception e) {
             Debug.logError(e, "Error in request handler: ", module);
             StringUtil.HtmlEncoder encoder = new StringUtil.HtmlEncoder();

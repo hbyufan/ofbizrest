@@ -26,10 +26,10 @@ orderContentTypeId = request.getParameter("orderContentTypeId");
 
 order = null;
 if (orderId && !orderItemSeqId) {
-    order = delegator.findOne("OrderHeader", [orderId : orderId], false);
+    order = delegator.findByPrimaryKey("OrderHeader", [orderId : orderId]);
 }
 if (orderId && orderItemSeqId) {
-    order = delegator.findOne("OrderItem", [orderId : orderId, orderItemSeqId : orderItemSeqId], false);
+    order = delegator.findByPrimaryKey("OrderItem", [orderId : orderId, orderItemSeqId : orderItemSeqId]);
 }
 
 wrapper = OrderContentWrapper.makeOrderContentWrapper(order, request);

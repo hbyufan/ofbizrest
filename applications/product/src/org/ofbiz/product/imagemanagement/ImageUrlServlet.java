@@ -102,7 +102,7 @@ public class ImageUrlServlet extends HttpServlet {
         if (content != null) {
             GenericValue dataResource = null;
             try {
-                dataResource = content.getRelatedOne("DataResource", false);
+                dataResource = content.getRelatedOne("DataResource");
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }

@@ -73,7 +73,7 @@ taxAmount = OrderReadHelper.getOrderTaxByTaxAuthGeoAndParty(orderAdjustments).ta
 context.orderTaxTotal = taxAmount;
 
 // get all the possible gift wrap options
-allgiftWraps = delegator.findByAnd("ProductFeature", [productFeatureTypeId : "GIFT_WRAP"], ["defaultSequenceNum"], false);
+allgiftWraps = delegator.findByAnd("ProductFeature", [productFeatureTypeId : "GIFT_WRAP"], ["defaultSequenceNum"]);
 context.allgiftWraps = allgiftWraps;
 
 context.contentPathPrefix = CatalogWorker.getContentPathPrefix(request);
@@ -102,12 +102,12 @@ context.defaultComment = defaultComment;
 
 // get all party shopping lists
 if (partyId) {
-  shoppingLists = delegator.findByAnd("ShoppingList", [partyId : partyId], null, false);
+  shoppingLists = delegator.findByAnd("ShoppingList", [partyId : partyId]);
   context.shoppingLists = shoppingLists;
 }
 
 // get product inventory summary for each shopping cart item
-productStore = delegator.findOne("ProductStore", [productStoreId : productStoreId], true);
+productStore = delegator.findByPrimaryKeyCache("ProductStore", [productStoreId : productStoreId]);
 context.productStore = productStore
 productStoreFacilityId = null;
 if (productStore) {
@@ -121,5 +121,5 @@ context.mktgPkgATPMap = inventorySummary.mktgPkgATPMap;
 context.mktgPkgQOHMap = inventorySummary.mktgPkgQOHMap;
 
 // get purchase order item types
-purchaseOrderItemTypeList = delegator.findByAnd("OrderItemType", [parentTypeId : "PURCHASE_SPECIFIC"], null, true);
+purchaseOrderItemTypeList = delegator.findByAndCache("OrderItemType", [parentTypeId : "PURCHASE_SPECIFIC"]);
 context.purchaseOrderItemTypeList = purchaseOrderItemTypeList;

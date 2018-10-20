@@ -8,14 +8,13 @@
 		minuteText: 'Minute',
 		secondText: 'Sekunde',
 		millisecText: 'Millisekunde',
-		microsecText: 'Mikrosekunde',
 		timezoneText: 'Zeitzone',
 		currentText: 'Jetzt',
 		closeText: 'Fertig',
-		timeFormat: 'HH:mm',
+		timeFormat: 'hh:mm tt',
 		amNames: ['vorm.', 'AM', 'A'],
 		pmNames: ['nachm.', 'PM', 'P'],
-		isRTL: false
+		ampm: false
 	};
 	$.timepicker.setDefaults($.timepicker.regional['de']);
 })(jQuery);

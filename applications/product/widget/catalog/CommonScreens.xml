@@ -41,7 +41,7 @@ under the License.
                 <set field="applicationMenuName" value="CatalogAppBar" global="true"/>
                 <set field="applicationMenuLocation" value="component://product/widget/catalog/CatalogMenus.xml" global="true"/>
                 <set field="applicationTitle" value="${uiLabelMap.ProductCatalogManagerApplication}" global="true"/>
-                <set field="layoutSettings.javaScripts[+0]" value="/images/jquery/ui/js/jquery.cookie-1.4.0.js" global="true"/>
+                <set field="layoutSettings.javaScripts[+0]" value="/images/jquery/ui/development-bundle/external/jquery.cookie.js" global="true"/>
                 <set field="layoutSettings.javaScripts[+0]" value="/images/jquery/plugins/jsTree/jquery.jstree.js" global="true"/>
             </actions>
             <widgets>
@@ -155,37 +155,6 @@ under the License.
                                         </section>
                                     </fail-widgets>
                                 </section>
-                                <decorator-section-include name="body"/>
-                            </widgets>
-                            <fail-widgets>
-                                <label style="h3">${uiLabelMap.ProductCatalogViewPermissionError}</label>
-                            </fail-widgets>
-                        </section>
-                    </decorator-section>
-                </decorator-screen>
-            </widgets>
-        </section>
-    </screen>
-
-    <screen name="CommonProductStoreGroupDecorator">
-        <section>
-            <widgets>
-                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
-                    <decorator-section name="left-column">
-                        <include-screen name="ProductStoreGroupTree"/>
-                    </decorator-section>
-                    <decorator-section name="body">
-                        <section>
-                            <condition>
-                                <or>
-                                    <if-has-permission permission="CATALOG" action="_ADMIN"/>
-                                    <if-has-permission permission="CATALOG" action="_CREATE"/>
-                                    <if-has-permission permission="CATALOG" action="_UPDATE"/>
-                                    <if-has-permission permission="CATALOG" action="_VIEW"/>
-                                </or>
-                            </condition>
-                            <widgets>
-                                <include-menu name="ProductStoreGroupButtonBar" location="component://product/widget/catalog/CatalogMenus.xml"/>
                                 <decorator-section-include name="body"/>
                             </widgets>
                             <fail-widgets>
@@ -354,24 +323,7 @@ under the License.
             </widgets>
         </section>
     </screen>
-
-    <screen name="ProductStoreGroupTree">
-        <section>
-            <actions>
-                <entity-one value-field="parentProductStoreGroup" entity-name="ProductStoreGroup"/>
-                <entity-condition entity-name="ProductStoreGroup" list="parentProductStoreGroups">
-                    <condition-expr field-name="primaryParentGroupId" from-field="nullField"/>
-                </entity-condition>
-            </actions>
-            <widgets>
-                <screenlet id="ProductStoreGroupPanel" title="${uiLabelMap.ProductParentProductStoreGroups}" collapsible="true">
-                    <container id="EditDocumentTree"/>
-                    <platform-specific><html><html-template location="component://product/webapp/catalog/store/ProductStoreGroupTree.ftl"/></html></platform-specific>
-                </screenlet>
-            </widgets>
-        </section>
-    </screen>
-
+    
     <screen name="main">
         <section>
             <actions>

@@ -230,7 +230,7 @@ public class DynamicViewEntity {
     }
 
     /**
-     * @deprecated use {@link #addAliasAll(String, String, Collection)}
+     * @deprecated use {@link #addAliasAll(String, String, Collection<String>)}
      */
     @Deprecated
     public void addAliasAll(String entityAlias, String prefix) {
@@ -288,7 +288,7 @@ public class DynamicViewEntity {
     }
 
     public void addRelation(String type, String title, String relEntityName, List<ModelKeyMap> modelKeyMaps) {
-        ModelRelation relation = ModelRelation.create(null, null, type, title, relEntityName, null, modelKeyMaps, false);
+        ModelRelation relation = new ModelRelation(type, title, relEntityName, null, modelKeyMaps);
         this.relations.add(relation);
     }
 

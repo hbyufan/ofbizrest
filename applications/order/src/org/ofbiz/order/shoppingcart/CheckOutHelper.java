@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralException;
@@ -114,7 +115,7 @@ public class CheckOutHelper {
 
         // set the shipping address
         if (UtilValidate.isNotEmpty(shippingContactMechId)) {
-            this.cart.setAllShippingContactMechId(shippingContactMechId);
+            this.cart.setShippingContactMechId(shippingContactMechId);
         } else if (cart.shippingApplies()) {
             // only return an error if shipping is required for this purchase
             errMsg = UtilProperties.getMessage(resource_error,"checkhelper.select_shipping_destination", (cart != null ? cart.getLocale() : Locale.getDefault()));
@@ -165,8 +166,8 @@ public class CheckOutHelper {
                 carrierPartyId = shippingMethod.substring(delimiterPos + 1);
             }
 
-            this.cart.setAllShipmentMethodTypeId(shipmentMethodTypeId);
-            this.cart.setAllCarrierPartyId(carrierPartyId);
+            this.cart.setShipmentMethodTypeId(shipmentMethodTypeId);
+            this.cart.setCarrierPartyId(carrierPartyId);
         } else if (cart.shippingApplies()) {
             // only return an error if shipping is required for this purchase
             errMsg = UtilProperties.getMessage(resource_error,"checkhelper.select_shipping_method", (cart != null ? cart.getLocale() : Locale.getDefault()));
@@ -174,20 +175,20 @@ public class CheckOutHelper {
         }
 
         // set the shipping instructions
-        this.cart.setAllShippingInstructions(shippingInstructions);
+        this.cart.setShippingInstructions(shippingInstructions);
 
         if (UtilValidate.isNotEmpty(maySplit)) {
-            cart.setAllMaySplit(Boolean.valueOf(maySplit));
+            cart.setMaySplit(Boolean.valueOf(maySplit));
         } else {
             errMsg = UtilProperties.getMessage(resource_error,"checkhelper.select_splitting_preference", (cart != null ? cart.getLocale() : Locale.getDefault()));
             errorMessages.add(errMsg);
         }
 
         // set the gift message
-        this.cart.setAllGiftMessage(giftMessage);
+        this.cart.setGiftMessage(giftMessage);
 
         if (UtilValidate.isNotEmpty(isGift)) {
-            cart.setAllIsGift(Boolean.valueOf(isGift));
+            cart.setIsGift(Boolean.valueOf(isGift));
         } else {
             errMsg = UtilProperties.getMessage(resource_error, "checkhelper.specify_if_order_is_gift", (cart != null ? cart.getLocale() : Locale.getDefault()));
             errorMessages.add(errMsg);
@@ -263,7 +264,7 @@ public class CheckOutHelper {
                 cart.setBillingAccount(billingAccountId, (billingAccountAmt != null ? billingAccountAmt: BigDecimal.ZERO));
                 // copy the billing account terms as order terms
                 try {
-                    List<GenericValue> billingAccountTerms = delegator.findByAnd("BillingAccountTerm", UtilMisc.toMap("billingAccountId", billingAccountId), null, false);
+                    List<GenericValue> billingAccountTerms = delegator.findByAnd("BillingAccountTerm", UtilMisc.toMap("billingAccountId", billingAccountId));
                     if (UtilValidate.isNotEmpty(billingAccountTerms)) {
                         for(GenericValue billingAccountTerm : billingAccountTerms) {
                             // the term is not copied if in the cart a term of the same type is already set
@@ -634,9 +635,9 @@ public class CheckOutHelper {
                 try {
                     // do something tricky here: run as the "system" user
                     // that can actually create and run a production run
-                    GenericValue permUserLogin = delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", "system"), true);
+                    GenericValue permUserLogin = delegator.findByPrimaryKeyCache("UserLogin", UtilMisc.toMap("userLoginId", "system"));
                     GenericValue productStore = ProductStoreWorker.getProductStore(productStoreId, delegator);
-                    GenericValue product = delegator.findOne("Product", UtilMisc.toMap("productId", productId), false);
+                    GenericValue product = delegator.findByPrimaryKey("Product", UtilMisc.toMap("productId", productId));
                     if (EntityTypeUtil.hasParentType(delegator, "ProductType", "productTypeId", product.getString("productTypeId"), "parentTypeId", "AGGREGATED")) {
                         org.ofbiz.product.config.ProductConfigWrapper config = this.cart.findCartItem(counter).getConfigWrapper();
                         Map<String, Object> inputMap = new HashMap<String, Object>();
@@ -696,7 +697,7 @@ public class CheckOutHelper {
 
         GenericValue party = null;
         try {
-            party = this.delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
+            party = this.delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logWarning(e, UtilProperties.getMessage(resource_error,"OrderProblemsGettingPartyRecord", cart.getLocale()), module);
         }
@@ -857,8 +858,8 @@ public class CheckOutHelper {
                 GenericValue facilityContactMech = ContactMechWorker.getFacilityContactMechByPurpose(delegator, originFacilityId, UtilMisc.toList("SHIP_ORIG_LOCATION", "PRIMARY_LOCATION"));
                 if (facilityContactMech != null) {
                     try {
-                        shipAddress = delegator.findOne("PostalAddress",
-                                UtilMisc.toMap("contactMechId", facilityContactMech.getString("contactMechId")), false);
+                        shipAddress = delegator.findByPrimaryKey("PostalAddress",
+                                UtilMisc.toMap("contactMechId", facilityContactMech.getString("contactMechId")));
                     } catch (GenericEntityException e) {
                         Debug.logError(e, module);
                     }
@@ -931,7 +932,7 @@ public class CheckOutHelper {
 
         List<GenericValue> allPaymentPreferences = null;
         try {
-            allPaymentPreferences = delegator.findByAnd("OrderPaymentPreference", UtilMisc.toMap("orderId", orderId), null, false);
+            allPaymentPreferences = delegator.findByAnd("OrderPaymentPreference", UtilMisc.toMap("orderId", orderId));
         } catch (GenericEntityException e) {
             throw new GeneralException("Problems getting payment preferences", e);
         }
@@ -1054,7 +1055,7 @@ public class CheckOutHelper {
 
                     // set the order and item status to approved
                     if (autoApproveOrder) {
-                        List<GenericValue> productStorePaymentSettingList = delegator.findByAnd("ProductStorePaymentSetting", UtilMisc.toMap("productStoreId", productStore.getString("productStoreId"), "paymentMethodTypeId", "CREDIT_CARD", "paymentService", "cyberSourceCCAuth"), null, false);
+                        List<GenericValue> productStorePaymentSettingList = delegator.findByAnd("ProductStorePaymentSetting", UtilMisc.toMap("productStoreId", productStore.getString("productStoreId"), "paymentMethodTypeId", "CREDIT_CARD", "paymentService", "cyberSourceCCAuth"));
                         if (productStorePaymentSettingList.size() > 0) {
                             String decision = (String) paymentResult.get("authCode");
                             if (UtilValidate.isNotEmpty(decision)) {
@@ -1206,9 +1207,9 @@ public class CheckOutHelper {
                 GenericValue creditCard = null;
                 GenericValue billingAddress = null;
                 try {
-                    creditCard = paymentMethod.getRelatedOne("CreditCard", false);
+                    creditCard = paymentMethod.getRelatedOne("CreditCard");
                     if (creditCard != null)
-                        billingAddress = creditCard.getRelatedOne("PostalAddress", false);
+                        billingAddress = creditCard.getRelatedOne("PostalAddress");
                 } catch (GenericEntityException e) {
                     Debug.logError(e, "Problems getting credit card from payment method", module);
                     errMsg = UtilProperties.getMessage(resource_error,"checkhelper.problems_reading_database", (cart != null ? cart.getLocale() : Locale.getDefault()));
@@ -1267,7 +1268,7 @@ public class CheckOutHelper {
                 userLogin.set("enabled", "N");
                 userLogin.store();
             } else {
-                userLogin = delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", "system"), true);
+                userLogin = delegator.findByPrimaryKeyCache("UserLogin", UtilMisc.toMap("userLoginId", "system"));
             }
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
@@ -1293,7 +1294,7 @@ public class CheckOutHelper {
         // you cannot accept multiple payment type when using an external gateway
         GenericValue orderHeader = null;
         try {
-            orderHeader = this.delegator.findOne("OrderHeader", UtilMisc.toMap("orderId", orderId), false);
+            orderHeader = this.delegator.findByPrimaryKey("OrderHeader", UtilMisc.toMap("orderId", orderId));
         } catch (GenericEntityException e) {
             Debug.logError(e, "Problems getting order header", module);
             errMsg = UtilProperties.getMessage(resource_error,"checkhelper.problems_getting_order_header", (cart != null ? cart.getLocale() : Locale.getDefault()));
@@ -1303,7 +1304,7 @@ public class CheckOutHelper {
         if (orderHeader != null) {
             List<GenericValue> paymentPrefs = null;
             try {
-                paymentPrefs = orderHeader.getRelated("OrderPaymentPreference", null, null, false);
+                paymentPrefs = orderHeader.getRelated("OrderPaymentPreference");
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Problems getting order payments", module);
                 errMsg = UtilProperties.getMessage(resource_error,"checkhelper.problems_getting_payment_preference", (cart != null ? cart.getLocale() : Locale.getDefault()));

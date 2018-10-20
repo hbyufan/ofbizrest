@@ -124,7 +124,7 @@ public class TraverseSubContentTransform implements TemplateTransformModel {
             }
             if (UtilValidate.isNotEmpty(thisContentId)) {
                 try {
-                    view = delegator.findOne("Content", UtilMisc.toMap("contentId", thisContentId), false);
+                    view = delegator.findByPrimaryKey("Content", UtilMisc.toMap("contentId", thisContentId));
                 } catch (GenericEntityException e) {
                     Debug.logError(e, "Error getting sub-content", module);
                     throw new RuntimeException(e.getMessage());
@@ -186,7 +186,7 @@ public class TraverseSubContentTransform implements TemplateTransformModel {
 /*
                 if (UtilValidate.isNotEmpty(contentId)) {
                     try {
-                        content = delegator.findOne("Content", UtilMisc.toMap("contentId", contentId), false);
+                        content = delegator.findByPrimaryKey("Content", UtilMisc.toMap("contentId", contentId));
                     } catch (GenericEntityException e) {
                         // TODO: Not sure what to put here.
                         throw new RuntimeException(e.getMessage());

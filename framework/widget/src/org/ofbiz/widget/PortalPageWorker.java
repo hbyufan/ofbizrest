@@ -22,18 +22,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralException;
-import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilValidate;
+import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.entity.Delegator;
-import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
+import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.condition.EntityCondition;
 import org.ofbiz.entity.condition.EntityOperator;
 import org.ofbiz.entity.util.EntityUtil;
-import org.ofbiz.security.Security;
+import org.ofbiz.security.authz.Authorization;
 
 /**
  * PortalPageWorker Class
@@ -79,6 +78,7 @@ public class PortalPageWorker {
                                 EntityOperator.AND);
                         List <GenericValue> privatePortalPages = delegator.findList("PortalPage", cond, null, null, null, false);
                         if (UtilValidate.isNotEmpty(privatePortalPages)) {
+                            //portalPages.remove(portalPage);
                             userPortalPages.add(privatePortalPages.get(0));
                         } else {
                             userPortalPages.add(portalPage);
@@ -155,9 +155,9 @@ public class PortalPageWorker {
             GenericValue userLogin = (GenericValue) context.get("userLogin");
             if (UtilValidate.isNotEmpty(userLogin)) {
                 String userLoginId = (String) userLogin.get("userLoginId");
-                Security security = (Security) context.get("security");
+                Authorization authz = (Authorization) context.get("authz");
 
-                Boolean hasPortalAdminPermission = security.hasPermission("PORTALPAGE_ADMIN", userLogin);
+                Boolean hasPortalAdminPermission = authz.hasPermission(userLoginId, "PORTALPAGE_ADMIN", context);
                 try {
                     Delegator delegator = WidgetWorker.getDelegator(context);
                     GenericValue portalPage = delegator.findOne("PortalPage", UtilMisc.toMap("portalPageId", portalPageId),false);

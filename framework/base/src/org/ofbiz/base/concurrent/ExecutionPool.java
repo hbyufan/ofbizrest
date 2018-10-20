@@ -117,7 +117,7 @@ public final class ExecutionPool {
         for (int i = 0; i < processorCount; i++) {
             Thread t = new Thread(worker);
             t.setDaemon(true);
-            t.setName("OFBiz-ExecutionPoolPulseWorker-" + i);
+            t.setName("ExecutionPoolPulseWorker(" + i + ")");
             t.start();
         }
     }

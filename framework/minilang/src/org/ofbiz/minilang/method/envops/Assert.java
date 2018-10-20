@@ -20,8 +20,9 @@ package org.ofbiz.minilang.method.envops;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
+
+import javolution.util.FastList;
 
 import org.ofbiz.base.util.UtilXml;
 import org.ofbiz.base.util.collections.FlexibleMapAccessor;
@@ -85,7 +86,7 @@ public final class Assert extends MethodOperation {
                 messageBuffer.append("failed: ");
                 condition.prettyPrint(messageBuffer, methodContext);
                 if (messages == null) {
-                    messages = new LinkedList<Object>();
+                    messages = FastList.newInstance();
                     errorListFma.put(methodContext.getEnvMap(), messages);
                 }
                 messages.add(messageBuffer.toString());

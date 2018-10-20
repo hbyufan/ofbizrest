@@ -86,9 +86,9 @@ for (supplierProduct in supplierProducts) {
 
     String facilityId = parameters.facilityId;
     if (facilityId) {
-        productFacilityList = delegator.findByAnd("ProductFacility", ["productId": productId, "facilityId" : facilityId], null, true);
+        productFacilityList = delegator.findByAndCache("ProductFacility", ["productId": productId, "facilityId" : facilityId]);
     } else {
-        productFacilityList = delegator.findByAnd("ProductFacility", ["productId": productId], null, true);
+        productFacilityList = delegator.findByAndCache("ProductFacility", ["productId": productId]);
     }
     if (newProductList.size() >= maxRows) {
         // We've got enough results to display, keep going to get the result size but skip the heavy stuff

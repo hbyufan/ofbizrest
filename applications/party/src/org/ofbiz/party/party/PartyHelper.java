@@ -43,7 +43,7 @@ public class PartyHelper {
     public static String getPartyName(Delegator delegator, String partyId, boolean lastNameFirst) {
         GenericValue partyObject = null;
         try {
-            partyObject = delegator.findOne("PartyNameView", UtilMisc.toMap("partyId", partyId), false);
+            partyObject = delegator.findByPrimaryKey("PartyNameView", UtilMisc.toMap("partyId", partyId));
         } catch (GenericEntityException e) {
             Debug.logError(e, "Error finding PartyNameView in getPartyName", module);
         }

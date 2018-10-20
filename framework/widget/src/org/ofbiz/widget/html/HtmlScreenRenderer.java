@@ -53,11 +53,9 @@ import org.ofbiz.widget.menu.MenuStringRenderer;
 import org.ofbiz.widget.menu.ModelMenu;
 import org.ofbiz.widget.screen.ModelScreenWidget;
 import org.ofbiz.widget.screen.ScreenStringRenderer;
-import org.ofbiz.widget.screen.ModelScreenWidget.ColumnContainer;
 
 /**
  * Widget Library - HTML Form Renderer implementation
- * @deprecated Use MacroScreenRenderer.
  */
 public class HtmlScreenRenderer extends HtmlWidgetRenderer implements ScreenStringRenderer {
 
@@ -111,7 +109,7 @@ public class HtmlScreenRenderer extends HtmlWidgetRenderer implements ScreenStri
             writer.append("', '");
             writer.append(rh.makeLink(request, response, autoUpdateTarget));
             writer.append("', '");
-            writer.append("', '").append(container.getAutoUpdateInterval(context)).append("');</script>");
+            writer.append("', '").append(container.getAutoUpdateInterval()).append("');</script>");
             appendWhitespace(writer);
         }
         writer.append("<div");
@@ -903,11 +901,6 @@ public class HtmlScreenRenderer extends HtmlWidgetRenderer implements ScreenStri
         // TODO: not implemented
     }
     public void renderPortalPagePortletBody(Appendable writer, Map<String, Object> context, ModelScreenWidget.PortalPage portalPage, GenericValue portalPortlet) throws GeneralException, IOException {
-        // TODO: not implemented
-    }
-
-    @Override
-    public void renderColumnContainer(Appendable writer, Map<String, Object> context, ColumnContainer columnContainer) throws IOException {
         // TODO: not implemented
     }
 }

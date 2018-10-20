@@ -22,7 +22,7 @@ import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Map;
 
-import org.apache.commons.validator.routines.EmailValidator;
+import org.apache.commons.validator.EmailValidator;
 import org.ofbiz.base.lang.IsEmpty;
 
 import com.ibm.icu.util.Calendar;

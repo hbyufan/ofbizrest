@@ -23,7 +23,6 @@ import java.math.MathContext;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -95,58 +94,6 @@ public class ShoppingCartEvents {
             }
         }
         return "success";
-    }
-
-    public static String removePromotion(HttpServletRequest request,HttpServletResponse response) {
-        LocalDispatcher dispatcher = (LocalDispatcher) request.getAttribute("dispatcher");
-        ShoppingCart cart = getCartObject(request);
-        String promoCodeId = (String) request.getParameter("promoCode");
-        String result = "error";
-
-        if (!promoCodeId.isEmpty()) {
-            cart.getProductPromoCodesEntered().clear();
-            GenericValue productPromoCode = null;
-            try {
-                productPromoCode = dispatcher.getDelegator().findOne("ProductPromoCode", UtilMisc.toMap("productPromoCodeId", promoCodeId), false);
-                if (!productPromoCode.isEmpty()) {
-                    String productPromoId = productPromoCode.getString("productPromoId");
-                    GenericValue productPromoAction = null;
-                    Map<String, String> productPromoActionMap = new HashMap<String, String>();
-                    productPromoActionMap.put("productPromoId", productPromoId);
-                    productPromoActionMap.put("productPromoRuleId", "01");
-                    productPromoActionMap.put("productPromoActionSeqId", "01");
-
-                    productPromoAction = dispatcher.getDelegator().findOne("ProductPromoAction", productPromoActionMap, false);
-                    if (!productPromoAction.isEmpty()) {
-                        int index = cart.getAdjustmentPromoIndex(productPromoId);
-                        /*Remove order adjustment*/
-                        if (index != -1) {
-                            cart.removeAdjustment(index);
-                            result = "success";
-                        }
-
-                        /*Remove product  adjustment*/
-                        for(ShoppingCartItem checkItem : cart) {
-                            List<GenericValue> itemAdjustments = checkItem.getAdjustments();
-                            if (!itemAdjustments.isEmpty()) {
-                                index = 0;
-                                for (GenericValue adjustment : itemAdjustments ) {
-                                    if(adjustment.get("productPromoId").equals(productPromoId)) {
-                                        checkItem.getAdjustments().remove(index);
-                                        result = "success";
-                                    }
-                                    index++;
-                                }
-                            }
-                        }
-                        cart.removeProductPromoUse(productPromoId);
-                    }
-                }
-            } catch (GenericEntityException e) {
-                Debug.logError(e.getMessage(), module);
-            }
-        }
-        return result;
     }
 
     public static String addItemGroup(HttpServletRequest request, HttpServletResponse response) {
@@ -463,14 +410,8 @@ public class ShoppingCartEvents {
         // parse the quantity
         try {
             quantity = (BigDecimal) ObjectType.simpleTypeConvert(quantityStr, "BigDecimal", null, locale);
-            //For quantity we should test if we allow to add decimal quantity for this product an productStore : 
-            // if not and if quantity is in decimal format then return error.
+            //For quantity we should test if we allow to add decimal quantity for this product an productStore : if not then round to 0
             if(! ProductWorker.isDecimalQuantityOrderAllowed(delegator, productId, cart.getProductStoreId())){
-                BigDecimal remainder = quantity.remainder(BigDecimal.ONE);
-                if (remainder.compareTo(BigDecimal.ZERO) != 0) {
-                    request.setAttribute("_ERROR_MESSAGE_", UtilProperties.getMessage(resource_error, "cart.addToCart.quantityInDecimalNotAllowed", locale));
-                    return "error";
-                }
                 quantity = quantity.setScale(0, UtilNumber.getBigDecimalRoundingMode("order.rounding"));
             }
             else {
@@ -628,7 +569,7 @@ public class ShoppingCartEvents {
         if(ProductWorker.isAlternativePacking(delegator, productId , parentProductId)){
             GenericValue parentProduct = null;
             try {
-                parentProduct = delegator.findOne("Product", UtilMisc.toMap("productId", parentProductId), false);
+                parentProduct = delegator.findByPrimaryKey("Product", UtilMisc.toMap("productId", parentProductId));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Error getting parent product", module);
             }
@@ -651,7 +592,7 @@ public class ShoppingCartEvents {
             request.setAttribute("itemId", itemId);
         }
         try {
-            GenericValue product = delegator.findOne("Product", UtilMisc.toMap("productId", productId), false); 
+            GenericValue product = delegator.findOne("Product", UtilMisc.toMap("productId", productId), false);
             //Reset shipment method information in cart only if shipping applies on product.
             if (ProductWorker.shippingApplies(product)) {
                 for (int shipGroupIndex = 0; shipGroupIndex < cart.getShipGroupSize(); shipGroupIndex++) {
@@ -1634,7 +1575,7 @@ public class ShoppingCartEvents {
                         List<GenericValue> storeReps = null;
                         try {
                             storeReps = delegator.findByAnd("ProductStoreRole", UtilMisc.toMap("productStoreId", productStore.getString("productStoreId"),
-                                                            "partyId", userLogin.getString("partyId"), "roleTypeId", "SALES_REP"), null, false);
+                                                            "partyId", userLogin.getString("partyId"), "roleTypeId", "SALES_REP"));
                         } catch (GenericEntityException gee) {
                             //
                         }
@@ -1685,7 +1626,7 @@ public class ShoppingCartEvents {
             if (UtilValidate.isEmpty(partyId) && UtilValidate.isNotEmpty(userLoginId)) {
                 GenericValue thisUserLogin = null;
                 try {
-                    thisUserLogin = delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", userLoginId), false);
+                    thisUserLogin = delegator.findByPrimaryKey("UserLogin", UtilMisc.toMap("userLoginId", userLoginId));
                 } catch (GenericEntityException gee) {
                     //
                 }
@@ -1698,7 +1639,7 @@ public class ShoppingCartEvents {
             if (UtilValidate.isNotEmpty(partyId)) {
                 GenericValue thisParty = null;
                 try {
-                    thisParty = delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
+                    thisParty = delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
                 } catch (GenericEntityException gee) {
                     //
                 }
@@ -1754,7 +1695,7 @@ public class ShoppingCartEvents {
             String productPromoId = (String)context.get(keyPrefix + i);
             if (UtilValidate.isNotEmpty(productPromoId)) {
                 try {
-                    GenericValue promo = delegator.findOne("ProductPromo", UtilMisc.toMap("productPromoId", productPromoId), false);
+                    GenericValue promo = delegator.findByPrimaryKey("ProductPromo", UtilMisc.toMap("productPromoId", productPromoId));
                     if (promo != null) {
                         manualPromotions.add(promo);
                     }
@@ -1823,25 +1764,6 @@ public class ShoppingCartEvents {
                 } catch (Exception e) {
                     Debug.logWarning(e, "Problems parsing quantity string: " + quantityStr, module);
                     quantity = BigDecimal.ZERO;
-                }
-
-                try {
-                    //For quantity we should test if we allow to add decimal quantity for this product an productStore : 
-                    // if not and if quantity is in decimal format then return error.
-                    if(! ProductWorker.isDecimalQuantityOrderAllowed(delegator, productId, cart.getProductStoreId())){
-                        BigDecimal remainder = quantity.remainder(BigDecimal.ONE);
-                        if (remainder.compareTo(BigDecimal.ZERO) != 0) {
-                            request.setAttribute("_ERROR_MESSAGE_", UtilProperties.getMessage(resource_error, "cart.addToCart.quantityInDecimalNotAllowed", cart.getLocale()));
-                            return "error";
-                        }
-                        quantity = quantity.setScale(0, UtilNumber.getBigDecimalRoundingMode("order.rounding"));
-                    }
-                    else {
-                        quantity = quantity.setScale(UtilNumber.getBigDecimalScale("order.decimals"), UtilNumber.getBigDecimalRoundingMode("order.rounding"));
-                    }
-                } catch (GenericEntityException e) {
-                    Debug.logWarning(e.getMessage(), module);
-                    quantity = BigDecimal.ONE;
                 }
 
                 // get the selected amount
@@ -1919,8 +1841,7 @@ public class ShoppingCartEvents {
         // set the agreement if specified otherwise set the currency
         if (UtilValidate.isNotEmpty(agreementId)) {
             result = cartHelper.selectAgreement(agreementId);
-        } 
-        if (UtilValidate.isNotEmpty(cart.getCurrency()) && UtilValidate.isNotEmpty(currencyUomId)) {
+        } else if (UtilValidate.isNotEmpty(currencyUomId)) {
             result = cartHelper.setCurrency(currencyUomId);
         }
         if (ServiceUtil.isError(result)) {
@@ -2087,7 +2008,7 @@ public class ShoppingCartEvents {
                     appendOrderItemMap.put("shipGroupSeqId", shipGroupSeqId);
                     try {
                         Map<String, Object> result = dispatcher.runSync("appendOrderItem", appendOrderItemMap);
-                        request.setAttribute("shoppingCart", result.get("shoppingCart"));
+                        request.setAttribute("shoppingCart", (ShoppingCart) result.get("shoppingCart"));
                         ShoppingCartEvents.destroyCart(request, response);
                     } catch (GenericServiceException e) {
                         Debug.logError(e, "Failed to execute service appendOrderItem", module);

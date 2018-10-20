@@ -197,7 +197,7 @@ under the License.
               </tr>
 
               <#-- facility location(s) -->
-              <#assign facilityLocations = (product.getRelated("ProductFacilityLocation", Static["org.ofbiz.base.util.UtilMisc"].toMap("facilityId", facilityId), null, false))?if_exists/>
+              <#assign facilityLocations = (product.getRelatedByAnd("ProductFacilityLocation", Static["org.ofbiz.base.util.UtilMisc"].toMap("facilityId", facilityId)))?if_exists/>
               <tr>
                 <td width="14%">&nbsp;</td>
                 <td width="6%" align="right" nowrap="nowrap" class="label">${uiLabelMap.ProductFacilityLocation}</td>
@@ -206,9 +206,9 @@ under the License.
                   <#if facilityLocations?has_content>
                     <select name="locationSeqId">
                       <#list facilityLocations as productFacilityLocation>
-                        <#assign facility = productFacilityLocation.getRelatedOne("Facility", true)/>
-                        <#assign facilityLocation = productFacilityLocation.getRelatedOne("FacilityLocation", false)?if_exists/>
-                        <#assign facilityLocationTypeEnum = (facilityLocation.getRelatedOne("TypeEnumeration", true))?if_exists/>
+                        <#assign facility = productFacilityLocation.getRelatedOneCache("Facility")/>
+                        <#assign facilityLocation = productFacilityLocation.getRelatedOne("FacilityLocation")?if_exists/>
+                        <#assign facilityLocationTypeEnum = (facilityLocation.getRelatedOneCache("TypeEnumeration"))?if_exists/>
                         <option value="${productFacilityLocation.locationSeqId}"><#if facilityLocation?exists>${facilityLocation.areaId?if_exists}:${facilityLocation.aisleId?if_exists}:${facilityLocation.sectionId?if_exists}:${facilityLocation.levelId?if_exists}:${facilityLocation.positionId?if_exists}</#if><#if facilityLocationTypeEnum?exists>(${facilityLocationTypeEnum.get("description",locale)})</#if>[${productFacilityLocation.locationSeqId}]</option>
                       </#list>
                       <option value="">${uiLabelMap.ProductNoLocation}</option>
@@ -283,10 +283,10 @@ under the License.
             <input type="hidden" name="partialReceive" value="${partialReceive?if_exists}"/>
             <table class="basic-table" cellspacing="0">
               <#list shipments?if_exists as shipment>
-                <#assign originFacility = shipment.getRelatedOne("OriginFacility", true)?if_exists/>
-                <#assign destinationFacility = shipment.getRelatedOne("DestinationFacility", true)?if_exists/>
-                <#assign statusItem = shipment.getRelatedOne("StatusItem", true)/>
-                <#assign shipmentType = shipment.getRelatedOne("ShipmentType", true)/>
+                <#assign originFacility = shipment.getRelatedOneCache("OriginFacility")?if_exists/>
+                <#assign destinationFacility = shipment.getRelatedOneCache("DestinationFacility")?if_exists/>
+                <#assign statusItem = shipment.getRelatedOneCache("StatusItem")/>
+                <#assign shipmentType = shipment.getRelatedOneCache("ShipmentType")/>
                 <#assign shipmentDate = shipment.estimatedArrivalDate?if_exists/>
                 <tr>
                   <td><hr /></td>
@@ -373,7 +373,7 @@ under the License.
                     </#if>
                   </#if>
                   <#if 0 < defaultQuantity>
-                  <#assign orderItemType = orderItem.getRelatedOne("OrderItemType", false)/>
+                  <#assign orderItemType = orderItem.getRelatedOne("OrderItemType")/>
                   <input type="hidden" name="orderId_o_${rowCount}" value="${orderItem.orderId}"/>
                   <input type="hidden" name="orderItemSeqId_o_${rowCount}" value="${orderItem.orderItemSeqId}"/>
                   <input type="hidden" name="facilityId_o_${rowCount}" value="${requestParameters.facilityId?if_exists}"/>
@@ -394,7 +394,7 @@ under the License.
                       <table class="basic-table" cellspacing="0">
                         <tr>
                           <#if orderItem.productId?exists>
-                            <#assign product = orderItem.getRelatedOne("Product", true)/>
+                            <#assign product = orderItem.getRelatedOneCache("Product")/>
                             <input type="hidden" name="productId_o_${rowCount}" value="${product.productId}"/>
                             <td width="45%">
                                 ${orderItem.orderItemSeqId}:&nbsp;<a href="/catalog/control/EditProduct?productId=${product.productId}${externalKeyParam?if_exists}" target="catalog" class="buttontext">${product.productId}&nbsp;-&nbsp;${orderItem.itemDescription?if_exists}</a> : ${product.description?if_exists}
@@ -403,19 +403,19 @@ under the License.
                             <td width="45%">
                                 <b>${orderItemType.get("description",locale)}</b> : ${orderItem.itemDescription?if_exists}&nbsp;&nbsp;
                                 <input type="text" size="12" name="productId_o_${rowCount}"/>
-                                <a href="/catalog/control/EditProduct?${StringUtil.wrapString(externalKeyParam)}" target="catalog" class="buttontext">${uiLabelMap.ProductCreateProduct}</a>
+                                <a href="/catalog/control/EditProduct?externalLoginKey=${externalLoginKey}" target="catalog" class="buttontext">${uiLabelMap.ProductCreateProduct}</a>
                             </td>
                           </#if>
                           <td align="right">${uiLabelMap.ProductLocation}:</td>
                           <#-- location(s) -->
                           <td align="right">
-                            <#assign facilityLocations = (orderItem.getRelated("ProductFacilityLocation", Static["org.ofbiz.base.util.UtilMisc"].toMap("facilityId", facilityId), null, false))?if_exists/>
+                            <#assign facilityLocations = (orderItem.getRelatedByAnd("ProductFacilityLocation", Static["org.ofbiz.base.util.UtilMisc"].toMap("facilityId", facilityId)))?if_exists/>
                             <#if facilityLocations?has_content>
                               <select name="locationSeqId_o_${rowCount}">
                                 <#list facilityLocations as productFacilityLocation>
-                                  <#assign facility = productFacilityLocation.getRelatedOne("Facility", true)/>
-                                  <#assign facilityLocation = productFacilityLocation.getRelatedOne("FacilityLocation", false)?if_exists/>
-                                  <#assign facilityLocationTypeEnum = (facilityLocation.getRelatedOne("TypeEnumeration", true))?if_exists/>
+                                  <#assign facility = productFacilityLocation.getRelatedOneCache("Facility")/>
+                                  <#assign facilityLocation = productFacilityLocation.getRelatedOne("FacilityLocation")?if_exists/>
+                                  <#assign facilityLocationTypeEnum = (facilityLocation.getRelatedOneCache("TypeEnumeration"))?if_exists/>
                                   <option value="${productFacilityLocation.locationSeqId}"><#if facilityLocation?exists>${facilityLocation.areaId?if_exists}:${facilityLocation.aisleId?if_exists}:${facilityLocation.sectionId?if_exists}:${facilityLocation.levelId?if_exists}:${facilityLocation.positionId?if_exists}</#if><#if facilityLocationTypeEnum?exists>(${facilityLocationTypeEnum.get("description",locale)})</#if>[${productFacilityLocation.locationSeqId}]</option>
                                 </#list>
                                 <option value="">${uiLabelMap.ProductNoLocation}</option>

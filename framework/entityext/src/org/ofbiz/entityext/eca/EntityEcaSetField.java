@@ -104,15 +104,4 @@ public final class EntityEcaSetField {
         Debug.logWarning("Format function not found [" + format + "] return string unchanged - " + s, module);
         return s;
     }
-
-    public String getFieldName() {
-        return this.fieldName;
-    }
-
-    public String getRValue() {
-        if (!this.value.isEmpty()) {
-            return "\"".concat(this.value).concat("\"");
-        }
-        return this.envName;
-    }
 }

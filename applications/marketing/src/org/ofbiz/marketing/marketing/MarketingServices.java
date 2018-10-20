@@ -68,14 +68,14 @@ public class MarketingServices {
         try {
             // locate the contact list
             Map<String, Object> input = UtilMisc.<String, Object>toMap("contactListId", contactListId);
-            GenericValue contactList = delegator.findOne("ContactList", input, false);
+            GenericValue contactList = delegator.findByPrimaryKey("ContactList", input);
             if (contactList == null) {
                 String error = UtilProperties.getMessage(resourceMarketing, "MarketingContactListNotFound", input, locale);
                 return ServiceUtil.returnError(error);
             }
 
             // perform actions as the system user
-            GenericValue userLogin = delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", "system"), true);
+            GenericValue userLogin = delegator.findByPrimaryKeyCache("UserLogin", UtilMisc.toMap("userLoginId", "system"));
 
             // associate the email with anonymous user TODO: do we need a custom contact mech purpose type, say MARKETING_EMAIL?
             if (partyId == null) {

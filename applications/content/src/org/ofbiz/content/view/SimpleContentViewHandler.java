@@ -25,12 +25,10 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralException;
@@ -43,13 +41,8 @@ import org.ofbiz.content.data.DataResourceWorker;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
-import org.ofbiz.entity.util.EntityUtilProperties;
-import org.ofbiz.service.GenericServiceException;
-import org.ofbiz.service.LocalDispatcher;
-import org.ofbiz.service.ServiceUtil;
 import org.ofbiz.webapp.view.AbstractViewHandler;
 import org.ofbiz.webapp.view.ViewHandlerException;
-import org.ofbiz.webapp.website.WebSiteWorker;
 
 /**
  * Uses XSL-FO formatted templates to generate PDF views
@@ -68,9 +61,6 @@ public class SimpleContentViewHandler extends AbstractViewHandler {
      */
     public void render(String name, String page, String info, String contentType, String encoding, HttpServletRequest request, HttpServletResponse response) throws ViewHandlerException {
 
-        LocalDispatcher dispatcher = (LocalDispatcher) request.getAttribute("dispatcher");
-        HttpSession session = request.getSession();
-        GenericValue userLogin = (GenericValue) session.getAttribute("userLogin");
         String contentId = request.getParameter("contentId");
         String rootContentId = request.getParameter("rootContentId");
         String mapKey = request.getParameter("mapKey");
@@ -81,11 +71,14 @@ public class SimpleContentViewHandler extends AbstractViewHandler {
         String mimeTypeId = request.getParameter("mimeTypeId");
         Locale locale = UtilHttp.getLocale(request);
         String rootDir = null;
-        String webSiteId = WebSiteWorker.getWebSiteId(request);
+        String webSiteId = null;
         String https = null;
 
         if (UtilValidate.isEmpty(rootDir)) {
             rootDir = servletContext.getRealPath("/");
+        }
+        if (UtilValidate.isEmpty(webSiteId)) {
+            webSiteId = (String) servletContext.getAttribute("webSiteId");
         }
         if (UtilValidate.isEmpty(https)) {
             https = (String) servletContext.getAttribute("https");
@@ -97,7 +90,7 @@ public class SimpleContentViewHandler extends AbstractViewHandler {
                 if (UtilValidate.isEmpty(contentRevisionSeqId)) {
                     if (UtilValidate.isEmpty(mapKey) && UtilValidate.isEmpty(contentAssocTypeId)) {
                         if (UtilValidate.isNotEmpty(contentId)) {
-                            GenericValue content = delegator.findOne("Content", UtilMisc.toMap("contentId", contentId), true);
+                            GenericValue content = delegator.findByPrimaryKeyCache("Content", UtilMisc.toMap("contentId", contentId));
                             dataResourceId = content.getString("dataResourceId");
                         }
                         if (Debug.verboseOn()) Debug.logVerbose("SCVH(0b)- dataResourceId:" + dataResourceId, module);
@@ -119,7 +112,7 @@ public class SimpleContentViewHandler extends AbstractViewHandler {
                         if (Debug.verboseOn()) Debug.logVerbose("SCVH(0b)- dataResourceId:" + dataResourceId, module);
                     }
                 } else {
-                    GenericValue contentRevisionItem = delegator.findOne("ContentRevisionItem", UtilMisc.toMap("contentId", rootContentId, "itemContentId", contentId, "contentRevisionSeqId", contentRevisionSeqId), true);
+                    GenericValue contentRevisionItem = delegator.findByPrimaryKeyCache("ContentRevisionItem", UtilMisc.toMap("contentId", rootContentId, "itemContentId", contentId, "contentRevisionSeqId", contentRevisionSeqId));
                     if (contentRevisionItem == null) {
                         throw new ViewHandlerException("ContentRevisionItem record not found for contentId=" + rootContentId
                                                        + ", contentRevisionSeqId=" + contentRevisionSeqId + ", itemContentId=" + contentId);
@@ -131,7 +124,7 @@ public class SimpleContentViewHandler extends AbstractViewHandler {
                 }
             }
             if (UtilValidate.isNotEmpty(dataResourceId)) {
-                GenericValue dataResource = delegator.findOne("DataResource", UtilMisc.toMap("dataResourceId", dataResourceId), true);
+                GenericValue dataResource = delegator.findByPrimaryKeyCache("DataResource", UtilMisc.toMap("dataResourceId", dataResourceId));
                 // DEJ20080717: why are we rendering the DataResource directly instead of rendering the content?
                 ByteBuffer byteBuffer = DataResourceWorker.getContentAsByteBuffer(delegator, dataResourceId, https, webSiteId, locale, rootDir);
                 ByteArrayInputStream bais = new ByteArrayInputStream(byteBuffer.array());
@@ -150,49 +143,12 @@ public class SimpleContentViewHandler extends AbstractViewHandler {
                 if (UtilValidate.isEmpty(charset)) {
                     charset = "UTF-8";
                 }
-
+    
                 // setup content type
                 String contentType2 = UtilValidate.isNotEmpty(mimeTypeId) ? mimeTypeId + "; charset=" +charset : contentType;
                 String fileName = null;
                 if (!UtilValidate.isEmpty(dataResource.getString("dataResourceName"))) {
                     fileName = dataResource.getString("dataResourceName").replace(" ", "_"); // spaces in filenames can be a problem
-                }
-                
-                // see if data resource is public or not
-                String isPublic = dataResource.getString("isPublic");
-                if (UtilValidate.isEmpty(isPublic)) {
-                    isPublic = "N";
-                }
-                // get the permission service required for streaming data; default is always the genericContentPermission
-                String permissionService = EntityUtilProperties.getPropertyValue("content.properties", "stream.permission.service", "genericContentPermission", delegator);
-
-                // not public check security
-                if (!"Y".equalsIgnoreCase(isPublic)) {
-                    // do security check
-                    Map<String, ? extends Object> permSvcCtx = UtilMisc.toMap("userLogin", userLogin, "locale", locale, "mainAction", "VIEW", "contentId", contentId);
-                    Map<String, Object> permSvcResp;
-                    try {
-                        permSvcResp = dispatcher.runSync(permissionService, permSvcCtx);
-                    } catch (GenericServiceException e) {
-                        Debug.logError(e, module);
-                        request.setAttribute("_ERROR_MESSAGE_", e.getMessage());
-                        throw new ViewHandlerException(e.getMessage());
-                    }
-                    if (ServiceUtil.isError(permSvcResp)) {
-                        String errorMsg = ServiceUtil.getErrorMessage(permSvcResp);
-                        Debug.logError(errorMsg, module);
-                        request.setAttribute("_ERROR_MESSAGE_", errorMsg);
-                        throw new ViewHandlerException(errorMsg);
-                    }
-
-                    // no service errors; now check the actual response
-                    Boolean hasPermission = (Boolean) permSvcResp.get("hasPermission");
-                    if (!hasPermission.booleanValue()) {
-                        String errorMsg = (String) permSvcResp.get("failMessage");
-                        Debug.logError(errorMsg, module);
-                        request.setAttribute("_ERROR_MESSAGE_", errorMsg);
-                        throw new ViewHandlerException(errorMsg);
-                    }
                 }
                 UtilHttp.streamContentToBrowser(response, bais, byteBuffer.limit(), contentType2, fileName);
             }

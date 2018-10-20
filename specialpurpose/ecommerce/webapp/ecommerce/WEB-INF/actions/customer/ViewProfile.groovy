@@ -31,7 +31,7 @@ productStoreId = ProductStoreWorker.getProductStoreId(request);
 context.productStoreId = productStoreId;
 
 if (userLogin) {
-    profiledefs = delegator.findOne("PartyProfileDefault", [partyId : partyId, productStoreId : productStoreId], false);
+    profiledefs = delegator.findByPrimaryKey("PartyProfileDefault", [partyId : partyId, productStoreId : productStoreId]);
 
     showOld = "true".equals(parameters.SHOW_OLD);
 
@@ -45,7 +45,7 @@ if (userLogin) {
 
     // shipping methods - for default selection
     if (profiledefs?.defaultShipAddr) {
-        shipAddress = delegator.findOne("PostalAddress", [contactMechId : profiledefs.defaultShipAddr], false);
+        shipAddress = delegator.findByPrimaryKey("PostalAddress", [contactMechId : profiledefs.defaultShipAddr]);
         if (shipAddress) {
             carrierShipMeths = ProductStoreWorker.getAvailableStoreShippingMethods(delegator, productStoreId, shipAddress, [1], null, 0, 1);
             context.carrierShipMethods = carrierShipMeths;
@@ -65,7 +65,7 @@ if (userLogin) {
     context.messages = messages;
     context.profileMessages = true;
 
-    partyContent = delegator.findByAnd("ContentRole", [partyId : partyId, roleTypeId : "OWNER"], null, false);
+    partyContent = delegator.findByAnd("ContentRole", [partyId : partyId, roleTypeId : "OWNER"]);
     partyContent = EntityUtil.filterByDate(partyContent);
     context.partyContent = partyContent;
 
@@ -83,14 +83,14 @@ if (userLogin) {
     context.totalSubRemainingAmount = result.totalSubRemainingAmount;
     context.totalOrders = result.totalOrders;
 
-    contactListPartyList = delegator.findByAnd("ContactListParty", [partyId : partyId], ["-fromDate"], false);
+    contactListPartyList = delegator.findByAnd("ContactListParty", [partyId : partyId], ["-fromDate"]);
     // show all, including history, ie don't filter: contactListPartyList = EntityUtil.filterByDate(contactListPartyList, true);
     context.contactListPartyList = contactListPartyList;
 
-    publicContactLists = delegator.findByAnd("ContactList", [isPublic : "Y"], ["contactListName"], false);
+    publicContactLists = delegator.findByAnd("ContactList", [isPublic : "Y"], ["contactListName"]);
     context.publicContactLists = publicContactLists;
 
-    partyAndContactMechList = delegator.findByAnd("PartyAndContactMech", [partyId : partyId], ["-fromDate"], false);
+    partyAndContactMechList = delegator.findByAnd("PartyAndContactMech", [partyId : partyId], ["-fromDate"]);
     partyAndContactMechList = EntityUtil.filterByDate(partyAndContactMechList);
     context.partyAndContactMechList = partyAndContactMechList;
 }

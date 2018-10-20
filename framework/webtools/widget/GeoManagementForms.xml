@@ -31,7 +31,7 @@
             </hyperlink>
         </field>
         <field name="wellKnownText" title="${uiLabelMap.CommonGeoWellKnownText}"><display/></field>
-        <field name="deleteLink" title=" " widget-style="buttontext">
+        <field name="deleteLink" title="${uiLabelMap.CommonEmptyHeader}" widget-style="buttontext">
             <hyperlink target="deleteGeo" description="${uiLabelMap.CommonRemove}">
                 <parameter param-name="geoId"/>
                 <parameter param-name="noConditionFind" value="Y"/>
@@ -43,7 +43,7 @@
         header-row-style="header-row" default-table-style="basic-table">
         <alt-target use-when="geo==null" target="createGeo"/>
         <field name="geoId" title="${uiLabelMap.CommonGeoId}"><text/></field>
-        <field name="geoTypeId" title="${uiLabelMap.CommonGeoTypeId}">
+        <field name="geoTypeId" title="${uiLabelMap.CommonGeoType}">
             <drop-down allow-empty="true">
                 <entity-options key-field-name="geoTypeId" entity-name="GeoType" description="${description}">
                     <entity-order-by field-name="description"/>
@@ -75,7 +75,7 @@
                 </entity-options>
             </drop-down>
         </field>        
-        <field name="dummy" title=" "><display/></field>
+        <field name="dummy" title="${uiLabelMap.CommonEmptyHeader}"><display/></field>
         <field name="geoAssocTypeId" title="${uiLabelMap.CommonGeoAssocTypeId}"
             event="onChange" 
             action="typeValue = jQuery('#${asm_typeField}').val(); selectMultipleRelatedValues('${asm_requestName}', '${asm_paramKey}', '${asm_relatedField}', '${asm_multipleSelect}', '${asm_type}', typeValue, '${asm_responseName}');">

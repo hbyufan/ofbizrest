@@ -20,9 +20,9 @@ package org.ofbiz.order.shoppinglist;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Date;
 import java.util.Map;
 
 import javolution.util.FastMap;
@@ -143,7 +143,7 @@ public class ShoppingListServices {
                 while (((shoppingList = eli.next()) != null)) {
                     Timestamp lastOrder = shoppingList.getTimestamp("lastOrderedDate");
                     GenericValue recurrenceInfo = null;
-                    recurrenceInfo = shoppingList.getRelatedOne("RecurrenceInfo", false);
+                    recurrenceInfo = shoppingList.getRelatedOne("RecurrenceInfo");
 
                     Timestamp startDateTime = recurrenceInfo.getTimestamp("startDateTime");
                     RecurrenceInfo recurrence = null;
@@ -271,7 +271,7 @@ public class ShoppingListServices {
             beganTransaction = TransactionUtil.begin();
 
             GenericValue orderHeader = null;
-            orderHeader = delegator.findOne("OrderHeader", UtilMisc.toMap("orderId", orderId), false);
+            orderHeader = delegator.findByPrimaryKey("OrderHeader", UtilMisc.toMap("orderId", orderId));
 
             if (orderHeader == null) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(resource_error,"OrderUnableToLocateOrder", UtilMisc.toMap("orderId",orderId), locale));
@@ -312,7 +312,7 @@ public class ShoppingListServices {
             }
 
             GenericValue shoppingList = null;
-            shoppingList = delegator.findOne("ShoppingList", UtilMisc.toMap("shoppingListId", shoppingListId), false);
+            shoppingList = delegator.findByPrimaryKey("ShoppingList", UtilMisc.toMap("shoppingListId", shoppingListId));
 
             if (shoppingList == null) {
                 return ServiceUtil.returnError(UtilProperties.getMessage(resource_error,"OrderNoShoppingListAvailable",locale));
@@ -332,7 +332,7 @@ public class ShoppingListServices {
                             orderItem.get("productId"), "quantity", orderItem.get("quantity"));
                     if (EntityTypeUtil.hasParentType(delegator, "ProductType", "productTypeId", ProductWorker.getProductTypeId(delegator, productId), "parentTypeId", "AGGREGATED")) {
                         try {
-                            GenericValue instanceProduct = delegator.findOne("Product", UtilMisc.toMap("productId", productId), false);
+                            GenericValue instanceProduct = delegator.findByPrimaryKey("Product", UtilMisc.toMap("productId", productId));
                             String configId = instanceProduct.getString("configId");
                             ctx.put("configId", configId);
                             String aggregatedProductId = ProductWorker.getInstanceAggregatedId(delegator, productId);
@@ -446,7 +446,7 @@ public class ShoppingListServices {
 
             List<GenericValue> items = null;
             try {
-                items = shoppingList.getRelated("ShoppingListItem", null, UtilMisc.toList("shoppingListItemSeqId"), false);
+                items = shoppingList.getRelated("ShoppingListItem", UtilMisc.toList("shoppingListItemSeqId"));
             } catch (GenericEntityException e) {
                 Debug.logError(e, module);
             }
@@ -515,13 +515,13 @@ public class ShoppingListServices {
                         listCart.addPayment(shoppingList.getString("paymentMethodId"));
                     }
                     if (UtilValidate.isNotEmpty(shoppingList.get("contactMechId"))) {
-                        listCart.setAllShippingContactMechId(shoppingList.getString("contactMechId"));
+                        listCart.setShippingContactMechId(0, shoppingList.getString("contactMechId"));
                     }
                     if (UtilValidate.isNotEmpty(shoppingList.get("shipmentMethodTypeId"))) {
-                        listCart.setAllShipmentMethodTypeId(shoppingList.getString("shipmentMethodTypeId"));
+                        listCart.setShipmentMethodTypeId(0, shoppingList.getString("shipmentMethodTypeId"));
                     }
                     if (UtilValidate.isNotEmpty(shoppingList.get("carrierPartyId"))) {
-                        listCart.setAllCarrierPartyId(shoppingList.getString("carrierPartyId"));
+                        listCart.setCarrierPartyId(0, shoppingList.getString("carrierPartyId"));
                     }
                     if (UtilValidate.isNotEmpty(shoppingList.getString("productPromoCodeId"))) {
                         listCart.addProductPromoCode(shoppingList.getString("productPromoCodeId"), dispatcher);
@@ -536,7 +536,7 @@ public class ShoppingListServices {
         Delegator delegator = dispatcher.getDelegator();
         GenericValue shoppingList = null;
         try {
-            shoppingList = delegator.findOne("ShoppingList", UtilMisc.toMap("shoppingListId", shoppingListId), false);
+            shoppingList = delegator.findByPrimaryKey("ShoppingList", UtilMisc.toMap("shoppingListId", shoppingListId));
         } catch (GenericEntityException e) {
             Debug.logError(e, module);
         }
@@ -558,13 +558,13 @@ public class ShoppingListServices {
         Delegator delegator = ctx.getDelegator();
         String orderId = (String) context.get("orderId");
         try {
-            List<GenericValue> orderItems = delegator.findByAnd("OrderItem", UtilMisc.toMap("orderId", orderId), null, false);
+            List<GenericValue> orderItems = delegator.findByAnd("OrderItem", UtilMisc.toMap("orderId", orderId));
             for(GenericValue orderItem : orderItems) {
                 String shoppingListId = orderItem.getString("shoppingListId");
                 String shoppingListItemSeqId = orderItem.getString("shoppingListItemSeqId");
                 if (UtilValidate.isNotEmpty(shoppingListId)) {
-                    GenericValue shoppingListItem=delegator.findOne("ShoppingListItem", UtilMisc.toMap("shoppingListId",
-                                shoppingListId, "shoppingListItemSeqId", shoppingListItemSeqId), false);
+                    GenericValue shoppingListItem=delegator.findByPrimaryKey("ShoppingListItem", UtilMisc.toMap("shoppingListId",
+                                shoppingListId, "shoppingListItemSeqId", shoppingListItemSeqId));
                     if (shoppingListItem != null) {
                         BigDecimal quantityPurchased = shoppingListItem.getBigDecimal("quantityPurchased");
                         BigDecimal orderQuantity = orderItem.getBigDecimal("quantity");
@@ -617,7 +617,7 @@ public class ShoppingListServices {
                 if (expireDate.equals(nowDate) || nowDate.after(expireDate)) {
                     List<GenericValue> shoppingListItems = null;
                     try {
-                        shoppingListItems = sl.getRelated("ShoppingListItem", null, null, false);
+                        shoppingListItems = sl.getRelated("ShoppingListItem");
                     } catch (GenericEntityException e) {
                         Debug.logError(e.getMessage(), module);
                     }

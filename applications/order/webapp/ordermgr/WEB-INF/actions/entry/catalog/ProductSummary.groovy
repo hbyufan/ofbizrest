@@ -32,7 +32,6 @@ import org.ofbiz.product.catalog.*;
 import org.ofbiz.product.store.*;
 import org.ofbiz.order.shoppingcart.*;
 import org.ofbiz.product.product.ProductWorker;
-import org.ofbiz.webapp.website.WebSiteWorker
 import java.text.NumberFormat;
 
 //either optProduct, optProductId or productId must be specified
@@ -40,7 +39,7 @@ product = request.getAttribute("optProduct");
 optProductId = request.getAttribute("optProductId");
 productId = product?.productId ?: optProductId ?: request.getAttribute("productId");
 
-webSiteId = WebSiteWorker.getWebSiteId(request);
+webSiteId = CatalogWorker.getWebSiteId(request);
 catalogId = CatalogWorker.getCurrentCatalogId(request);
 cart = ShoppingCartEvents.getCartObject(request);
 productStore = null;
@@ -62,7 +61,7 @@ context.remove("totalPrice");
 
 // get the product entity
 if (!product && productId) {
-    product = delegator.findOne("Product", [productId : productId], true);
+    product = delegator.findByPrimaryKeyCache("Product", [productId : productId]);
 }
 if (product) {
     //if order is purchase then don't calculate available inventory for product.
@@ -70,13 +69,13 @@ if (product) {
         resultOutput = dispatcher.runSync("getInventoryAvailableByFacility", [productId : product.productId, facilityId : facilityId, useCache : true]);
         totalAvailableToPromise = resultOutput.availableToPromiseTotal;
         if (totalAvailableToPromise && totalAvailableToPromise.doubleValue() > 0) {
-            productFacility = delegator.findOne("ProductFacility", [productId : product.productId, facilityId : facilityId], true);
+            productFacility = delegator.findByPrimaryKeyCache("ProductFacility", [productId : product.productId, facilityId : facilityId]);
             if (productFacility?.daysToShip != null) {
                 context.daysToShip = productFacility.daysToShip;
             }
         }
     } else {
-       supplierProducts = delegator.findByAnd("SupplierProduct", [productId : product.productId], ["-availableFromDate"], true);
+       supplierProducts = delegator.findByAndCache("SupplierProduct", [productId : product.productId], ["-availableFromDate"]);
        supplierProduct = EntityUtil.getFirst(supplierProducts);
        if (supplierProduct?.standardLeadTimeDays != null) {
            standardLeadTimeDays = supplierProduct.standardLeadTimeDays;
@@ -127,19 +126,19 @@ if (product) {
     }
 
     // get the product review(s)
-    reviews = product.getRelated("ProductReview", null, ["-postedDateTime"], true);
+    reviews = product.getRelatedCache("ProductReview", null, ["-postedDateTime"]);
     
     // get product variant for Box/Case/Each
     productVariants = [];
     boolean isAlternativePacking = ProductWorker.isAlternativePacking(delegator, product.productId, null);
     mainProducts = [];
     if(isAlternativePacking){
-        productVirtualVariants = delegator.findByAnd("ProductAssoc", UtilMisc.toMap("productIdTo", product.productId , "productAssocTypeId", "ALTERNATIVE_PACKAGE"), null, true);
+        productVirtualVariants = delegator.findByAndCache("ProductAssoc", UtilMisc.toMap("productIdTo", product.productId , "productAssocTypeId", "ALTERNATIVE_PACKAGE"));
         if(productVirtualVariants){
             productVirtualVariants.each { virtualVariantKey ->
                 mainProductMap = [:];
-                mainProduct = virtualVariantKey.getRelatedOne("MainProduct", true);
-                quantityUom = mainProduct.getRelatedOne("QuantityUom", true);
+                mainProduct = virtualVariantKey.getRelatedOneCache("MainProduct");
+                quantityUom = mainProduct.getRelatedOneCache("QuantityUom");
                 mainProductMap.productId = mainProduct.productId;
                 mainProductMap.piecesIncluded = mainProduct.piecesIncluded;
                 mainProductMap.uomDesc = quantityUom.description;
@@ -171,7 +170,7 @@ if (product) {
             variantPriceJS.append("function getVariantPrice(sku) { ");
             
             virtualVariants.each { virtualAssoc ->
-                virtual = virtualAssoc.getRelatedOne("MainProduct", false);
+                virtual = virtualAssoc.getRelatedOne("MainProduct");
                 // Get price from a virtual product
                 priceContext.product = virtual;
                 if (cart.isSalesOrder()) {
@@ -220,7 +219,7 @@ if (reviews) {
 }
 
 // an example of getting features of a certain type to show
-sizeProductFeatureAndAppls = delegator.findByAnd("ProductFeatureAndAppl", [productId : productId, productFeatureTypeId : "SIZE"], ["sequenceNum", "defaultSequenceNum"], true);
+sizeProductFeatureAndAppls = delegator.findByAndCache("ProductFeatureAndAppl", [productId : productId, productFeatureTypeId : "SIZE"], ["sequenceNum", "defaultSequenceNum"]);
 
 context.product = product;
 context.categoryId = categoryId;

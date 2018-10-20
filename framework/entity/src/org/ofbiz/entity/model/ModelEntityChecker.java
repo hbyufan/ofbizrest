@@ -19,11 +19,12 @@
 package org.ofbiz.entity.model;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+
+import javolution.util.FastMap;
 
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilValidate;
@@ -44,7 +45,7 @@ public class ModelEntityChecker {
         TreeSet<String> reservedWords = new TreeSet<String>();
         initReservedWords(reservedWords);
 
-        Map<String, TreeSet<String>> packages = new HashMap<String, TreeSet<String>>();
+        Map<String, TreeSet<String>> packages = FastMap.newInstance();
         TreeSet<String> packageNames = new TreeSet<String>();
         TreeSet<String> tableNames = new TreeSet<String>();
 
@@ -215,10 +216,10 @@ public class ModelEntityChecker {
                             //if relation is of type one, make sure keyMaps
                             // match the PK of the relatedEntity
                             if ("one".equals(relation.getType()) || "one-nofk".equals(relation.getType())) {
-                                if (relatedEntity.getPksSize() != relation.getKeyMaps().size())
+                                if (relatedEntity.getPksSize() != relation.getKeyMapsSize())
                                         warningList.add("[RelatedOneKeyMapsWrongSize] The number of primary keys (" + relatedEntity.getPksSize()
                                                         + ") of related entity " + relation.getRelEntityName()
-                                                        + " does not match the number of keymaps (" + relation.getKeyMaps().size()
+                                                        + " does not match the number of keymaps (" + relation.getKeyMapsSize()
                                                         + ") for relation of type one \"" + relation.getTitle() + relation.getRelEntityName()
                                                         + "\" of entity " + entity.getEntityName() + ".");
                                 Iterator<ModelField> pksIter = relatedEntity.getPksIterator();
@@ -238,7 +239,8 @@ public class ModelEntityChecker {
                         // this entity
                         //make sure all keyMap 'relFieldName's match fields of
                         // the relatedEntity
-                        for (ModelKeyMap keyMap : relation.getKeyMaps()) {
+                        for (int rkm = 0; rkm < relation.getKeyMapsSize(); rkm++) {
+                            ModelKeyMap keyMap = relation.getKeyMap(rkm);
 
                             ModelField field = entity.getField(keyMap.getFieldName());
                             ModelField rfield = null;
@@ -282,7 +284,7 @@ public class ModelEntityChecker {
     }
 
     public static final String[] rwArray = { "ABORT", "ABS", "ABSOLUTE",
-            "ACCEPT", "ACCES", "ACCESS", "ACS", "ACTION", "ACTIVATE", "ADD", "ADDFORM",
+            "ACCEPT", "ACCES", "ACS", "ACTION", "ACTIVATE", "ADD", "ADDFORM",
             "ADMIN", "AFTER", "AGGREGATE", "ALIAS", "ALL", "ALLOCATE", "ALTER",
             "ANALYZE", "AND", "ANDFILENAME", "ANY", "ANYFINISH", "APPEND",
             "ARCHIVE", "ARE", "ARRAY", "AS", "ASC", "ASCENDING", "ASCII",
@@ -470,7 +472,7 @@ public class ModelEntityChecker {
             "START_TRANSACTION", "STATE", "STATIC", "STATISTICS", "STATUS",
             "STDDEV", "STDEV", "STEP", "STOP", "STORE", "STRAIGHT_JOIN",
             "STRING", "STRUCTURE", "SUBMENU", "SUBSTR", "SUBSTRING", "SUBTYPE",
-            "SUCCEEDS", "SUCCESFULL", "SUCCESSFULL", "SUCCESSFUL", "SUM", "SUMU", "SUPERDBA",
+            "SUCCEEDS", "SUCCESFULL", "SUCCESSFULL", "SUM", "SUMU", "SUPERDBA",
             "SYB_TERMINATE", "SYNONYM", "SYSDATE", "SYSSORT", "SYSTEM_USER",
 
             "TABLE", "TABLEDATA", "TABLES", "TEMP", "TEMPORARY", "TERMINATE",

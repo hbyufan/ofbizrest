@@ -121,7 +121,7 @@ function call_fieldlookup4(rootForumId, parentForumId ) {
 
 <@loopSubContent contentId=forumId viewIndex=0 viewSize=9999 contentAssocTypeId="SUBSITE" returnAfterPickWhen="1==1";>
        <tr>
-         <td >
+         <td class="tabletext" >
             ${indent}
             <#local plusMinus="-"/>
             ${plusMinus} ${content.contentName?if_exists}
@@ -156,28 +156,28 @@ function call_fieldlookup4(rootForumId, parentForumId ) {
   <#list mostRecentList as content>
     <@checkPermission entityOperation="_ADMIN" targetOperation="CONTENT_PUBLISH" subContentId=forumId >
         <tr>
-          <td> <b>id:</b>${content.contentId} </td>
-          <td> <b>name:</b>${content.contentName} </td>
+          <td class="tabletext"> <b>id:</b>${content.contentId} </td>
+          <td class="tabletext"> <b>name:</b>${content.contentName} </td>
       <@injectNodeTrailCsv subContentId=content.contentId redo="true" contentAssocTypeId="PUBLISH_LINK">
           <td>
   <a class="tabButton" href="<@ofbizUrl>CMSContentEdit?contentId=${content.contentId}&amp;nodeTrailCsv=${nodeTrailCsv?if_exists}</@ofbizUrl>" >View</a>
           </td>
-          <td>
+          <td class="tabletext">
           <b>submitted:</b>
           <input type="radio" name="statusId_o_${row}" value="CTNT_FINAL_DRAFT" checked="checked"/>
           </td>
-          <td>
+          <td class="tabletext">
           <b>publish:</b>
           <input type="radio" name="statusId_o_${row}" value="CTNT_PUBLISHED"/>
           </td>
-          <td>
+          <td class="tabletext">
           <b>reject:</b>
           <input type="radio" name="statusId_o_${row}" value="CTNT_DEACTIVATED"/>
           </td>
         </tr>
           <input type="hidden" name="contentId_o_${row}" value="${content.contentId}"/>
         <tr>
-          <td colspan="6">
+          <td colspan="6" class="tabletext">
           <b>content:</b><br />
             <@renderSubContentCache subContentId=content.contentId/>
           </td>

@@ -1134,23 +1134,6 @@ under the License.
     <field name="description" type="description"></field>
     <prim-key field="accommodationMapTypeId"/>
   </entity>
-    <view-entity entity-name="FixedAssetMaintWorkEffort" package-name="org.ofbiz.accounting.fixedasset"
-        title="FixedAssetMaint and WorkEffort View Entity">
-        <member-entity entity-alias="FA" entity-name="FixedAsset"/>
-        <member-entity entity-alias="FAM" entity-name="FixedAssetMaint"/>
-        <member-entity entity-alias="WE" entity-name="WorkEffort"/>
-        <alias-all entity-alias="FA"/>
-        <alias-all entity-alias="FAM"/>
-        <alias-all entity-alias="WE">
-            <exclude field="fixedAssetId"/>
-        </alias-all>
-        <view-link entity-alias="FAM" rel-entity-alias="FA">
-            <key-map field-name="fixedAssetId"/>
-        </view-link>
-        <view-link entity-alias="FAM" rel-entity-alias="WE">
-            <key-map field-name="scheduleWorkEffortId" rel-field-name="workEffortId"/>
-        </view-link>
-    </view-entity>
 
   <!-- ========================================================= -->
   <!-- org.ofbiz.accounting.invoice -->
@@ -1225,40 +1208,6 @@ under the License.
       <relation type="many" rel-entity-name="InvoiceTypeAttr">
         <key-map field-name="attrName"/>
       </relation>
-    </entity>
-    <entity entity-name="InvoiceContent" 
-            package-name="org.ofbiz.accounting.invoice" 
-            title="Invoice Content Entity">
-        <field name="invoiceId" type="id-ne"></field>
-        <field name="invoiceContentTypeId" type="id-ne"></field>
-        <field name="contentId" type="id-ne"></field>
-        <field name="fromDate" type="date-time"></field>
-        <field name="thruDate" type="date-time"></field>
-        <prim-key field="contentId"/>
-        <prim-key field="invoiceId"/>
-        <prim-key field="invoiceContentTypeId"/>
-        <prim-key field="fromDate"/>
-        <relation type="one" fk-name="INV_CNT_PROD" rel-entity-name="Invoice">
-            <key-map field-name="invoiceId"/>
-        </relation>
-        <relation type="one" fk-name="INV_CNT_CNT" rel-entity-name="Content">
-            <key-map field-name="contentId"/>
-        </relation>
-        <relation type="one" fk-name="INV_CNT_TYPE" rel-entity-name="InvoiceContentType">
-            <key-map field-name="invoiceContentTypeId"/>
-        </relation>
-    </entity>
-    <entity entity-name="InvoiceContentType" 
-            package-name="org.ofbiz.accounting.invoice"
-            title="Invoice Content Type Entity">
-        <field name="invoiceContentTypeId" type="id-ne"></field>
-        <field name="parentTypeId" type="id"></field>
-        <field name="hasTable" type="indicator"></field>
-        <field name="description" type="description"></field>
-        <prim-key field="invoiceContentTypeId"/>
-        <relation type="one" fk-name="INVCT_TYP_PARENT" title="Parent" rel-entity-name="InvoiceContentType">
-            <key-map field-name="parentTypeId" rel-field-name="invoiceContentTypeId"/>
-        </relation>
     </entity>
     <entity entity-name="InvoiceContactMech"
             package-name="org.ofbiz.accounting.invoice"
@@ -1601,20 +1550,6 @@ under the License.
         <key-map field-name="invoiceTypeId"/>
       </relation>
     </entity>
-    <entity entity-name="InvoiceNote"
-            package-name="org.ofbiz.accounting.invoice"
-            title="Invoice Note Entity">
-      <field name="invoiceId" type="id-ne"></field>
-      <field name="noteId" type="id-ne"></field>
-      <prim-key field="invoiceId"/>
-      <prim-key field="noteId"/>
-      <relation type="one" fk-name="INVOICE_NOTE_INV" rel-entity-name="Invoice">
-        <key-map field-name="invoiceId"/>
-      </relation>
-      <relation type="one" fk-name="INVOICE_NOTE_NOTE" rel-entity-name="NoteData">
-        <key-map field-name="noteId"/>
-      </relation>
-    </entity>
 
   <view-entity entity-name="InvoiceAndApplAndPayment" package-name="org.ofbiz.accounting.invoice" title="Invoice and related applications and payments">
     <member-entity entity-alias="INV" entity-name="Invoice"/>
@@ -1686,38 +1621,6 @@ under the License.
             <key-map field-name="productId"/>
         </view-link>
     </view-entity>
-
-    <view-entity entity-name="InvoiceContentAndInfo"
-            package-name="org.ofbiz.accounting.invoice"
-            title="InvoiceContent Content and DataResource View Entity">
-      <member-entity entity-alias="INVC" entity-name="InvoiceContent"/>
-      <member-entity entity-alias="CO" entity-name="Content"/>
-      <member-entity entity-alias="DR" entity-name="DataResource"/>
-      <alias-all entity-alias="INVC"/>
-      <alias-all entity-alias="CO"/>
-      <alias-all entity-alias="DR" prefix="dr"/>
-      <view-link entity-alias="INVC" rel-entity-alias="CO">
-        <key-map field-name="contentId"/>
-      </view-link>
-      <view-link entity-alias="CO" rel-entity-alias="DR">
-        <key-map field-name="dataResourceId"/>
-      </view-link>
-      <relation type="one-nofk" rel-entity-name="ElectronicText">
-        <key-map field-name="dataResourceId"/>
-      </relation>
-      <relation type="one-nofk" rel-entity-name="ImageDataResource">
-        <key-map field-name="dataResourceId"/>
-      </relation>
-      <relation type="one-nofk" rel-entity-name="OtherDataResource">
-        <key-map field-name="dataResourceId"/>
-      </relation>
-      <relation type="many" rel-entity-name="ContentAssocDataResourceViewFrom">
-        <key-map field-name="contentId" rel-field-name="contentIdStart"/>
-      </relation>
-      <relation type="many" rel-entity-name="ContentAssocDataResourceViewTo">
-        <key-map field-name="contentId" rel-field-name="contentIdStart"/>
-      </relation>
-    </view-entity>
   <!-- ========================================================= -->
   <!-- org.ofbiz.accounting.ledger -->
   <!-- ========================================================= -->
@@ -1749,9 +1652,7 @@ under the License.
       <field name="receiptId" type="id"></field>
       <field name="workEffortId" type="id"></field>
       <field name="theirAcctgTransId" type="id-long"></field>
-      <field name="createdDate" type="date-time"></field>      
       <field name="createdByUserLogin" type="id-vlong"></field>
-      <field name="lastModifiedDate" type="date-time"></field>
       <field name="lastModifiedByUserLogin" type="id-vlong"></field>
       <prim-key field="acctgTransId"/>
       <relation type="one" fk-name="ACCTTX_TYPE" rel-entity-name="AcctgTransType">
@@ -2052,6 +1953,7 @@ under the License.
       <field name="description" type="description"></field>
       <field name="productId" type="id"></field>
       <field name="externalId" type="id"><description>id of the account in an external system where the accounts are imported/exported</description></field>
+      <field name="postedBalance" type="currency-amount"></field>
       <prim-key field="glAccountId"/>
       <relation type="one" fk-name="GLACCT_TYPE" rel-entity-name="GlAccountType">
         <key-map field-name="glAccountTypeId"/>
@@ -2127,7 +2029,6 @@ under the License.
       <field name="glAccountId" type="id-ne"></field>
       <field name="organizationPartyId" type="id-ne"></field>
       <field name="customTimePeriodId" type="id-ne"></field>
-      <field name="openingBalance" type="currency-amount"></field>
       <field name="postedDebits" type="currency-amount"></field>
       <field name="postedCredits" type="currency-amount"></field>
       <field name="endingBalance" type="currency-amount"></field>
@@ -2201,6 +2102,7 @@ under the License.
       <field name="roleTypeId" type="id-ne"></field>
       <field name="fromDate" type="date-time"></field>
       <field name="thruDate" type="date-time"></field>
+      <field name="postedBalance" type="currency-amount"></field>
       <prim-key field="glAccountId"/>
       <prim-key field="organizationPartyId"/>
       <relation type="one" fk-name="GLACCT_ORG_GLA" rel-entity-name="GlAccount">
@@ -2223,7 +2125,10 @@ under the License.
       <member-entity entity-alias="GLAO" entity-name="GlAccountOrganization"/>
       <member-entity entity-alias="GLA" entity-name="GlAccount"/>
       <alias-all entity-alias="GLAO"/>
-      <alias-all entity-alias="GLA"/>
+      <alias-all entity-alias="GLA">
+        <exclude field="postedBalance"/>
+      </alias-all>
+      <alias entity-alias="GLA" name="accountPostedBalance" field="postedBalance"/>
       <view-link entity-alias="GLAO" rel-entity-alias="GLA">
         <key-map field-name="glAccountId"/>
       </view-link>
@@ -2337,9 +2242,7 @@ under the License.
       <field name="glReconciliationId" type="id-ne"></field>
       <field name="glReconciliationName" type="name"></field>
       <field name="description" type="description"></field>
-      <field name="createdDate" type="date-time"></field>
       <field name="createdByUserLogin" type="id-vlong"></field>
-      <field name="lastModifiedDate" type="date-time"></field>
       <field name="lastModifiedByUserLogin" type="id-vlong"></field>
       <field name="glAccountId" type="id-ne"></field>
       <field name="statusId" type="id-ne"></field>
@@ -3696,9 +3599,6 @@ under the License.
       <field name="workingKey" type="very-long"></field>
       <field name="workingKeyIndex" type="numeric"></field>
       <field name="lastWorkingKey" type="very-long"></field>
-      <field name="createdDate" type="date-time"></field>
-      <field name="createdByTerminal" type="short-varchar"></field>
-      <field name="createdByUserLogin" type="id-vlong"></field>
       <field name="lastModifiedDate" type="date-time"></field>
       <field name="lastModifiedByTerminal" type="short-varchar"></field>
       <field name="lastModifiedByUserLogin" type="id-vlong"></field>

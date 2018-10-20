@@ -34,8 +34,10 @@ if (!priceRuleId) {
 if (priceRuleId) {
     productPriceRules = [];
     productPriceRules.add(delegator.findOne("ProductPriceRule", [productPriceRuleId : priceRuleId], false));
-    productPriceConds = productPriceRules[0].getRelated("ProductPriceCond", null, ["productPriceCondSeqId"], true);
-    productPriceActions = productPriceRules[0].getRelated("ProductPriceAction", null, ["productPriceActionSeqId"], true);
+    productPriceConds = productPriceRules[0].getRelatedCache("ProductPriceCond");
+    productPriceConds = EntityUtil.orderBy(productPriceConds, UtilMisc.toList("productPriceCondSeqId"));
+    productPriceActions = productPriceRules[0].getRelatedCache("ProductPriceAction");
+    productPriceActions = EntityUtil.orderBy(productPriceActions, UtilMisc.toList("productPriceActionSeqId"));
     
     productPriceCondAdd = [];
     productPriceCondAdd.add(delegator.makeValue("ProductPriceCond"));

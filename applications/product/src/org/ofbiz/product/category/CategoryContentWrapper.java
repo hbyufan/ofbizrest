@@ -35,7 +35,6 @@ import org.ofbiz.base.util.StringUtil;
 import org.ofbiz.base.util.UtilHttp;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilValidate;
-import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.GeneralRuntimeException;
 import org.ofbiz.content.content.ContentWorker;
 import org.ofbiz.content.content.ContentWrapper;
@@ -130,7 +129,7 @@ public class CategoryContentWrapper implements ContentWrapper {
         ModelEntity categoryModel = delegator.getModelEntity("ProductCategory");
         if (categoryModel.isField(candidateFieldName)) {
             if (productCategory == null) {
-                productCategory = delegator.findOne("ProductCategory", UtilMisc.toMap("productCategoryId", productCategoryId), true);
+                productCategory = delegator.findByPrimaryKeyCache("ProductCategory", UtilMisc.toMap("productCategoryId", productCategoryId));
             }
             if (productCategory != null) {
                 String candidateValue = productCategory.getString(candidateFieldName);
@@ -141,25 +140,9 @@ public class CategoryContentWrapper implements ContentWrapper {
             }
         }
 
-        List<GenericValue> categoryContentList = delegator.findByAnd("ProductCategoryContent", UtilMisc.toMap("productCategoryId", productCategoryId, "prodCatContentTypeId", prodCatContentTypeId), UtilMisc.toList("-fromDate"), true);
+        List<GenericValue> categoryContentList = delegator.findByAndCache("ProductCategoryContent", UtilMisc.toMap("productCategoryId", productCategoryId, "prodCatContentTypeId", prodCatContentTypeId), UtilMisc.toList("-fromDate"));
         categoryContentList = EntityUtil.filterByDate(categoryContentList);
-        
-        GenericValue categoryContent = null;
-        String sessionLocale = locale.toString();
-        String fallbackLocale = UtilProperties.getFallbackLocale().toString();
-        if ( sessionLocale == null ) sessionLocale = fallbackLocale;
-        // look up all content found for locale
-        for( GenericValue currentContent: categoryContentList ) {
-            GenericValue content = currentContent.getRelatedOne("Content", true);
-            if ( sessionLocale.equals(content.getString("localeString")) ) {
-              // valid locale found
-              categoryContent = currentContent;
-              break;
-            } else if ( fallbackLocale.equals(content.getString("localeString")) ) {
-              // fall back to default locale
-              categoryContent = currentContent;
-            }
-        }
+        GenericValue categoryContent = EntityUtil.getFirst(categoryContentList);
         if (categoryContent != null) {
             // when rendering the category content, always include the Product Category and ProductCategoryContent records that this comes from
             Map<String, Object> inContext = FastMap.newInstance();

@@ -49,11 +49,11 @@
 <#macro fillTreeSubsites assocList>
       <#if (assocList?has_content)>
         <#list assocList as assoc>
-            <#assign content = assoc.getRelatedOne("ToContent", false)/>
+            <#assign content = assoc.getRelatedOne("ToContent")/>
             {
             "data": {"title" : cutNameLength("${content.contentName!assoc.contentIdTo}"), "attr": {"href": "javascript:void(0);", "onClick" : "callDocument('', '${assoc.contentIdTo}', jQuery('#${assoc.contentIdTo}'), '');"}},
            
-            <#assign assocChilds  = content.getRelated("FromContentAssoc", null, null, false)?if_exists/>
+            <#assign assocChilds  = content.getRelated("FromContentAssoc")?if_exists/>
                 "attr": {"id" : "${assoc.contentIdTo}", "contentId" : "${assoc.contentId}", "fromDate" : "${assoc.fromDate}", "contentAssocTypeId" : "${assoc.contentAssocTypeId}"}
             <#if assocChilds?has_content>
                 ,"children": [
@@ -71,10 +71,10 @@
 <#macro fillTreeMenus assocList>
       <#if (assocList?has_content)>
         <#list assocList as assoc>
-            <#assign content = assoc.getRelatedOne("ToContent", false)/>
+            <#assign content = assoc.getRelatedOne("ToContent")/>
             {
             "data": {"title" : cutNameLength("${content.contentName!assoc.contentIdTo}"), "attr": {"href": "javascript:void(0);", "onClick" : "callDocument('${assoc.contentIdTo}');"}},
-            <#assign assocChilds  = content.getRelated("FromContentAssoc", null, null, false)?if_exists/>
+            <#assign assocChilds  = content.getRelated("FromContentAssoc")?if_exists/>
                 "attr": {"id" : "${assoc.contentIdTo}", "contentId" : "${assoc.contentId}", "fromDate" : "${assoc.fromDate}"}
             <#if assocChilds?has_content>
                 ,"children": [
@@ -93,10 +93,10 @@
 <#macro fillTreeError assocList>
       <#if (assocList?has_content)>
         <#list assocList as assoc>
-            <#assign content = assoc.getRelatedOne("ToContent", false)/>
+            <#assign content = assoc.getRelatedOne("ToContent")/>
             {
             "data": {"title" : cutNameLength("${content.contentName!assoc.contentIdTo}"), "attr": {"href": "javascript:void(0);", "onClick" : "callDocument('', '${assoc.contentIdTo}', '', '');"}},
-            <#assign assocChilds  = content.getRelated("FromContentAssoc", null, null, false)?if_exists/>
+            <#assign assocChilds  = content.getRelated("FromContentAssoc")?if_exists/>
                 "attr": {"id" : "${assoc.contentIdTo}", "contentId" : "${assoc.contentId}", "fromDate" : "${assoc.fromDate}"}
             <#if assocChilds?has_content>
                 ,"children": [

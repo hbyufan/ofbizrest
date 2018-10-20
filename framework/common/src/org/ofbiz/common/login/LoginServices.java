@@ -23,8 +23,6 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.transaction.Transaction;
 
@@ -120,7 +118,7 @@ public class LoginServices {
             }
 
             boolean repeat = true;
-            // starts at zero but it incremented at the beginning so in the first pass passNumber will be 1
+            // starts at zero but it incremented at the beggining so in the first pass passNumber will be 1
             int passNumber = 0;
 
             while (repeat) {
@@ -409,7 +407,7 @@ public class LoginServices {
                     } else {
                         // userLogin record not found, user does not exist
                         errMsg = UtilProperties.getMessage(resource, "loginservices.user_not_found", locale);
-                        Debug.logInfo("[LoginServices.userLogin] Invalid User : '" + username + "'; " + errMsg, module);
+                        Debug.logInfo("[LoginServices.userLogin] : Invalid User : " + errMsg, module);
                     }
                 }
             }
@@ -422,7 +420,7 @@ public class LoginServices {
         return result;
     }
 
-    public static void createUserLoginPasswordHistory(Delegator delegator,String userLoginId, String currentPassword) throws GenericEntityException{
+    private static void createUserLoginPasswordHistory(Delegator delegator,String userLoginId, String currentPassword) throws GenericEntityException{
         int passwordChangeHistoryLimit = 0;
         try {
             passwordChangeHistoryLimit = Integer.parseInt(UtilProperties.getPropertyValue("security.properties", "password.change.history.limit", "0"));
@@ -458,7 +456,7 @@ public class LoginServices {
         // save this password in history
         GenericValue userLoginPwdHistToCreate = delegator.makeValue("UserLoginPasswordHistory", UtilMisc.toMap("userLoginId", userLoginId,"fromDate", nowTimestamp));
         boolean useEncryption = "true".equals(UtilProperties.getPropertyValue("security.properties", "password.encrypt"));
-        userLoginPwdHistToCreate.set("currentPassword", useEncryption ? HashCrypt.cryptUTF8(getHashType(), null, currentPassword) : currentPassword);
+        userLoginPwdHistToCreate.set("currentPassword", useEncryption ? HashCrypt.cryptPassword(getHashType(), currentPassword) : currentPassword);
         userLoginPwdHistToCreate.create();
     }
 
@@ -522,7 +520,7 @@ public class LoginServices {
         userLoginToCreate.set("passwordHint", passwordHint);
         userLoginToCreate.set("enabled", enabled);
         userLoginToCreate.set("requirePasswordChange", requirePasswordChange);
-        userLoginToCreate.set("currentPassword", useEncryption ? HashCrypt.cryptUTF8(getHashType(), null, currentPassword) : currentPassword);
+        userLoginToCreate.set("currentPassword", useEncryption ? HashCrypt.cryptPassword(getHashType(), currentPassword) : currentPassword);
         try {
             userLoginToCreate.set("partyId", partyId);
         } catch (Exception e) {
@@ -674,7 +672,7 @@ public class LoginServices {
                 return ServiceUtil.returnError(errMsg);
             }
         } else {
-            userLoginToUpdate.set("currentPassword", useEncryption ? HashCrypt.cryptUTF8(getHashType(), null, newPassword) : newPassword, false);
+            userLoginToUpdate.set("currentPassword", useEncryption ? HashCrypt.cryptPassword(getHashType(), newPassword) : newPassword, false);
             userLoginToUpdate.set("passwordHint", passwordHint, false);
             userLoginToUpdate.set("requirePasswordChange", "N");
 
@@ -724,7 +722,7 @@ public class LoginServices {
         if (UtilValidate.isNotEmpty(partyId)) {
             //GenericValue party = null;
             //try {
-            //    party = delegator.findOne("Party", UtilMisc.toMap("partyId", partyId), false);
+            //    party = delegator.findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
             //} catch (GenericEntityException e) {
             //    Debug.logWarning(e, "", module);
             //}
@@ -925,15 +923,18 @@ public class LoginServices {
         if (passwordChangeHistoryLimit > 0 && userLogin != null) {
             Debug.logInfo(" checkNewPassword Checking if user is tyring to use old password " + passwordChangeHistoryLimit, module);
             Delegator delegator = userLogin.getDelegator();
+            String newPasswordHash = newPassword;
+            if (useEncryption) {
+                newPasswordHash = HashCrypt.cryptPassword(getHashType(), newPassword);
+            }
             try {
-                List<GenericValue> pwdHistList = delegator.findByAnd("UserLoginPasswordHistory", UtilMisc.toMap("userLoginId",userLogin.getString("userLoginId")), UtilMisc.toList("-fromDate"), false);
-                for (GenericValue pwdHistValue : pwdHistList) {
-                    if (checkPassword(pwdHistValue.getString("currentPassword"), useEncryption, newPassword)) {
-                        Map<String, Integer> messageMap = UtilMisc.toMap("passwordChangeHistoryLimit", passwordChangeHistoryLimit);
-                        errMsg = UtilProperties.getMessage(resource,"loginservices.password_must_be_different_from_last_passwords", messageMap, locale);
-                        errorMessageList.add(errMsg);
-                        break;
-                    }
+                List<GenericValue> pwdHistList = delegator.findByAnd("UserLoginPasswordHistory", UtilMisc.toMap("userLoginId",userLogin.getString("userLoginId"),"currentPassword",newPasswordHash));
+                Debug.logInfo(" checkNewPassword pwdHistListpwdHistList " + pwdHistList.size(), module);
+                if (pwdHistList.size() >0) {
+                    Map<String, Integer> messageMap = UtilMisc.toMap("passwordChangeHistoryLimit", passwordChangeHistoryLimit);
+                    errMsg = UtilProperties.getMessage(resource,"loginservices.password_must_be_different_from_last_passwords", messageMap, locale);
+                    errorMessageList.add(errMsg);
+                    Debug.logInfo(" checkNewPassword errorMessageListerrorMessageList " + pwdHistList.size(), module);
                 }
             } catch (GenericEntityException e) {
                 Debug.logWarning(e, "", module);
@@ -952,29 +953,10 @@ public class LoginServices {
         }
 
         if (newPassword != null) {
-            // Matching password with pattern
-            String passwordPattern = UtilProperties.getPropertyValue("security.properties", "security.login.password.pattern", "^.*(?=.{5,}).*$");
-            boolean usePasswordPattern = UtilProperties.getPropertyAsBoolean("security.properties", "security.login.password.pattern.enable", true);
-            if (usePasswordPattern) {
-                Pattern pattern = Pattern.compile(passwordPattern);
-                Matcher matcher = pattern.matcher(newPassword);
-                boolean matched = matcher.matches();
-                if (!matched) {
-                    // This is a mix to handle the OOTB pattern which is only a fixed length
-                    Map<String, String> messageMap = UtilMisc.toMap("minPasswordLength", Integer.toString(minPasswordLength));
-                    String passwordPatternMessage = UtilProperties.getPropertyValue("security.properties",
-                            "security.login.password.pattern.description", "loginservices.password_must_be_least_characters_long");
-                    errMsg = UtilProperties.getMessage(resource, passwordPatternMessage, messageMap, locale);
-                    messageMap = UtilMisc.toMap("passwordPatternMessage", errMsg);
-                    errMsg = UtilProperties.getMessage(resource,"loginservices.password.pattern.errmsg", messageMap, locale);
-                    errorMessageList.add(errMsg);
-                }
-            } else {
-                if (!(newPassword.length() >= minPasswordLength)) {
-                    Map<String, String> messageMap = UtilMisc.toMap("minPasswordLength", Integer.toString(minPasswordLength));
-                    errMsg = UtilProperties.getMessage(resource,"loginservices.password_must_be_least_characters_long", messageMap, locale);
-                    errorMessageList.add(errMsg);
-                }
+            if (!(newPassword.length() >= minPasswordLength)) {
+                Map<String, String> messageMap = UtilMisc.toMap("minPasswordLength", Integer.toString(minPasswordLength));
+                errMsg = UtilProperties.getMessage(resource,"loginservices.password_must_be_least_characters_long", messageMap, locale);
+                errorMessageList.add(errMsg);
             }
             if (userLogin != null && newPassword.equalsIgnoreCase(userLogin.getString("userLoginId"))) {
                 errMsg = UtilProperties.getMessage(resource,"loginservices.password_may_not_equal_username", locale);

@@ -89,7 +89,22 @@ var rawdata = [
   }
   
   function callDocument(id,type) {
-   window.location = "viewprofile?partyId=" + id;
+    //jQuerry Ajax Request
+    var dataSet = {};
+        URL = 'viewprofile';
+        dataSet = {"partyId" : id, "ajaxUpdateEvent" : "Y"};
+        
+    jQuery.ajax({
+        url: URL,
+        type: 'POST',
+        data: dataSet,
+        error: function(msg) {
+            alert("An error occured loading content! : " + msg);
+        },
+        success: function(msg) {
+            jQuery('div.contentarea').html(msg);
+        }
+    });
   }
   
   function callEmplDocument(id,type) {

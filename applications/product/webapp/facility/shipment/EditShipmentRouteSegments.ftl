@@ -35,7 +35,7 @@ under the License.
                 <div>${uiLabelMap.ProductOriginDestinationPhoneId}</div>
                 <div>${uiLabelMap.ProductShipmentThirdPartyAccountNumber}</div>
                 <div>${uiLabelMap.ProductShipmentThirdPartyPostalCode}</div>
-                <div>${uiLabelMap.ProductShipmentThirdCommonCountryCode}</div>
+                <div>${uiLabelMap.ProductShipmentThirdPartyCountryCode}</div>
             </td>
             <td valign="top">
                 <div>${uiLabelMap.ProductShipmentFedexHomeDeliveryTypeDate}</div>

@@ -35,9 +35,9 @@ import javolution.util.FastList;
 
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.StringUtil;
-import org.ofbiz.base.util.StringUtil.StringWrapper;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilValidate;
+import org.ofbiz.base.util.StringUtil.StringWrapper;
 import org.ofbiz.common.UrlServletHelper;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericEntityException;
@@ -66,9 +66,7 @@ public class CatalogUrlFilter extends ContextFilter {
         
         //Get ServletContext
         ServletContext servletContext = config.getServletContext();
-
-        ContextFilter.setCharacterEncoding(request);
-
+        
         //Set request attribute and session
         UrlServletHelper.setRequestAttributes(request, delegator, servletContext);
         
@@ -96,10 +94,10 @@ public class CatalogUrlFilter extends ContextFilter {
                     if (UtilValidate.isNotEmpty(productContentInfos)) {
                         for(GenericValue productContentInfo : productContentInfos){
                             String contentId = (String) productContentInfo.get("contentId");
-                            List<GenericValue> ContentAssocDataResourceViewTos = delegator.findByAnd("ContentAssocDataResourceViewTo", UtilMisc.toMap("contentIdStart", contentId, "caContentAssocTypeId", "ALTERNATE_LOCALE", "drDataResourceTypeId", "ELECTRONIC_TEXT"), null, true);
+                            List<GenericValue> ContentAssocDataResourceViewTos = delegator.findByAndCache("ContentAssocDataResourceViewTo", UtilMisc.toMap("contentIdStart", contentId, "caContentAssocTypeId", "ALTERNATE_LOCALE", "drDataResourceTypeId", "ELECTRONIC_TEXT"));
                             if (UtilValidate.isNotEmpty(ContentAssocDataResourceViewTos)){
                                 for (GenericValue ContentAssocDataResourceViewTo : ContentAssocDataResourceViewTos) {
-                                    GenericValue ElectronicText = ContentAssocDataResourceViewTo.getRelatedOne("ElectronicText", true);
+                                    GenericValue ElectronicText = ContentAssocDataResourceViewTo.getRelatedOneCache("ElectronicText");
                                     if (UtilValidate.isNotEmpty(ElectronicText)) {
                                         String textData = (String) ElectronicText.get("textData");
                                         textData = UrlServletHelper.invalidCharacter(textData);
@@ -117,9 +115,9 @@ public class CatalogUrlFilter extends ContextFilter {
                                 }
                             } 
                             if (UtilValidate.isEmpty(productId)) {
-                                List<GenericValue> contentDataResourceViews = delegator.findByAnd("ContentDataResourceView", UtilMisc.toMap("contentId", contentId, "drDataResourceTypeId", "ELECTRONIC_TEXT"), null, true);
+                                List<GenericValue> contentDataResourceViews = delegator.findByAndCache("ContentDataResourceView", UtilMisc.toMap("contentId", contentId, "drDataResourceTypeId", "ELECTRONIC_TEXT"));
                                 for (GenericValue contentDataResourceView : contentDataResourceViews) {
-                                    GenericValue ElectronicText = contentDataResourceView.getRelatedOne("ElectronicText", true);
+                                    GenericValue ElectronicText = contentDataResourceView.getRelatedOneCache("ElectronicText");
                                     if (UtilValidate.isNotEmpty(ElectronicText)) {
                                         String textData = (String) ElectronicText.get("textData");
                                         if (UtilValidate.isNotEmpty(textData)) {
@@ -151,10 +149,10 @@ public class CatalogUrlFilter extends ContextFilter {
                     if (UtilValidate.isNotEmpty(productCategoryContentInfos)) {
                         for(GenericValue productCategoryContentInfo : productCategoryContentInfos){
                             String contentId = (String) productCategoryContentInfo.get("contentId");
-                            List<GenericValue> ContentAssocDataResourceViewTos = delegator.findByAnd("ContentAssocDataResourceViewTo", UtilMisc.toMap("contentIdStart", contentId, "caContentAssocTypeId", "ALTERNATE_LOCALE", "drDataResourceTypeId", "ELECTRONIC_TEXT"), null, true);
+                            List<GenericValue> ContentAssocDataResourceViewTos = delegator.findByAndCache("ContentAssocDataResourceViewTo", UtilMisc.toMap("contentIdStart", contentId, "caContentAssocTypeId", "ALTERNATE_LOCALE", "drDataResourceTypeId", "ELECTRONIC_TEXT"));
                             if (UtilValidate.isNotEmpty(ContentAssocDataResourceViewTos)){
                                 for (GenericValue ContentAssocDataResourceViewTo : ContentAssocDataResourceViewTos) {
-                                    GenericValue ElectronicText = ContentAssocDataResourceViewTo.getRelatedOne("ElectronicText", true);
+                                    GenericValue ElectronicText = ContentAssocDataResourceViewTo.getRelatedOneCache("ElectronicText");
                                     if (UtilValidate.isNotEmpty(ElectronicText)){
                                         String textData = (String) ElectronicText.get("textData");
                                         if (UtilValidate.isNotEmpty(textData)) {
@@ -174,9 +172,9 @@ public class CatalogUrlFilter extends ContextFilter {
                                 }
                             } 
                             if (UtilValidate.isEmpty(productCategoryId)) {
-                                List<GenericValue> contentDataResourceViews = delegator.findByAnd("ContentDataResourceView", UtilMisc.toMap("contentId", contentId, "drDataResourceTypeId", "ELECTRONIC_TEXT"), null, true);
+                                List<GenericValue> contentDataResourceViews = delegator.findByAndCache("ContentDataResourceView", UtilMisc.toMap("contentId", contentId, "drDataResourceTypeId", "ELECTRONIC_TEXT"));
                                 for (GenericValue contentDataResourceView : contentDataResourceViews) {
-                                    GenericValue ElectronicText = contentDataResourceView.getRelatedOne("ElectronicText", true);
+                                    GenericValue ElectronicText = contentDataResourceView.getRelatedOneCache("ElectronicText");
                                     if (UtilValidate.isNotEmpty(ElectronicText)) {
                                         String textData = (String) ElectronicText.get("textData");
                                         if (UtilValidate.isNotEmpty(textData)) {
@@ -344,7 +342,7 @@ public class CatalogUrlFilter extends ContextFilter {
             GenericValue productCategory = delegator.findOne("ProductCategory", UtilMisc.toMap("productCategoryId", productCategoryId), true);
             CategoryContentWrapper wrapper = new CategoryContentWrapper(productCategory, request);
             List<String> trail = CategoryWorker.getTrail(request);
-            return makeCategoryUrl(delegator, wrapper, trail, request.getContextPath(), previousCategoryId, productCategoryId, productId, viewSize, viewIndex, viewSort, searchString);
+            return makeCategoryUrl(delegator, wrapper, trail, request.getSession().getServletContext().getContextPath(), previousCategoryId, productCategoryId, productId, viewSize, viewIndex, viewSort, searchString);
         } catch (GenericEntityException e) {
             Debug.logWarning(e, "Cannot create category's URL for: " + productCategoryId, module);
             return redirectUrl;
@@ -419,7 +417,7 @@ public class CatalogUrlFilter extends ContextFilter {
             GenericValue product = delegator.findOne("Product", UtilMisc.toMap("productId", productId), true);
             ProductContentWrapper wrapper = new ProductContentWrapper(product, request);
             List<String> trail = CategoryWorker.getTrail(request);
-            url = makeProductUrl(delegator, wrapper, trail, request.getContextPath(), previousCategoryId, productCategoryId, productId);
+            url = makeProductUrl(delegator, wrapper, trail, request.getSession().getServletContext().getContextPath(), previousCategoryId, productCategoryId, productId);
         } catch (GenericEntityException e) {
             Debug.logWarning(e, "Cannot create product's URL for: " + productId, module);
             return redirectUrl;

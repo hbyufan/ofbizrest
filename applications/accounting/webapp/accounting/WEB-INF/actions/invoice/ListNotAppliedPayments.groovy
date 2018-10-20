@@ -32,7 +32,7 @@ import org.ofbiz.entity.condition.EntityOperator;
 import java.math.*;
 
 invoiceId = parameters.invoiceId;
-invoice = delegator.findOne("Invoice", [invoiceId : invoiceId], false);
+invoice = delegator.findByPrimaryKey("Invoice", [invoiceId : invoiceId]);
 
 decimals = UtilNumber.getBigDecimalScale("invoice.decimals");
 rounding = UtilNumber.getBigDecimalRoundingMode("invoice.rounding");
@@ -40,7 +40,7 @@ rounding = UtilNumber.getBigDecimalRoundingMode("invoice.rounding");
 exprBldr = new EntityConditionBuilder();
 preCurrencyCond = exprBldr.AND() {
     EQUALS(partyIdTo: invoice.partyIdFrom)
-    EQUALS(partyIdFrom: invoice.partyId)
+    EQUALS(partyIdFrom: invoice.partyIdTo)
     IN(statusId: ["PMNT_NOT_PAID", "PMNT_RECEIVED", "PMNT_SENT"])
 }
 

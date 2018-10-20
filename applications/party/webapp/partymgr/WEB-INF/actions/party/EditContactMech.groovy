@@ -32,7 +32,7 @@ context.paymentMethodId = parameters.paymentMethodId;
 
 cmNewPurposeTypeId = parameters.contactMechPurposeTypeId;
 if (cmNewPurposeTypeId) {
-    contactMechPurposeType = delegator.findOne("ContactMechPurposeType", [contactMechPurposeTypeId : cmNewPurposeTypeId], false);
+    contactMechPurposeType = delegator.findByPrimaryKey("ContactMechPurposeType", [contactMechPurposeTypeId : cmNewPurposeTypeId]);
     if (contactMechPurposeType) {
         context.contactMechPurposeType = contactMechPurposeType;
     } else {

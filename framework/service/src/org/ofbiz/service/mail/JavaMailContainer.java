@@ -22,9 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.mail.FetchProfile;
 import javax.mail.Flags;
 import javax.mail.Folder;
@@ -49,9 +48,9 @@ import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.DelegatorFactory;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.GenericEntityException;
+import org.ofbiz.service.GenericDispatcher;
 import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.service.GenericServiceException;
-import org.ofbiz.service.ServiceContainer;
 
 public class JavaMailContainer implements Container {
 
@@ -63,12 +62,12 @@ public class JavaMailContainer implements Container {
     protected GenericValue userLogin = null;
     protected long timerDelay = 300000;
     protected long maxSize = 1000000;
-    protected ScheduledExecutorService pollTimer = null;
+    protected Timer pollTimer = null;
     protected boolean deleteMail = false;    // whether to delete emails after fetching them.
 
     protected String configFile = null;
     protected Map<Store, Session> stores = null;
-    private String name;
+
     /**
      * Initialize the container
      *
@@ -77,11 +76,10 @@ public class JavaMailContainer implements Container {
      * @throws org.ofbiz.base.container.ContainerException
      *
      */
-    public void init(String[] args, String name, String configFile) throws ContainerException {
-        this.name = name;
+    public void init(String[] args, String configFile) throws ContainerException {
         this.configFile = configFile;
         this.stores = new LinkedHashMap<Store, Session>();
-        this.pollTimer = Executors.newScheduledThreadPool(1);
+        this.pollTimer = new Timer();
     }
 
     /**
@@ -92,13 +90,13 @@ public class JavaMailContainer implements Container {
      *
      */
     public boolean start() throws ContainerException {
-        ContainerConfig.Container cfg = ContainerConfig.getContainer(name, configFile);
+        ContainerConfig.Container cfg = ContainerConfig.getContainer("javamail-container", configFile);
         String dispatcherName = ContainerConfig.getPropertyValue(cfg, "dispatcher-name", "JavaMailDispatcher");
         String delegatorName = ContainerConfig.getPropertyValue(cfg, "delegator-name", "default");
         this.deleteMail = "true".equals(ContainerConfig.getPropertyValue(cfg, "delete-mail", "false"));
 
         this.delegator = DelegatorFactory.getDelegator(delegatorName);
-        this.dispatcher = ServiceContainer.getLocalDispatcher(dispatcherName, delegator);
+        this.dispatcher = GenericDispatcher.getLocalDispatcher(dispatcherName, delegator);
         this.timerDelay = ContainerConfig.getPropertyValue(cfg, "poll-delay", 300000);
         this.maxSize = ContainerConfig.getPropertyValue(cfg, "maxSize", 1000000); // maximum size in bytes
 
@@ -127,7 +125,7 @@ public class JavaMailContainer implements Container {
 
         // start the polling timer
         if (UtilValidate.isNotEmpty(stores)) {
-            pollTimer.scheduleAtFixedRate(new PollerTask(dispatcher, userLogin), timerDelay, timerDelay, TimeUnit.MILLISECONDS);
+            pollTimer.schedule(new PollerTask(dispatcher, userLogin), timerDelay, timerDelay);
         } else {
             Debug.logWarning("No JavaMail Store(s) configured; poller disabled.", module);
         }
@@ -143,12 +141,8 @@ public class JavaMailContainer implements Container {
      */
     public void stop() throws ContainerException {
         // stop the poller
-        this.pollTimer.shutdown();
+        this.pollTimer.cancel();
         Debug.logWarning("stop JavaMail poller", module);
-    }
-
-    public String getName() {
-        return name;
     }
 
     // java-mail methods
@@ -251,7 +245,7 @@ public class JavaMailContainer implements Container {
         }
     }
 
-    class PollerTask implements Runnable {
+    class PollerTask extends TimerTask {
 
         LocalDispatcher dispatcher;
         GenericValue userLogin;
@@ -261,6 +255,7 @@ public class JavaMailContainer implements Container {
             this.userLogin = userLogin;
         }
 
+        @Override
         public void run() {
             if (UtilValidate.isNotEmpty(stores)) {
                 for (Map.Entry<Store, Session> entry: stores.entrySet()) {

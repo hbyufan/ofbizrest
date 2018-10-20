@@ -43,20 +43,20 @@ context.showWarningForm = showWarningForm;
 orderId = parameters.orderId;
 shipGroupSeqId = parameters.shipGroupSeqId;
 
-shipment = EntityUtil.getFirst(delegator.findByAnd("Shipment", [primaryOrderId : orderId, statusId : "SHIPMENT_PICKED"], null, false));
+shipment = EntityUtil.getFirst(delegator.findByAnd("Shipment", [primaryOrderId : orderId, statusId : "SHIPMENT_PICKED"]));
 context.shipment = shipment;
 if (shipment) {
-    invoice = EntityUtil.getFirst(delegator.findByAnd("ShipmentItemBilling", [shipmentId : shipment.shipmentId], null, false));
+    invoice = EntityUtil.getFirst(delegator.findByAnd("ShipmentItemBilling", [shipmentId : shipment.shipmentId]));
     context.invoice = invoice;
 } else {
     context.invoice = null;
 }
 actualCost = null;
 if (shipment) {
-    shipmentRouteSegment = EntityUtil.getFirst(delegator.findByAnd("ShipmentRouteSegment", [shipmentId : shipment.shipmentId], null, false));
+    shipmentRouteSegment = EntityUtil.getFirst(delegator.findByAnd("ShipmentRouteSegment", [shipmentId : shipment.shipmentId]));
     actualCost = shipmentRouteSegment.actualCost;
     if (actualCost) {
-        context.shipmentPackages = delegator.findByAnd("ShipmentPackage", [shipmentId : shipment.shipmentId], null, false);
+        context.shipmentPackages = delegator.findByAnd("ShipmentPackage", [shipmentId : shipment.shipmentId]);
     }
 }
 
@@ -107,7 +107,7 @@ if (shipmentId) {
     if (shipment.statusId && "SHIPMENT_PACKED" == shipment.statusId) {
         orderId = null;
     }
-    shipmentPackageRouteSegs = delegator.findByAnd("ShipmentPackageRouteSeg",  [shipmentId : shipmentId], null, false);
+    shipmentPackageRouteSegs = delegator.findByAnd("ShipmentPackageRouteSeg",  [shipmentId : shipmentId]);
     shipmentPackageRouteSegList = [];
     shipmentPackageRouteSegs.each { shipmentPackageRouteSeg ->
         if (shipmentPackageRouteSeg.labelImage) {
@@ -172,7 +172,7 @@ context.shipGroupSeqId = shipGroupSeqId;
 context.picklistBinId = picklistBinId;
 
 if (carrierPartyId) {
-    carrierShipmentBoxTypes =  delegator.findByAnd("CarrierShipmentBoxType", [partyId : carrierPartyId], null, false);
+    carrierShipmentBoxTypes =  delegator.findByAnd("CarrierShipmentBoxType", [partyId : carrierPartyId]);
     shipmentBoxTypes = [];
     carrierShipmentBoxTypes.each { carrierShipmentBoxType ->
         shipmentBoxTypes.add(delegator.findOne("ShipmentBoxType", [shipmentBoxTypeId : carrierShipmentBoxType.shipmentBoxTypeId], false));

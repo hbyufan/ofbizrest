@@ -23,9 +23,9 @@ visitId = parameters.visitId;
 visit = null;
 serverHits = null;
 if (visitId) {
-    visit = delegator.findOne("Visit", [visitId : visitId], false);
+    visit = delegator.findByPrimaryKey("Visit", [visitId : visitId]);
     if (visit) {
-        serverHits = delegator.findByAnd("ServerHit", [visitId : visitId], ["-hitStartDateTime"], false);
+        serverHits = delegator.findByAnd("ServerHit", [visitId : visitId], ["-hitStartDateTime"]);
     }
 }
 

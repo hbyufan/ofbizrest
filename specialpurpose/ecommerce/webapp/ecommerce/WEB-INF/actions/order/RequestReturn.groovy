@@ -24,7 +24,7 @@ import org.ofbiz.party.contact.*;
 orderId = parameters.orderId;
 context.orderId = orderId;
 
-party = userLogin.getRelatedOne("Party", false);
+party = userLogin.getRelatedOne("Party");
 context.party = party;
 
 returnTypes = delegator.findList("ReturnType", null, null, ["sequenceId"], null, false);
@@ -36,19 +36,19 @@ context.returnReasons = returnReasons;
 if (orderId) {
     returnRes = dispatcher.runSync("getReturnableItems", [orderId : orderId]);
     context.returnableItems = returnRes.returnableItems;
-    orderHeader = delegator.findOne("OrderHeader", [orderId : orderId], false);
+    orderHeader = delegator.findByPrimaryKey("OrderHeader", [orderId : orderId]);
     context.orderHeader = orderHeader;
 }
 
-returnItemTypeMap = delegator.findByAnd("ReturnItemTypeMap", [returnHeaderTypeId : "CUSTOMER_RETURN"], null, false);
+returnItemTypeMap = delegator.findByAnd("ReturnItemTypeMap", [returnHeaderTypeId : "CUSTOMER_RETURN"]);
 typeMap = new HashMap();
 returnItemTypeMap.each { value -> typeMap[value.returnItemMapKey] = value.returnItemTypeId }
 context.returnItemTypeMap = typeMap;
 
 //put in the return to party information from the order header
 if (orderId) {
-    order = delegator.findOne("OrderHeader", [orderId : orderId], false);
-    productStore = order.getRelatedOne("ProductStore", false);
+    order = delegator.findByPrimaryKey("OrderHeader", [orderId : orderId]);
+    productStore = order.getRelatedOne("ProductStore");
     context.toPartyId = productStore.payToPartyId;
 }
 

@@ -63,7 +63,7 @@ if (trail) {
 
 // start at 1 to skip webSiteId
 idList.each { id ->
-    webSitePublishPoint = delegator.findOne("WebSitePublishPoint", [contentId : id], true);
+    webSitePublishPoint = delegator.findByPrimaryKeyCache("WebSitePublishPoint", [contentId : id]);
     siteAncestorList.add(webSitePublishPoint);
 }
 context.siteAncestorList = siteAncestorList;

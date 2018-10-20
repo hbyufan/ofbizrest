@@ -50,19 +50,10 @@ public class CatalogWorker {
 
     private CatalogWorker () {}
 
-    
-    /**
-     * @deprecated - Use WebSiteWorker.getWebSiteId(ServletRequest) instead
-     */
-    @Deprecated
     public static String getWebSiteId(ServletRequest request) {
         return WebSiteWorker.getWebSiteId(request);
     }
 
-    /**
-     * @deprecated - Use WebSiteWorker.getWebSite(ServletRequest) instead
-     */
-    @Deprecated
     public static GenericValue getWebSite(ServletRequest request) {
         return WebSiteWorker.getWebSite(request);
     }
@@ -92,7 +83,7 @@ public class CatalogWorker {
 
     public static List<GenericValue> getStoreCatalogs(Delegator delegator, String productStoreId) {
         try {
-            return EntityUtil.filterByDate(delegator.findByAnd("ProductStoreCatalog", UtilMisc.toMap("productStoreId", productStoreId), UtilMisc.toList("sequenceNum", "prodCatalogId"), true), true);
+            return EntityUtil.filterByDate(delegator.findByAndCache("ProductStoreCatalog", UtilMisc.toMap("productStoreId", productStoreId), UtilMisc.toList("sequenceNum", "prodCatalogId")), true);
         } catch (GenericEntityException e) {
             Debug.logError(e, "Error looking up store catalogs for store with id " + productStoreId, module);
         }
@@ -116,7 +107,7 @@ public class CatalogWorker {
         }
 
         try {
-            return EntityUtil.filterByDate(delegator.findByAnd("ProdCatalogRole", UtilMisc.toMap("partyId", partyId, "roleTypeId", "CUSTOMER"), UtilMisc.toList("sequenceNum", "prodCatalogId"), true), true);
+            return EntityUtil.filterByDate(delegator.findByAndCache("ProdCatalogRole", UtilMisc.toMap("partyId", partyId, "roleTypeId", "CUSTOMER"), UtilMisc.toList("sequenceNum", "prodCatalogId")), true);
         } catch (GenericEntityException e) {
             Debug.logError(e, "Error looking up ProdCatalog Roles for party with id " + partyId, module);
         }
@@ -130,9 +121,9 @@ public class CatalogWorker {
 
     public static List<GenericValue> getProdCatalogCategories(Delegator delegator, String prodCatalogId, String prodCatalogCategoryTypeId) {
         try {
-            List<GenericValue> prodCatalogCategories = EntityUtil.filterByDate(delegator.findByAnd("ProdCatalogCategory",
+            List<GenericValue> prodCatalogCategories = EntityUtil.filterByDate(delegator.findByAndCache("ProdCatalogCategory",
                         UtilMisc.toMap("prodCatalogId", prodCatalogId),
-                        UtilMisc.toList("sequenceNum", "productCategoryId"), true), true);
+                        UtilMisc.toList("sequenceNum", "productCategoryId")), true);
 
             if (UtilValidate.isNotEmpty(prodCatalogCategoryTypeId) && prodCatalogCategories != null) {
                 prodCatalogCategories = EntityUtil.filterByAnd(prodCatalogCategories,
@@ -213,7 +204,7 @@ public class CatalogWorker {
         Delegator delegator = (Delegator) request.getAttribute("delegator");
 
         try {
-            GenericValue prodCatalog = delegator.findOne("ProdCatalog", UtilMisc.toMap("prodCatalogId", prodCatalogId), true);
+            GenericValue prodCatalog = delegator.findByPrimaryKeyCache("ProdCatalog", UtilMisc.toMap("prodCatalogId", prodCatalogId));
 
             if (prodCatalog != null) {
                 return prodCatalog.getString("catalogName");
@@ -252,7 +243,7 @@ public class CatalogWorker {
         Delegator delegator = (Delegator) request.getAttribute("delegator");
 
         try {
-            return delegator.findOne("ProdCatalog", UtilMisc.toMap("prodCatalogId", prodCatalogId), true);
+            return delegator.findByPrimaryKeyCache("ProdCatalog", UtilMisc.toMap("prodCatalogId", prodCatalogId));
         } catch (GenericEntityException e) {
             Debug.logError(e, "Error looking up name for prodCatalog with id " + prodCatalogId, module);
             return null;
@@ -347,7 +338,7 @@ public class CatalogWorker {
         Delegator delegator = (Delegator) request.getAttribute("delegator");
 
         try {
-            GenericValue prodCatalog = delegator.findOne("ProdCatalog", UtilMisc.toMap("prodCatalogId", prodCatalogId), true);
+            GenericValue prodCatalog = delegator.findByPrimaryKeyCache("ProdCatalog", UtilMisc.toMap("prodCatalogId", prodCatalogId));
 
             if (prodCatalog != null) {
                 return "Y".equals(prodCatalog.getString("useQuickAdd"));

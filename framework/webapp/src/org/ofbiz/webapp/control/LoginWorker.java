@@ -22,10 +22,8 @@ import static org.ofbiz.base.util.UtilGenerics.checkMap;
 
 import java.math.BigInteger;
 import java.security.cert.X509Certificate;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,9 +44,7 @@ import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.KeyStoreUtil;
 import org.ofbiz.base.util.StringUtil;
 import org.ofbiz.base.util.StringUtil.StringWrapper;
-import org.ofbiz.base.util.UtilDateTime;
 import org.ofbiz.base.util.UtilFormatOut;
-import org.ofbiz.base.util.UtilGenerics;
 import org.ofbiz.base.util.UtilHttp;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilProperties;
@@ -64,10 +60,11 @@ import org.ofbiz.entity.model.ModelEntity;
 import org.ofbiz.entity.serialize.XmlSerializer;
 import org.ofbiz.entity.transaction.GenericTransactionException;
 import org.ofbiz.entity.transaction.TransactionUtil;
-import org.ofbiz.entity.util.EntityUtil;
 import org.ofbiz.security.Security;
 import org.ofbiz.security.SecurityConfigurationException;
 import org.ofbiz.security.SecurityFactory;
+import org.ofbiz.security.authz.Authorization;
+import org.ofbiz.security.authz.AuthorizationFactory;
 import org.ofbiz.service.GenericServiceException;
 import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.service.ModelService;
@@ -122,10 +119,6 @@ public class LoginWorker {
      * Gets (and creates if necessary) a key to be used for an external login parameter
      */
     public static String getExternalLoginKey(HttpServletRequest request) {
-        boolean externalLoginKeyEnabled = "true".equals(UtilProperties.getPropertyValue("security", "security.login.externalLoginKey.enabled", "true"));
-        if (!externalLoginKeyEnabled) {
-            return null;
-        }
         //Debug.logInfo("Running getExternalLoginKey, externalLoginKeys.size=" + externalLoginKeys.size(), module);
         GenericValue userLogin = (GenericValue) request.getAttribute("userLogin");
 
@@ -219,8 +212,14 @@ public class LoginWorker {
     }
 
     /**
+     * An HTTP WebEvent handler that checks to see is a userLogin is logged in.
+     * If not, the user is forwarded to the login page.
+     *
+     * @param request The HTTP request object for the current JSP or Servlet request.
+     * @param response The HTTP response object for the current JSP or Servlet request.
+     * @return String
      */
-    public static GenericValue checkLogout(HttpServletRequest request, HttpServletResponse response) {
+    public static String checkLogin(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession();
         GenericValue userLogin = (GenericValue) session.getAttribute("userLogin");
 
@@ -232,83 +231,15 @@ public class LoginWorker {
         // user is logged in; check to see if they have globally logged out if not
         // check if they have permission for this login attempt; if not log them out
         if (userLogin != null) {
-            List<Object> errorMessageList = UtilGenerics.checkList(request.getAttribute("_ERROR_MESSAGE_LIST"));
             if (!hasBasePermission(userLogin, request) || isFlaggedLoggedOut(userLogin)) {
-                if (errorMessageList == null) {
-                    errorMessageList = new FastList<Object>();
-                    request.setAttribute("_ERROR_MESSAGE_LIST", errorMessageList);
-                }
-                errorMessageList.add("User does not have permission or is flagged as logged out");
                 Debug.logInfo("User does not have permission or is flagged as logged out", module);
                 doBasicLogout(userLogin, request, response);
                 userLogin = null;
+
+                // have to reget this because the old session object will be invalid
+                session = request.getSession();
             }
         }
-        return userLogin;
-    }
-
-    /** This WebEvent allows for java 'services' to hook into the login path.
-     * This method loads all instances of {@link LoginCheck}, and calls the
-     * {@link LoginCheck#associate} method.  The first implementation to return
-     * a non-null value gets that value returned to the caller.  Returning
-     * "none" will abort processing, while anything else gets looked up in
-     * outer view dispatch.  This event is called when the current request
-     * needs to have a validly logged in user; it is a wrapper around {@link
-     * #checkLogin}.
-     *
-     * @param request The HTTP request object for the current JSP or Servlet request.
-     * @param response The HTTP response object for the current JSP or Servlet request.
-     * @return String
-     */
-    public static String extensionCheckLogin(HttpServletRequest request, HttpServletResponse response) {
-        for (LoginCheck check: ServiceLoader.load(LoginCheck.class)) {
-            if (!check.isEnabled()) {
-                continue;
-            }
-            String result = check.associate(request, response);
-            if (result != null) {
-                return result;
-            }
-        }
-        return checkLogin(request, response);
-    }
-
-    /** This WebEvent allows for java 'services' to hook into the login path.
-     * This method loads all instances of {@link LoginCheck}, and calls the
-     * {@link LoginCheck#check} method.  The first implementation to return
-     * a non-null value gets that value returned to the caller.  Returning
-     * "none" will abort processing, while anything else gets looked up in
-     * outer view dispatch; for preprocessors, only "success" makes sense.
-     *
-     * @param request The HTTP request object for the current JSP or Servlet request.
-     * @param response The HTTP response object for the current JSP or Servlet request.
-     * @return String
-     */
-    public static String extensionConnectLogin(HttpServletRequest request, HttpServletResponse response) {
-        for (LoginCheck check: ServiceLoader.load(LoginCheck.class)) {
-            if (!check.isEnabled()) {
-                continue;
-            }
-            String result = check.check(request, response);
-            if (result != null) {
-                return result;
-            }
-        }
-        return "success";
-    }
-
-    /**
-     * An HTTP WebEvent handler that checks to see is a userLogin is logged in.
-     * If not, the user is forwarded to the login page.
-     *
-     * @param request The HTTP request object for the current JSP or Servlet request.
-     * @param response The HTTP response object for the current JSP or Servlet request.
-     * @return String
-     */
-    public static String checkLogin(HttpServletRequest request, HttpServletResponse response) {
-        GenericValue userLogin = checkLogout(request, response);
-        // have to reget this because the old session object will be invalid
-        HttpSession session = request.getSession();
 
         String username = null;
         String password = null;
@@ -382,10 +313,9 @@ public class LoginWorker {
         if (UtilValidate.isEmpty(password)) {
             unpwErrMsgList.add(UtilProperties.getMessage(resourceWebapp, "loginevents.password_was_empty_reenter", UtilHttp.getLocale(request)));
         }
-        boolean requirePasswordChange = "Y".equals(request.getParameter("requirePasswordChange"));
         if (!unpwErrMsgList.isEmpty()) {
             request.setAttribute("_ERROR_MESSAGE_LIST_", unpwErrMsgList);
-            return  requirePasswordChange ? "requirePasswordChange" : "error";
+            return "error";
         }
 
         boolean setupNewDelegatorEtc = false;
@@ -474,7 +404,7 @@ public class LoginWorker {
         if (ModelService.RESPOND_SUCCESS.equals(result.get(ModelService.RESPONSE_MESSAGE))) {
             GenericValue userLogin = (GenericValue) result.get("userLogin");
 
-            if (requirePasswordChange) {
+            if ("Y".equals(request.getParameter("requirePasswordChange"))) {
                 Map<String, Object> inMap = UtilMisc.<String, Object>toMap("login.username", username, "login.password", password, "locale", UtilHttp.getLocale(request));
                 inMap.put("userLoginId", username);
                 inMap.put("currentPassword", password);
@@ -488,7 +418,7 @@ public class LoginWorker {
                     Map<String, String> messageMap = UtilMisc.toMap("errorMessage", e.getMessage());
                     String errMsg = UtilProperties.getMessage(resourceWebapp, "loginevents.following_error_occurred_during_login", messageMap, UtilHttp.getLocale(request));
                     request.setAttribute("_ERROR_MESSAGE_", errMsg);
-                    return "requirePasswordChange";
+                    return "error";
                 }
                 if (ServiceUtil.isError(resultPasswordChange)) {
                     String errorMessage = (String) resultPasswordChange.get(ModelService.ERROR_MESSAGE);
@@ -498,7 +428,7 @@ public class LoginWorker {
                         request.setAttribute("_ERROR_MESSAGE_", errMsg);
                     }
                     request.setAttribute("_ERROR_MESSAGE_LIST_", resultPasswordChange.get(ModelService.ERROR_MESSAGE_LIST));
-                    return "requirePasswordChange";
+                    return "error";
                 } else {
                     try {
                         userLogin.refresh();
@@ -508,7 +438,7 @@ public class LoginWorker {
                         Map<String, String> messageMap = UtilMisc.toMap("errorMessage", e.getMessage());
                         String errMsg = UtilProperties.getMessage(resourceWebapp, "loginevents.following_error_occurred_during_login", messageMap, UtilHttp.getLocale(request));
                         request.setAttribute("_ERROR_MESSAGE_", errMsg);
-                        return "requirePasswordChange";
+                        return "error";
                     }
                 }
             }
@@ -522,12 +452,6 @@ public class LoginWorker {
             Map<String, Object> userLoginSession = checkMap(result.get("userLoginSession"), String.class, Object.class);
             if (userLogin != null && "Y".equals(userLogin.getString("requirePasswordChange"))) {
                 return "requirePasswordChange";
-            }
-            String autoChangePassword = UtilProperties.getPropertyValue("security.properties", "user.auto.change.password.enable", "false");
-            if ("true".equalsIgnoreCase(autoChangePassword)) {
-                if ("requirePasswordChange".equals(autoChangePassword(request, response))) {
-                    return "requirePasswordChange";
-                }
             }
 
             // check on JavaScriptEnabled
@@ -547,28 +471,37 @@ public class LoginWorker {
             Map<String, String> messageMap = UtilMisc.toMap("errorMessage", (String) result.get(ModelService.ERROR_MESSAGE));
             String errMsg = UtilProperties.getMessage(resourceWebapp, "loginevents.following_error_occurred_during_login", messageMap, UtilHttp.getLocale(request));
             request.setAttribute("_ERROR_MESSAGE_", errMsg);
-            return requirePasswordChange ? "requirePasswordChange" : "error";
+            return "error";
         }
     }
 
     private static void setWebContextObjects(HttpServletRequest request, HttpServletResponse response, Delegator delegator, LocalDispatcher dispatcher) {
         HttpSession session = request.getSession();
         // NOTE: we do NOT want to set this in the servletContext, only in the request and session
-        // We also need to setup the security objects since they are dependent on the delegator
+        // We also need to setup the security and authz objects since they are dependent on the delegator
         Security security = null;
         try {
             security = SecurityFactory.getInstance(delegator);
         } catch (SecurityConfigurationException e) {
             Debug.logError(e, module);
         }
+        Authorization authz = null;
+        try {
+            authz = AuthorizationFactory.getInstance(delegator);
+        } catch (SecurityConfigurationException e) {
+            Debug.logError(e, module);
+        }
+
         request.setAttribute("delegator", delegator);
         request.setAttribute("dispatcher", dispatcher);
         request.setAttribute("security", security);
+        request.setAttribute("authz", authz);
 
         session.setAttribute("delegatorName", delegator.getDelegatorName());
         session.setAttribute("delegator", delegator);
         session.setAttribute("dispatcher", dispatcher);
         session.setAttribute("security", security);
+        session.setAttribute("authz", authz);
 
         // get rid of the visit info since it was pointing to the previous database, and get a new one
         session.removeAttribute("visitor");
@@ -619,8 +552,8 @@ public class LoginWorker {
         if (modelUserLogin.isField("partyId")) {
             // if partyId is a field, then we should have these relations defined
             try {
-                GenericValue person = userLogin.getRelatedOne("Person", false);
-                GenericValue partyGroup = userLogin.getRelatedOne("PartyGroup", false);
+                GenericValue person = userLogin.getRelatedOne("Person");
+                GenericValue partyGroup = userLogin.getRelatedOne("PartyGroup");
                 if (person != null) session.setAttribute("person", person);
                 if (partyGroup != null) session.setAttribute("partyGroup", partyGroup);
             } catch (GenericEntityException e) {
@@ -684,6 +617,7 @@ public class LoginWorker {
         request.removeAttribute("delegator");
         request.removeAttribute("dispatcher");
         request.removeAttribute("security");
+        request.removeAttribute("authz");
 
         // now empty out the session
         session.invalidate();
@@ -801,7 +735,7 @@ public class LoginWorker {
         return "success";
     }
 
-    public static boolean isUserLoggedIn(HttpServletRequest request) {
+    private static boolean isUserLoggedIn(HttpServletRequest request) {
         HttpSession session = request.getSession();
         GenericValue currentUserLogin = (GenericValue) session.getAttribute("userLogin");
         if (currentUserLogin != null) {
@@ -822,7 +756,7 @@ public class LoginWorker {
      * @param userLoginId
      * @return Returns "success" if user could be logged in or "error" if there was a problem.
      */
-    public static String loginUserWithUserLoginId(HttpServletRequest request, HttpServletResponse response, String userLoginId) {
+    private static String loginUserWithUserLoginId(HttpServletRequest request, HttpServletResponse response, String userLoginId) {
         Delegator delegator = (Delegator) request.getAttribute("delegator");
         try {
             GenericValue userLogin = delegator.findOne("UserLogin", false, "userLoginId", userLoginId);
@@ -1058,22 +992,20 @@ public class LoginWorker {
                 "Y".equalsIgnoreCase(userLogin.getString("hasLoggedOut")) : false);
     }
 
-    public static boolean hasBasePermission(GenericValue userLogin, HttpServletRequest request) {
+    protected static boolean hasBasePermission(GenericValue userLogin, HttpServletRequest request) {
+        ServletContext context = (ServletContext) request.getAttribute("servletContext");
+        Authorization authz = (Authorization) request.getAttribute("authz");
         Security security = (Security) request.getAttribute("security");
+
+        String serverId = (String) context.getAttribute("_serverId");
+        String contextPath = request.getContextPath();
+
+        ComponentConfig.WebappInfo info = ComponentConfig.getWebAppInfo(serverId, contextPath);
         if (security != null) {
-            ServletContext context = (ServletContext) request.getAttribute("servletContext");
-            String serverId = (String) context.getAttribute("_serverId");
-            
-            // get a context path from the request, if it is empty then assume it is the root mount point
-            String contextPath = request.getContextPath();
-            if (UtilValidate.isEmpty(contextPath)) {
-                contextPath = "/";
-            }
-            
-            ComponentConfig.WebappInfo info = ComponentConfig.getWebAppInfo(serverId, contextPath);
             if (info != null) {
                 for (String permission: info.getBasePermission()) {
-                    if (!"NONE".equals(permission) && !security.hasEntityPermission(permission, "_VIEW", userLogin)) {
+                    if (!"NONE".equals(permission) && !security.hasEntityPermission(permission, "_VIEW", userLogin) &&
+                            !authz.hasPermission(userLogin.getString("userLoginId"), permission, null)) {
                         return false;
                     }
                 }
@@ -1092,7 +1024,7 @@ public class LoginWorker {
         GenericValue userLoginSession;
         Map<String, Object> userLoginSessionMap = null;
         try {
-            userLoginSession = userLogin.getRelatedOne("UserLoginSession", false);
+            userLoginSession = userLogin.getRelatedOne("UserLoginSession");
             if (userLoginSession != null) {
                 Object deserObj = XmlSerializer.deserialize(userLoginSession.getString("sessionData"), delegator);
                 //don't check, just cast, if it fails it will get caught and reported below; if (deserObj instanceof Map)
@@ -1111,40 +1043,4 @@ public class LoginWorker {
        return "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
     }
 
-    public static String autoChangePassword(HttpServletRequest request, HttpServletResponse response) {
-        Delegator delegator = (Delegator) request.getAttribute("delegator");
-        String userName = request.getParameter("USERNAME");
-        Timestamp now = UtilDateTime.nowTimestamp();
-        Integer reqToChangePwdInDays = Integer.valueOf(UtilProperties.getPropertyValue("security.properties", "user.change.password.days", "0"));
-        Integer passwordNoticePeriod = Integer.valueOf(UtilProperties.getPropertyValue("security.properties", "user.change.password.notification.days", "0"));
-        if (reqToChangePwdInDays > 0) {
-            List<GenericValue> passwordHistories = null;
-            try {
-                passwordHistories = delegator.findByAnd("UserLoginPasswordHistory", UtilMisc.toMap("userLoginId", userName), null, false);
-            } catch (GenericEntityException e) {
-                Debug.logError(e, "Cannot get user's password history record: " + e.getMessage(), module);
-            }
-            if (UtilValidate.isNotEmpty(passwordHistories)) {
-                GenericValue passwordHistory = EntityUtil.getFirst(EntityUtil.filterByDate(passwordHistories));
-                Timestamp passwordCreationDate = passwordHistory.getTimestamp("fromDate");
-                Integer passwordValidDays = reqToChangePwdInDays - passwordNoticePeriod; // Notification starts after days.
-                Timestamp startNotificationFromDate = UtilDateTime.addDaysToTimestamp(passwordCreationDate, passwordValidDays);
-                Timestamp passwordExpirationDate = UtilDateTime.addDaysToTimestamp(passwordCreationDate, reqToChangePwdInDays);
-                if (now.after(startNotificationFromDate)) {
-                    if (now.after(passwordExpirationDate)) {
-                        Map<String, String> messageMap = UtilMisc.toMap("passwordExpirationDate", passwordExpirationDate.toString());
-                        String errMsg = UtilProperties.getMessage(resourceWebapp, "loginevents.password_expired_message", messageMap, UtilHttp.getLocale(request));
-                        request.setAttribute("_ERROR_MESSAGE_", errMsg);
-                        return "requirePasswordChange";
-                    } else {
-                        Map<String, String> messageMap = UtilMisc.toMap("passwordExpirationDate", passwordExpirationDate.toString());
-                        String errMsg = UtilProperties.getMessage(resourceWebapp, "loginevents.password_expiration_alert", messageMap, UtilHttp.getLocale(request));
-                        request.setAttribute("_EVENT_MESSAGE_", errMsg);
-                        return "success";
-                    }
-                }
-            }
-        }
-        return "success";
-    }
 }

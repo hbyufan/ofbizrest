@@ -165,20 +165,10 @@ public class StringUtil {
      * @return a String of all values in the list seperated by the delimiter
      */
     public static String join(List<?> list, String delim) {
-        return join ((Collection<?>) list, delim);
-    }
-
-    /**
-     * Creates a single string from a Collection of strings seperated by a delimiter.
-     * @param col a collection of strings to join
-     * @param delim the delimiter character(s) to use. (null value will join with no delimiter)
-     * @return a String of all values in the collection seperated by the delimiter
-     */
-    public static String join(Collection<?> col, String delim) {
-        if (UtilValidate.isEmpty(col))
+        if (list == null || list.size() < 1)
             return null;
         StringBuilder buf = new StringBuilder();
-        Iterator<?> i = col.iterator();
+        Iterator<?> i = list.iterator();
 
         while (i.hasNext()) {
             buf.append(i.next());
@@ -377,9 +367,7 @@ public class StringUtil {
     }
     
     /**
-     * Reads a String version of a Map (should contain only strings) and creates a new Map.
-     * Partial Map elements are skipped: <code>{foo=fooValue, bar=}</code> will contain only
-     * the foo element.
+     * Reads a String version of a Map (should contain only strings) and creates a new Map
      *
      * @param s String value of a Map ({n1=v1, n2=v2})
      * @return new Map
@@ -391,9 +379,7 @@ public class StringUtil {
             String[] entries = s.split("\\,\\s");
             for (String entry: entries) {
                 String[] nv = entry.split("\\=");
-                if (nv.length == 2) {
-                    newMap.put(nv[0], nv[1]);
-                }
+                newMap.put(nv[0], nv[1]);
             }
         } else {
             throw new IllegalArgumentException("String is not from Map.toString()");

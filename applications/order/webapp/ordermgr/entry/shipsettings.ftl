@@ -18,30 +18,18 @@ under the License.
 -->
 
 <#if security.hasEntityPermission("ORDERMGR", "_CREATE", session) || security.hasEntityPermission("ORDERMGR", "_PURCHASE_CREATE", session)>
-<script language="JavaScript" type="text/javascript">
-     jQuery(document).ready(function(){
-        jQuery('#shipToSameParty, #shipToOtherParty').change(function(){
-            if(jQuery('#shipToSameParty').is(':checked')){
-                jQuery('#shipToParty').val("");
-            }
-            if(jQuery('#shipToOtherParty').is(':checked')){
-                jQuery('#shipToParty').val("${shipToPartyId!}");
-            }
-        })
-      });
-</script>
+
 <#-- Purchase Orders -->
 
 <#if facilityMaps?exists>
             <form method="post" action="<@ofbizUrl>finalizeOrder</@ofbizUrl>" name="checkoutsetupform">
             <input type="hidden" name="finalizeMode" value="ship"/>
-            <input type="hidden" name="shipToPartyId" id="shipToParty"/>
             <#if (cart.getShipGroupSize() > 1)>
             <input type="hidden" name="finalizeReqShipGroups" value="true"/>
             </#if>
       <table width='100%' border='0' cellspacing='0' cellpadding='0' class="boxboutside">
         <tr>
-          <td colspan="4">
+          <td>
           <a href="<@ofbizUrl>setShipping?createNewShipGroup=Y</@ofbizUrl>" class="buttontext">${uiLabelMap.OrderCreateShipGroup}</a>
           
 
@@ -75,12 +63,12 @@ under the License.
                   <tr>
                     <td valign="top" nowrap="nowrap">
                       <#assign checked='' />
-                      <#if shipGroup?has_content && (shipGroup.getFacilityId()?has_content && shipGroup.getFacilityId() == facility.facilityId) && (shipGroup.getContactMechId()?has_content && shipGroup.getContactMechId() == shippingAddress.contactMechId && !shipToPartyShippingContactMechList?has_content) >
+                      <#if shipGroup?has_content && (shipGroup.getFacilityId()?has_content && shipGroup.getFacilityId() == facility.facilityId) && (shipGroup.getContactMechId()?has_content && shipGroup.getContactMechId() == shippingAddress.contactMechId) >
                           <#assign checked='checked' />
-                      <#elseif i == 0 && !shipToPartyShippingContactMechList?has_content>
+                      <#elseif i == 0>
                           <#assign checked='checked' />
                       </#if>
-                      <input type="radio" id="shipToSameParty" name="${shipGroupIndex?default("0")}_shipping_contact_mech_id" value="${shippingAddress.contactMechId}_@_${facility.facilityId}" ${checked} onchange="setShiptToPartyId()"/>
+                      <input type="radio" name="${shipGroupIndex?default("0")}_shipping_contact_mech_id" value="${shippingAddress.contactMechId}_@_${facility.facilityId}" ${checked} />
                     </td>
                     <td nowrap="nowrap">&nbsp;&nbsp;&nbsp;&nbsp;</td>
                     <td valign="top" width="100%" nowrap="nowrap">
@@ -119,38 +107,6 @@ under the License.
 </#list>
           </td>
         </tr>
-        <#if shipToPartyShippingContactMechList?has_content>
-          <tr><td colspan="4"><hr /></td></tr>
-          <tr><td colspan="4">${uiLabelMap.OrderShipToAnotherParty}: <b>${Static["org.ofbiz.party.party.PartyHelper"].getPartyName(shipToParty)}</b></td></tr>
-          <tr><td colspan="4"><hr /></td></tr>
-          <#list shipToPartyShippingContactMechList as shippingContactMech>
-            <#assign shippingAddress = shippingContactMech.getRelatedOne("PostalAddress", false)>
-            <tr>
-              <td valign="top" nowrap="nowrap">
-                <input type="radio" id="shipToOtherParty" name="${shipGroupIndex?default("0")}_shipping_contact_mech_id" value="${shippingAddress.contactMechId}" onchange="setShiptToPartyId()"/>
-              </td>
-              <td nowrap="nowrap">&nbsp;&nbsp;&nbsp;&nbsp;</td>
-              <td valign="top" width="100%" nowrap="nowrap">
-                <div>
-                  <#if shippingAddress.toName?has_content><b>${uiLabelMap.CommonTo}:</b>&nbsp;${shippingAddress.toName}<br /></#if>
-                  <#if shippingAddress.attnName?has_content><b>${uiLabelMap.CommonAttn}:</b>&nbsp;${shippingAddress.attnName}<br /></#if>
-                  <#if shippingAddress.address1?has_content>${shippingAddress.address1}<br /></#if>
-                  <#if shippingAddress.address2?has_content>${shippingAddress.address2}<br /></#if>
-                  <#if shippingAddress.city?has_content>${shippingAddress.city}</#if>
-                  <#if shippingAddress.stateProvinceGeoId?has_content><br />${shippingAddress.stateProvinceGeoId}</#if>
-                  <#if shippingAddress.postalCode?has_content><br />${shippingAddress.postalCode}</#if>
-                  <#if shippingAddress.countryGeoId?has_content><br />${shippingAddress.countryGeoId}</#if>
-                </div>
-              </td>
-              <td>
-                <div><a href="/partymgr/control/editcontactmech?partyId=${orderParty.partyId}&amp;contactMechId=${shippingContactMech.contactMechId}" target="_blank" class="buttontext">${uiLabelMap.CommonUpdate}</a></div>
-              </td>
-            </tr>
-            <#if shippingContactMech_has_next>
-              <tr><td colspan="4"><hr /></td></tr>
-            </#if>
-          </#list>
-        </#if>
       </table>
             </form>
 
@@ -160,7 +116,6 @@ under the License.
 
             <form method="post" action="<@ofbizUrl>finalizeOrder</@ofbizUrl>" name="checkoutsetupform">
             <input type="hidden" name="finalizeMode" value="ship"/>
-            <input type="hidden" name="shipToPartyId" id="shipToParty"/>
             <#if (cart.getShipGroupSize() > 1)>
             <input type="hidden" name="finalizeReqShipGroups" value="true"/>
             </#if>
@@ -196,7 +151,7 @@ under the License.
                       <select name="${shipGroupIndex?default("0")}_shipGroupFacilityId">
                         <option value=""></option>
                         <#list productStoreFacilities as productStoreFacility>
-                          <#assign facility = productStoreFacility.getRelatedOne("Facility", false)>
+                          <#assign facility = productStoreFacility.getRelatedOne("Facility")>
                           <option value="${productStoreFacility.facilityId}"<#if facilityId?exists><#if productStoreFacility.facilityId == facilityId> selected="selected"</#if></#if>>${facility.facilityName?if_exists} </option>
                         </#list>
                       </select>
@@ -207,7 +162,7 @@ under the License.
                 <tr><td colspan="3"><hr /></td></tr>
                 <#assign i = 0>
                 <#list shippingContactMechList as shippingContactMech>
-                  <#assign shippingAddress = shippingContactMech.getRelatedOne("PostalAddress", false)>
+                  <#assign shippingAddress = shippingContactMech.getRelatedOne("PostalAddress")>
                   <#if currShipContactMechId?exists && currShipContactMechId?has_content>
                       <#if currShipContactMechId == shippingContactMech.contactMechId>
                         <#assign checkedValue = "checked='checked'">
@@ -223,7 +178,7 @@ under the License.
                   </#if>
                   <tr>
                     <td valign="top" width="1%" nowrap="nowrap">
-                      <input type="radio" id="shipToSameParty" name="${shipGroupIndex?default("0")}_shipping_contact_mech_id" value="${shippingAddress.contactMechId}" ${checkedValue} onchange="setShiptToPartyId()"/>
+                      <input type="radio" name="${shipGroupIndex?default("0")}_shipping_contact_mech_id" value="${shippingAddress.contactMechId}" ${checkedValue} />
                     </td>
                     <td valign="top" width="99%" nowrap="nowrap">
                       <div>
@@ -252,10 +207,10 @@ under the License.
                 <tr><td colspan="3">${uiLabelMap.OrderShipToAnotherParty}: <b>${Static["org.ofbiz.party.party.PartyHelper"].getPartyName(shipToParty)}</b></td></tr>
                 <tr><td colspan="3"><hr /></td></tr>
                 <#list shipToPartyShippingContactMechList as shippingContactMech>
-                  <#assign shippingAddress = shippingContactMech.getRelatedOne("PostalAddress", false)>
+                  <#assign shippingAddress = shippingContactMech.getRelatedOne("PostalAddress")>
                   <tr>
                     <td valign="top" width="1%" nowrap="nowrap">
-                      <input type="radio" id="shipToOtherParty" name="${shipGroupIndex?default("0")}_shipping_contact_mech_id" value="${shippingAddress.contactMechId}" onchange="setShiptToPartyId()"/>
+                      <input type="radio" name="${shipGroupIndex?default("0")}_shipping_contact_mech_id" value="${shippingAddress.contactMechId}"/>
                     </td>
                     <td valign="top" width="99%" nowrap="nowrap">
                       <div>

@@ -157,28 +157,15 @@ public class SSLUtil {
     }
 
     public static SSLSocketFactory getSSLSocketFactory(KeyStore ks, String password, String alias) throws IOException, GeneralSecurityException, GenericConfigException {
-        return getSSLContext(ks, password, alias, false).getSocketFactory();
-    }
-
-    public static SSLContext getSSLContext(KeyStore ks, String password, String alias, boolean trustAny) throws IOException, GeneralSecurityException, GenericConfigException {
         KeyManager[] km = SSLUtil.getKeyManagers(ks, password, alias);
-        TrustManager[] tm;
-        if (trustAny) {
-            tm = SSLUtil.getTrustAnyManagers();
-        } else {
-            tm = SSLUtil.getTrustManagers();
-        }
+        TrustManager[] tm = SSLUtil.getTrustManagers();
 
         SSLContext context = SSLContext.getInstance("SSL");
         context.init(km, tm, new SecureRandom());
-        return context;
+        return context.getSocketFactory();
     }
 
     public static SSLSocketFactory getSSLSocketFactory(String alias, boolean trustAny) throws IOException, GeneralSecurityException, GenericConfigException {
-        return getSSLContext(alias, trustAny).getSocketFactory();
-    }
-
-    public static SSLContext getSSLContext(String alias, boolean trustAny) throws IOException, GeneralSecurityException, GenericConfigException {
         KeyManager[] km = SSLUtil.getKeyManagers(alias);
         TrustManager[] tm;
         if (trustAny) {
@@ -189,7 +176,7 @@ public class SSLUtil {
 
         SSLContext context = SSLContext.getInstance("SSL");
         context.init(km, tm, new SecureRandom());
-        return context;
+        return context.getSocketFactory();
     }
 
     public static SSLSocketFactory getSSLSocketFactory(String alias) throws IOException, GeneralSecurityException, GenericConfigException {
@@ -201,11 +188,21 @@ public class SSLUtil {
     }
 
     public static SSLServerSocketFactory getSSLServerSocketFactory(KeyStore ks, String password, String alias) throws IOException, GeneralSecurityException, GenericConfigException {
-        return getSSLContext(ks, password, alias, false).getServerSocketFactory();
+        TrustManager[] tm = SSLUtil.getTrustManagers();
+        KeyManager[] km = SSLUtil.getKeyManagers(ks, password, alias);
+
+        SSLContext context = SSLContext.getInstance("SSL");
+        context.init(km, tm, new SecureRandom());
+        return context.getServerSocketFactory();
     }
 
     public static SSLServerSocketFactory getSSLServerSocketFactory(String alias) throws IOException, GeneralSecurityException, GenericConfigException {
-        return getSSLContext(alias, false).getServerSocketFactory();
+        TrustManager[] tm = SSLUtil.getTrustManagers();
+        KeyManager[] km = SSLUtil.getKeyManagers(alias);
+
+        SSLContext context = SSLContext.getInstance("SSL");
+        context.init(km, tm, new SecureRandom());
+        return context.getServerSocketFactory();
     }
 
     public static HostnameVerifier getHostnameVerifier(int level) {

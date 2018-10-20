@@ -40,13 +40,13 @@ context.imageNameSmall = imageUrlPrefix + "/" + filenameExpander.expandString([s
 // Start ProdConfItemContent stuff
 productContent = null;
 if (configItem) {
-    productContent = configItem.getRelated("ProdConfItemContent", null, ['confItemContentTypeId'], false);
+    productContent = configItem.getRelated("ProdConfItemContent", null, ['confItemContentTypeId']);
 }
 context.productContent = productContent;
 
 productContentDatas = [];
 productContent.each { productContent ->
-    content = productContent.getRelatedOne("Content", false);
+    content = productContent.getRelatedOne("Content");
     productContentDatas.add([productContent : productContent, content : content]);
 }
 

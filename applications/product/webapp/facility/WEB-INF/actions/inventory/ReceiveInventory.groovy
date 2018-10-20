@@ -39,7 +39,7 @@ if (facilityId) {
 
 ownerAcctgPref = null;
 if (facility) {
-    owner = facility.getRelatedOne("OwnerParty", false);
+    owner = facility.getRelatedOne("OwnerParty");
     if (owner) {
         result = dispatcher.runSync("getPartyAccountingPreferences", [organizationPartyId : owner.partyId, userLogin : request.getAttribute("userLogin")]);
         if (!ServiceUtil.isError(result) && result.partyAccountingPreference) {
@@ -68,7 +68,7 @@ if (purchaseOrder && !shipmentId) {
     if (orderShipments) {
         shipments = [] as TreeSet;
         orderShipments.each { orderShipment ->
-            shipment = orderShipment.getRelatedOne("Shipment", false);
+            shipment = orderShipment.getRelatedOne("Shipment");
             if (!"PURCH_SHIP_RECEIVED".equals(shipment.statusId) &&
                 !"SHIPMENT_CANCELLED".equals(shipment.statusId) &&
                 (!shipment.destinationFacilityId || facilityId.equals(shipment.destinationFacilityId))) {
@@ -81,7 +81,7 @@ if (purchaseOrder && !shipmentId) {
     if (issuances) {
         shipments = [] as TreeSet;
         issuances.each { issuance ->
-            shipment = issuance.getRelatedOne("Shipment", false);
+            shipment = issuance.getRelatedOne("Shipment");
             if (!"PURCH_SHIP_RECEIVED".equals(shipment.statusId) &&
                 !"SHIPMENT_CANCELLED".equals(shipment.statusId) &&
                 (!shipment.destinationFacilityId || facilityId.equals(shipment.destinationFacilityId))) {
@@ -100,11 +100,11 @@ shippedQuantities = [:];
 purchaseOrderItems = null;
 if (purchaseOrder) {
     if (product) {
-        purchaseOrderItems = purchaseOrder.getRelated("OrderItem", [productId : productId], null, false);
+        purchaseOrderItems = purchaseOrder.getRelated("OrderItem", [productId : productId], null);
     } else if (shipment) {
-        orderItems = purchaseOrder.getRelated("OrderItem", null, null, false);
+        orderItems = purchaseOrder.getRelated("OrderItem");
         exprs = [] as ArrayList;
-        orderShipments = shipment.getRelated("OrderShipment", [orderId : purchaseOrderId], null, false);
+        orderShipments = shipment.getRelated("OrderShipment", [orderId : purchaseOrderId], null);
         if (orderShipments) {
             orderShipments.each { orderShipment ->
                 exprs.add(EntityCondition.makeCondition("orderItemSeqId", EntityOperator.EQUALS, orderShipment.orderItemSeqId));
@@ -116,7 +116,7 @@ if (purchaseOrder) {
             }
         } else {
             // this is here for backward compatibility only: ItemIssuances are no more created for purchase shipments.
-            issuances = shipment.getRelated("ItemIssuance", [orderId : purchaseOrderId], null, false);
+            issuances = shipment.getRelated("ItemIssuance", [orderId : purchaseOrderId], null);
             issuances.each { issuance ->
                 exprs.add(EntityCondition.makeCondition("orderItemSeqId", EntityOperator.EQUALS, issuance.orderItemSeqId));
                 double issuanceQty = issuance.getDouble("quantity").doubleValue();
@@ -128,7 +128,7 @@ if (purchaseOrder) {
         }
         purchaseOrderItems = EntityUtil.filterByOr(orderItems, exprs);
     } else {
-        purchaseOrderItems = purchaseOrder.getRelated("OrderItem", null, null, false);
+        purchaseOrderItems = purchaseOrder.getRelated("OrderItem");
     }
     purchaseOrderItems = EntityUtil.filterByAnd(purchaseOrderItems, [EntityCondition.makeCondition("statusId", EntityOperator.NOT_EQUAL, "ITEM_CANCELLED")]);
 }
@@ -171,7 +171,7 @@ if (purchaseOrderItems) {
     context.purchaseOrderItemsSize = purchaseOrderItems.size();
     purchaseOrderItems.each { thisItem ->
         totalReceived = 0.0;
-        receipts = thisItem.getRelated("ShipmentReceipt", null, null, false);
+        receipts = thisItem.getRelated("ShipmentReceipt");
         if (receipts) {
             receipts.each { rec ->
                 if (!shipment || (rec.shipmentId && rec.shipmentId.equals(shipment.shipmentId))) {

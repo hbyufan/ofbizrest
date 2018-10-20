@@ -30,7 +30,7 @@ under the License.
             </td>
             <td valign="top">
               <#list contactMechMap.facilityContactMechPurposes as facilityContactMechPurpose>
-                  <#assign contactMechPurposeType = facilityContactMechPurpose.getRelatedOne("ContactMechPurposeType", true)>
+                  <#assign contactMechPurposeType = facilityContactMechPurpose.getRelatedOneCache("ContactMechPurposeType")>
                       <#if contactMechPurposeType?has_content>
                         <b>${contactMechPurposeType.get("description",locale)}</b>
                       <#else>

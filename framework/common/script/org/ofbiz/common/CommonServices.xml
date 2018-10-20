@@ -279,9 +279,20 @@ under the License.
     <simple-method method-name="linkGeos" short-description="Link Geos to another Geo">
         <entity-and entity-name="GeoAssoc" list="geoAssocs">
             <field-map field-name="geoId" from-field="parameters.geoId"/>
-            <field-map field-name="geoAssocTypeId" from-field="parameters.geoAssocTypeId"/>
         </entity-and>
-        <set field="oldGeoIds" value="${groovy:org.ofbiz.entity.util.EntityUtil.getFieldListFromEntityList(geoAssocs, 'geoIdTo', true);}"/>
+        <!-- Current list contains old values? -->
+        <iterate list="geoAssocs" entry="geoAssoc">
+            <if-compare-field field="parameters.geoIds" operator="contains" to-field="geoAssoc.geoIdTo">
+                <!-- Yes, nothing to do, it already exists and we keep it -->
+                <else><!-- Remove -->
+                    <entity-one entity-name="GeoAssoc" value-field="oldGeoAssoc">
+                        <field-map field-name="geoId" from-field="parameters.geoId"/>
+                        <field-map field-name="geoIdTo" from-field="geoAssoc.geoIdTo"/>
+                    </entity-one>
+                    <remove-value value-field="oldGeoAssoc"/>
+                </else>                
+            </if-compare-field>
+        </iterate>
         <!-- Old list contains current values -->
         <iterate list="parameters.geoIds" entry="geoIdTo">            
             <if-compare-field field="oldGeoIds" operator="contains" to-field="geoIdTo">
@@ -334,21 +345,5 @@ under the License.
             </else>
         </if-not-empty>
         <field-to-result field="exist"/>
-    </simple-method>
-
-    <simple-method method-name="getServerTimestamp" login-required="false">      
-        <now field="serverTimestamp" type="java.sql.Timestamp"/>
-        <field-to-result field="serverTimestamp"/>
-    </simple-method>            
-    
-    <simple-method method-name="getServerTimeZone" login-required="false">      
-        <set field="serverTimeZone" value="${util:defaultTimeZone()}" type="String"/>
-        <field-to-result field="serverTimeZone"/>
-    </simple-method>            
-    
-    <simple-method method-name="getServerTimestampAsLong" login-required="false">      
-        <now field="serverTimestamp" type="java.lang.Long"/>
-        <field-to-result field="serverTimestamp"/>
-    </simple-method>        
-    
+    </simple-method>    
 </simple-methods>

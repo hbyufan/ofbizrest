@@ -45,7 +45,7 @@ under the License.
                 <td>
                     <select name="PRODUCT_ASSOC_TYPE_ID" size="1">
                     <#if productAssocTypeId?has_content>
-                        <#assign curAssocType = delegator.findOne("ProductAssocType", Static["org.ofbiz.base.util.UtilMisc"].toMap("productAssocTypeId", productAssocTypeId), false)>
+                        <#assign curAssocType = delegator.findByPrimaryKey("ProductAssocType", Static["org.ofbiz.base.util.UtilMisc"].toMap("productAssocTypeId", productAssocTypeId))>
                         <#if curAssocType?exists>
                             <option selected="selected" value="${(curAssocType.productAssocTypeId)?if_exists}">${(curAssocType.get("description",locale))?if_exists}</option>
                             <option value="${(curAssocType.productAssocTypeId)?if_exists}"></option>
@@ -108,7 +108,7 @@ under the License.
             </#if>
         <#else>
             <#assign isCreate = false>
-            <#assign curProductAssocType = productAssoc.getRelatedOne("ProductAssocType", true)>
+            <#assign curProductAssocType = productAssoc.getRelatedOneCache("ProductAssocType")>
             <input type="hidden" name="UPDATE_MODE" value="UPDATE" />
             <input type="hidden" name="PRODUCT_ID" value="${productId?if_exists}" />
             <input type="hidden" name="PRODUCT_ID_TO" value="${productIdTo?if_exists}" />
@@ -201,8 +201,8 @@ under the License.
             </tr>
             <#assign rowClass = "2">
             <#list assocFromProducts as assocFromProduct>
-            <#assign listToProduct = assocFromProduct.getRelatedOne("AssocProduct", true)>
-            <#assign curProductAssocType = assocFromProduct.getRelatedOne("ProductAssocType", true)>
+            <#assign listToProduct = assocFromProduct.getRelatedOneCache("AssocProduct")>
+            <#assign curProductAssocType = assocFromProduct.getRelatedOneCache("ProductAssocType")>
             <tr valign="middle"<#if rowClass == "1"> class="alternate-row"</#if>>
                 <td><a href="<@ofbizUrl>EditProduct?productId=${(assocFromProduct.productIdTo)?if_exists}</@ofbizUrl>" class="buttontext">${(assocFromProduct.productIdTo)?if_exists}</a></td>
                 <td><#if listToProduct?exists><a href="<@ofbizUrl>EditProduct?productId=${(assocFromProduct.productIdTo)?if_exists}</@ofbizUrl>" class="buttontext">${(listToProduct.internalName)?if_exists}</a></#if>&nbsp;</td>
@@ -248,8 +248,8 @@ under the License.
             </tr>
             <#assign rowClass = "2">
             <#list assocToProducts as assocToProduct>
-            <#assign listToProduct = assocToProduct.getRelatedOne("MainProduct", true)>
-            <#assign curProductAssocType = assocToProduct.getRelatedOne("ProductAssocType", true)>
+            <#assign listToProduct = assocToProduct.getRelatedOneCache("MainProduct")>
+            <#assign curProductAssocType = assocToProduct.getRelatedOneCache("ProductAssocType")>
             <tr valign="middle"<#if rowClass == "1"> class="alternate-row"</#if>>
                 <td><a href="<@ofbizUrl>EditProduct?productId=${(assocToProduct.productId)?if_exists}</@ofbizUrl>" class="buttontext">${(assocToProduct.productId)?if_exists}</a></td>
                 <td><#if listToProduct?exists><a href="<@ofbizUrl>EditProduct?productId=${(assocToProduct.productId)?if_exists}</@ofbizUrl>" class="buttontext">${(listToProduct.internalName)?if_exists}</a></#if></td>

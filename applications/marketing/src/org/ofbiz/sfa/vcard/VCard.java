@@ -239,13 +239,13 @@ public class VCard {
             address.setCity(postalAddress.getString("city"));
 
             address.setPostalCode(postalAddress.getString("postalCode"));
-            GenericValue state = postalAddress.getRelatedOne("StateProvinceGeo", false);
+            GenericValue state = postalAddress.getRelatedOne("StateProvinceGeo");
             if (UtilValidate.isNotEmpty(state)) {
                 address.setRegion(state.getString("geoName"));
             }
-            GenericValue countryGeo = postalAddress.getRelatedOne("CountryGeo", false);
+            GenericValue countryGeo = postalAddress.getRelatedOne("CountryGeo");
             if (UtilValidate.isNotEmpty(countryGeo)) {
-                String country = postalAddress.getRelatedOne("CountryGeo", false).getString("geoName");
+                String country = postalAddress.getRelatedOne("CountryGeo").getString("geoName");
                 address.setCountry(country);
                 address.setWork(true); // this can be better set by checking contactMechPurposeTypeId
             }

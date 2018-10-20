@@ -102,7 +102,7 @@ public class WorkEffortSearch {
         // now find all sub-categories, filtered by effective dates, and call this routine for them
         try {
             // Find WorkEffortAssoc, workEffortAssocTypeId=WORK_EFF_BREAKDOWN
-            List<GenericValue> workEffortAssocList = delegator.findByAnd("WorkEffortAssoc", UtilMisc.toMap("workEffortIdFrom", workEffortId, "workEffortAssocTypeId", "WORK_EFF_BREAKDOWN"), null, true);
+            List<GenericValue> workEffortAssocList = delegator.findByAndCache("WorkEffortAssoc", UtilMisc.toMap("workEffortIdFrom", workEffortId, "workEffortAssocTypeId", "WORK_EFF_BREAKDOWN"));
             for (GenericValue workEffortAssoc: workEffortAssocList) {
                 String subWorkEffortId = workEffortAssoc.getString("workEffortIdTo");
                 if (workEffortIdSet.contains(subWorkEffortId)) {
@@ -578,8 +578,8 @@ public class WorkEffortSearch {
             GenericValue workEffort = null;
             GenericValue workEffortAssocType = null;
             try {
-                workEffort = delegator.findOne("WorkEffort", UtilMisc.toMap("workEffortId", this.workEffortId), true);
-                workEffortAssocType = delegator.findOne("WorkEffortAssocType", UtilMisc.toMap("workEffortAssocTypeId", this.workEffortAssocTypeId), true);
+                workEffort = delegator.findByPrimaryKeyCache("WorkEffort", UtilMisc.toMap("workEffortId", this.workEffortId));
+                workEffortAssocType = delegator.findByPrimaryKeyCache("WorkEffortAssocType", UtilMisc.toMap("workEffortAssocTypeId", this.workEffortAssocTypeId));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Error looking up WorkEffortAssocConstraint pretty print info: " + e.toString(), module);
             }
@@ -738,8 +738,8 @@ public class WorkEffortSearch {
             GenericValue partyNameView = null;
             GenericValue roleType = null;
             try {
-                partyNameView = delegator.findOne("PartyNameView", UtilMisc.toMap("partyId", partyId), true);
-                roleType = delegator.findOne("RoleType", UtilMisc.toMap("roleTypeId", roleTypeId), true);
+                partyNameView = delegator.findByPrimaryKeyCache("PartyNameView", UtilMisc.toMap("partyId", partyId));
+                roleType = delegator.findByPrimaryKeyCache("RoleType", UtilMisc.toMap("roleTypeId", roleTypeId));
             } catch (GenericEntityException e) {
                 Debug.logError(e, "Error finding PartyAssignmentConstraint information for constraint pretty print", module);
             }
@@ -855,7 +855,7 @@ public class WorkEffortSearch {
                 Iterator<String> productIdIter = this.productIdSet.iterator();
                 while (productIdIter.hasNext()) {
                     String productId = productIdIter.next();
-                    GenericValue product = delegator.findOne("Product", UtilMisc.toMap("productId", productId), true);
+                    GenericValue product = delegator.findByPrimaryKeyCache("Product", UtilMisc.toMap("productId", productId));
                     if (product == null) {
                         infoOut.append("[");
                         infoOut.append(productId);

@@ -47,13 +47,13 @@ import org.ofbiz.entity.util.EntityUtil;
 import org.ofbiz.marketing.tracking.TrackingCodeEvents;
 import org.ofbiz.order.order.OrderReadHelper;
 import org.ofbiz.party.party.PartyWorker;
+import org.ofbiz.product.catalog.CatalogWorker;
 import org.ofbiz.product.store.ProductStoreWorker;
 import org.ofbiz.service.GenericServiceException;
 import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.service.ModelService;
 import org.ofbiz.service.ServiceUtil;
 import org.ofbiz.webapp.stats.VisitHandler;
-import org.ofbiz.webapp.website.WebSiteWorker;
 
 /**
  * Events used for processing checkout and orders.
@@ -234,8 +234,8 @@ public class CheckOutEvents {
 
         // if no shipping applies, set the no shipment method and skip to payment
         if (!cart.shippingApplies()) {
-            cart.setAllShipmentMethodTypeId("NO_SHIPPING");
-            cart.setAllCarrierPartyId("_NA_");
+            cart.setShipmentMethodTypeId("NO_SHIPPING");
+            cart.setCarrierPartyId("_NA_");
             page = "payment";
         }
 
@@ -273,7 +273,7 @@ public class CheckOutEvents {
         ShoppingCart cart = (ShoppingCart) request.getSession().getAttribute("shoppingCart");
         String shipToCustomerPartyId = request.getParameter("shipToCustomerPartyId");
         cart.setShipToCustomerPartyId(shipToCustomerPartyId);
-        cart.setAllShippingContactMechId(null);
+        cart.setShippingContactMechId(null);
         return "success";
     }
 
@@ -446,7 +446,7 @@ public class CheckOutEvents {
         String distributorId = (String) session.getAttribute("_DISTRIBUTOR_ID_");
         String affiliateId = (String) session.getAttribute("_AFFILIATE_ID_");
         String visitId = VisitHandler.getVisitId(session);
-        String webSiteId = WebSiteWorker.getWebSiteId(request);
+        String webSiteId = CatalogWorker.getWebSiteId(request);
 
         callResult = checkOutHelper.createOrder(userLogin, distributorId, affiliateId, trackingCodeOrders, areOrderItemsExploded, visitId, webSiteId);
         if (callResult != null) {
@@ -508,7 +508,7 @@ public class CheckOutEvents {
         ShoppingCart cart = ShoppingCartEvents.getCartObject(request);
         GenericValue productStore = null;
         try {
-            productStore = delegator.findOne("ProductStore", UtilMisc.toMap("productStoreId", cart.getProductStoreId()), true);
+            productStore = delegator.findByPrimaryKeyCache("ProductStore", UtilMisc.toMap("productStoreId", cart.getProductStoreId()));
             Debug.logInfo("checkShipmentNeeded: reqShipAddrForDigItems=" + productStore.getString("reqShipAddrForDigItems"), module);
         } catch (GenericEntityException e) {
             Debug.logError(e, "Error getting ProductStore: " + e.toString(), module);
@@ -652,10 +652,10 @@ public class CheckOutEvents {
         if ("EXT_PAYPAL".equals(paymentMethodTypeId) || cart.getPaymentMethodTypeIds().contains("EXT_PAYPAL")) {
             List<GenericValue> payPalProdStorePaySettings = null;
             try {
-                payPalProdStorePaySettings = delegator.findByAnd("ProductStorePaymentSetting", UtilMisc.toMap("productStoreId", productStore.getString("productStoreId"), "paymentMethodTypeId", "EXT_PAYPAL"), null, false);
+                payPalProdStorePaySettings = delegator.findByAnd("ProductStorePaymentSetting", "productStoreId", productStore.getString("productStoreId"), "paymentMethodTypeId", "EXT_PAYPAL");
                 GenericValue payPalProdStorePaySetting = EntityUtil.getFirst(payPalProdStorePaySettings);
                 if (payPalProdStorePaySetting != null) {
-                    GenericValue gatewayConfig = payPalProdStorePaySetting.getRelatedOne("PaymentGatewayConfig", false);
+                    GenericValue gatewayConfig = payPalProdStorePaySetting.getRelatedOne("PaymentGatewayConfig");
                     if (gatewayConfig != null && "PAYFLOWPRO".equals(gatewayConfig.getString("paymentGatewayConfigTypeId"))) {
                         return "paypal";
                     }
@@ -707,7 +707,6 @@ public class CheckOutEvents {
         String shipAfterDate = null;
         String internalOrderNotes = null;
         String shippingNotes = null;
-        String shipToPartyId = null;
 
         String mode = request.getParameter("finalizeMode");
         Debug.logInfo("FinalizeMode: " + mode, module);
@@ -759,7 +758,7 @@ public class CheckOutEvents {
                 // no userLogin means we are an anonymous shopper; fake the UL for service calls
                 if (userLogin == null) {
                     try {
-                        userLogin = delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", "anonymous"), false);
+                        userLogin = delegator.findByPrimaryKey("UserLogin", UtilMisc.toMap("userLoginId", "anonymous"));
                     } catch (GenericEntityException e) {
                         Debug.logError(e, module);
                     }
@@ -809,13 +808,6 @@ public class CheckOutEvents {
                     String supplierPartyId = request.getParameter(shipGroupIndex + "_supplierPartyId");
                     if (UtilValidate.isNotEmpty(facilityId)) {
                         cart.setShipGroupFacilityId(shipGroupIndex, facilityId);
-                    }
-                    // If shipTo party is different than order party
-                    shipToPartyId = request.getParameter("shipToPartyId");
-                    if (UtilValidate.isNotEmpty(shipToPartyId)) {
-                        cart.setShipToCustomerPartyId(shipToPartyId);
-                    } else {
-                        cart.setShipToCustomerPartyId(request.getParameter("orderPartyId"));
                     }
                     callResult = checkOutHelper.finalizeOrderEntryShip(shipGroupIndex, shippingContactMechId, supplierPartyId);
                     ServiceUtil.addErrors(errorMessages, errorMaps, callResult);
@@ -1168,7 +1160,7 @@ public class CheckOutEvents {
                 orderItemMap.put("isPromo", sci.getIsPromo() ? "Y" : "N");
                 orderItemMap.put("productId", sci.getProductId());
                 orderItemMap.put("orderItemTypeId", sci.getItemType());
-                GenericValue orderItem = EntityUtil.getFirst(delegator.findByAnd("OrderItem", orderItemMap, null, false));
+                GenericValue orderItem = EntityUtil.getFirst(delegator.findByAnd("OrderItem", orderItemMap));
                 if (UtilValidate.isNotEmpty(orderItem)) {
                     sci.setAssociatedOrderId(orderItem.getString("orderId"));
                     sci.setAssociatedOrderItemSeqId(orderItem.getString("orderItemSeqId"));

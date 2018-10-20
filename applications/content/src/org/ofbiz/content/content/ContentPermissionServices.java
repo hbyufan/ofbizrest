@@ -121,7 +121,7 @@ public class ContentPermissionServices {
             String passedUserLoginId = (String)context.get("userLoginId");
             if (UtilValidate.isNotEmpty(passedUserLoginId)) {
                 try {
-                    userLogin = delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", passedUserLoginId), true);
+                    userLogin = delegator.findByPrimaryKeyCache("UserLogin", UtilMisc.toMap("userLoginId", passedUserLoginId));
                     if (userLogin != null) {
                         partyId = userLogin.getString("partyId");
                     }
@@ -276,8 +276,8 @@ public class ContentPermissionServices {
         GenericValue contentTo = null;
         GenericValue contentFrom = null;
         try {
-            contentTo = delegator.findOne("Content", UtilMisc.toMap("contentId", contentIdTo), true);
-            contentFrom = delegator.findOne("Content",  UtilMisc.toMap("contentId", contentIdFrom), true);
+            contentTo = delegator.findByPrimaryKeyCache("Content", UtilMisc.toMap("contentId", contentIdTo));
+            contentFrom = delegator.findByPrimaryKeyCache("Content",  UtilMisc.toMap("contentId", contentIdFrom));
         } catch (GenericEntityException e) {
             return ServiceUtil.returnError(UtilProperties.getMessage(resource,
                     "ContentContentToOrFromErrorRetriving", locale));

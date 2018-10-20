@@ -34,29 +34,29 @@ productStore = ProductStoreWorker.getProductStore(request);
 if (productStore) {
     context.defaultProductStore = productStore;
     if (productStore.defaultSalesChannelEnumId)
-        context.defaultSalesChannel = delegator.findOne("Enumeration", [enumId : productStore.defaultSalesChannelEnumId], true);
+        context.defaultSalesChannel = delegator.findByPrimaryKeyCache("Enumeration", [enumId : productStore.defaultSalesChannelEnumId]);
 }
 // Get the Cart
 shoppingCart = session.getAttribute("shoppingCart");
 context.shoppingCart = shoppingCart;
 
-salesChannels = delegator.findByAnd("Enumeration", [enumTypeId : "ORDER_SALES_CHANNEL"], ["sequenceId"], true);
+salesChannels = delegator.findByAndCache("Enumeration", [enumTypeId : "ORDER_SALES_CHANNEL"], ["sequenceId"]);
 context.salesChannels = salesChannels;
 
 productStores = delegator.findList("ProductStore", null, null, ["productStoreId", "storeName"], null, true);
 context.productStores = productStores;
 
-suppliers = delegator.findByAnd("PartyRoleAndPartyDetail", [roleTypeId : "SUPPLIER"], ["groupName", "partyId"], false);
+suppliers = delegator.findByAnd("PartyRoleAndPartyDetail", [roleTypeId : "SUPPLIER"], ["groupName", "partyId"]);
 context.suppliers = suppliers;
 
-organizations = delegator.findByAnd("PartyAcctgPrefAndGroup", null, null, false);
+organizations = delegator.findByAnd("PartyRole", [roleTypeId : "INTERNAL_ORGANIZATIO"]);
 context.organizations = organizations;
 
 // Set Shipping From the Party 
 partyId = null;
 partyId = parameters.partyId;
 if (partyId) {
-    party = delegator.findOne("Person", [partyId : partyId], false);
+    party = delegator.findByPrimaryKey("Person", [partyId : partyId]);
     if (party) {
         contactMech = EntityUtil.getFirst(ContactHelper.getContactMech(party, "SHIPPING_LOCATION", "POSTAL_ADDRESS", false));
         if (contactMech) {

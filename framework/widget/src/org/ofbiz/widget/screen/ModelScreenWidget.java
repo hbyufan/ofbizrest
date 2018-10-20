@@ -20,10 +20,8 @@ package org.ofbiz.widget.screen;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.ListIterator;
 
@@ -231,84 +229,12 @@ public abstract class ModelScreenWidget extends ModelWidget {
         }
     }
 
-    public static class ColumnContainer extends ModelScreenWidget {
-        public static final String TAG_NAME = "column-container";
-        private final FlexibleStringExpander idExdr;
-        private final FlexibleStringExpander styleExdr;
-        private final List<Column> columns;
-
-        public ColumnContainer(ModelScreen modelScreen, Element containerElement) {
-            super(modelScreen, containerElement);
-            this.idExdr = FlexibleStringExpander.getInstance(containerElement.getAttribute("id"));
-            this.styleExdr = FlexibleStringExpander.getInstance(containerElement.getAttribute("style"));
-            List<? extends Element> subElementList = UtilXml.childElementList(containerElement, "column");
-            List<Column> columns = new ArrayList<Column>(subElementList.size());
-            for (Element element : subElementList) {
-                columns.add(new Column(modelScreen, element));
-            }
-            this.columns = Collections.unmodifiableList(columns);
-        }
-
-        @Override
-        public void renderWidgetString(Appendable writer, Map<String, Object> context, ScreenStringRenderer screenStringRenderer) throws GeneralException, IOException {
-            try {
-                screenStringRenderer.renderColumnContainer(writer, context, this);
-            } catch (IOException e) {
-                String errMsg = "Error rendering container in screen named [" + this.modelScreen.getName() + "]: " + e.toString();
-                Debug.logError(e, errMsg, module);
-                throw new RuntimeException(errMsg);
-            }
-        }
-
-        public List<Column> getColumns() {
-            return this.columns;
-        }
-
-        public String getId(Map<String, Object> context) {
-            return this.idExdr.expandString(context);
-        }
-
-        public String getStyle(Map<String, Object> context) {
-            return this.styleExdr.expandString(context);
-        }
-
-        @Override
-        public String rawString() {
-            return "<column-container id=\"" + this.idExdr.getOriginal() + "\" style=\"" + this.styleExdr.getOriginal() + "\">";
-        }
-    }
-
-    public static class Column {
-        private final FlexibleStringExpander idExdr;
-        private final FlexibleStringExpander styleExdr;
-        private final List<ModelScreenWidget> subWidgets;
-
-        public Column(ModelScreen modelScreen, Element columnElement) {
-            this.idExdr = FlexibleStringExpander.getInstance(columnElement.getAttribute("id"));
-            this.styleExdr = FlexibleStringExpander.getInstance(columnElement.getAttribute("style"));
-            List<? extends Element> subElementList = UtilXml.childElementList(columnElement);
-            this.subWidgets = Collections.unmodifiableList(readSubWidgets(modelScreen, subElementList));
-        }
-
-        public List<ModelScreenWidget> getSubWidgets() {
-            return this.subWidgets;
-        }
-
-        public String getId(Map<String, Object> context) {
-            return this.idExdr.expandString(context);
-        }
-
-        public String getStyle(Map<String, Object> context) {
-            return this.styleExdr.expandString(context);
-        }
-    }
-
     public static class Container extends ModelScreenWidget {
         public static final String TAG_NAME = "container";
         protected FlexibleStringExpander idExdr;
         protected FlexibleStringExpander styleExdr;
         protected FlexibleStringExpander autoUpdateTargetExdr;
-        protected FlexibleStringExpander autoUpdateInterval;
+        protected String autoUpdateInterval = "2";
         protected List<ModelScreenWidget> subWidgets;
 
         public Container(ModelScreen modelScreen, Element containerElement) {
@@ -316,11 +242,10 @@ public abstract class ModelScreenWidget extends ModelWidget {
             this.idExdr = FlexibleStringExpander.getInstance(containerElement.getAttribute("id"));
             this.styleExdr = FlexibleStringExpander.getInstance(containerElement.getAttribute("style"));
             this.autoUpdateTargetExdr = FlexibleStringExpander.getInstance(containerElement.getAttribute("auto-update-target"));
-            String autoUpdateInterval = containerElement.getAttribute("auto-update-interval");
-            if (autoUpdateInterval.isEmpty()) {
-                autoUpdateInterval = "2";
+            if (containerElement.hasAttribute("auto-update-interval")) {
+                this.autoUpdateInterval = containerElement.getAttribute("auto-update-interval");
             }
-            this.autoUpdateInterval = FlexibleStringExpander.getInstance(autoUpdateInterval);
+
             // read sub-widgets
             List<? extends Element> subElementList = UtilXml.childElementList(containerElement);
             this.subWidgets = ModelScreenWidget.readSubWidgets(this.modelScreen, subElementList);
@@ -354,15 +279,8 @@ public abstract class ModelScreenWidget extends ModelWidget {
             return this.autoUpdateTargetExdr.expandString(context);
         }
 
-        /**
-         * @deprecated Use the version that takes a context parameter.
-         */
         public String getAutoUpdateInterval() {
-            return this.autoUpdateInterval.getOriginal();
-        }
-
-        public String getAutoUpdateInterval(Map<String, Object> context) {
-            return this.autoUpdateInterval.expandString(context);
+            return this.autoUpdateInterval;
         }
 
         @Override
@@ -930,7 +848,17 @@ public abstract class ModelScreenWidget extends ModelWidget {
             if (treeStringRenderer == null) {
                 throw new IllegalArgumentException("Could not find a treeStringRenderer in the context");
             }
-            modelTree.renderTreeString(writer, context, treeStringRenderer);
+
+            StringBuffer renderBuffer = new StringBuffer();
+            modelTree.renderTreeString(renderBuffer, context, treeStringRenderer);
+            try {
+                writer.append(renderBuffer.toString());
+            } catch (IOException e) {
+                String errMsg = "Error rendering included tree named [" + name + "] at location [" + location + "]: " + e.toString();
+                Debug.logError(e, errMsg, module);
+                throw new RuntimeException(errMsg);
+            }
+
             if (protectScope) {
                 UtilGenerics.<MapStack<String>>cast(context).pop();
             }
@@ -1057,7 +985,7 @@ public abstract class ModelScreenWidget extends ModelWidget {
 
                 if (UtilValidate.isEmpty(expandedDataResourceId)) {
                     if (UtilValidate.isNotEmpty(expandedContentId)) {
-                        content = delegator.findOne("Content", UtilMisc.toMap("contentId", expandedContentId), true);
+                        content = delegator.findByPrimaryKeyCache("Content", UtilMisc.toMap("contentId", expandedContentId));
                     } else {
                         String errMsg = "contentId is empty.";
                         Debug.logError(errMsg, module);
@@ -1074,7 +1002,7 @@ public abstract class ModelScreenWidget extends ModelWidget {
 
                 GenericValue dataResource = null;
                 if (UtilValidate.isNotEmpty(expandedDataResourceId)) {
-                    dataResource = delegator.findOne("DataResource", UtilMisc.toMap("dataResourceId", expandedDataResourceId), true);
+                    dataResource = delegator.findByPrimaryKeyCache("DataResource", UtilMisc.toMap("dataResourceId", expandedDataResourceId));
                 }
 
                 String mimeTypeId = null;
@@ -1708,7 +1636,7 @@ public abstract class ModelScreenWidget extends ModelWidget {
                         portalPage = PortalPageWorker.getPortalPage(expandedPortalPageId, context);
                     }
                     else {
-                        portalPage = delegator.findOne("PortalPage", UtilMisc.toMap("portalPageId", expandedPortalPageId), true);
+                        portalPage = delegator.findByPrimaryKeyCache("PortalPage", UtilMisc.toMap("portalPageId", expandedPortalPageId));
                     }
                     if (portalPage == null) {
                         String errMsg = "Could not find PortalPage with portalPageId [" + expandedPortalPageId + "] ";
@@ -1717,7 +1645,7 @@ public abstract class ModelScreenWidget extends ModelWidget {
                     } else {
                         actualPortalPageId = portalPage.getString("portalPageId");
                         originalPortalPageId = portalPage.getString("originalPortalPageId");
-                        portalPageColumns = delegator.findByAnd("PortalPageColumn", UtilMisc.toMap("portalPageId", actualPortalPageId), UtilMisc.toList("columnSeqId"), true);
+                        portalPageColumns = delegator.findByAndCache("PortalPageColumn", UtilMisc.toMap("portalPageId", actualPortalPageId), UtilMisc.toList("columnSeqId"));
                     }
                 } else {
                     String errMsg = "portalPageId is empty.";
@@ -1741,7 +1669,7 @@ public abstract class ModelScreenWidget extends ModelWidget {
                     screenStringRenderer.renderPortalPageColumnBegin(writer, context, this, columnValue);
 
                     // Get the Portlets located in the current column
-                    portalPagePortlets = delegator.findByAnd("PortalPagePortletView", UtilMisc.toMap("portalPageId", portalPage.getString("portalPageId"), "columnSeqId", columnSeqId), UtilMisc.toList("sequenceNum"), false);
+                    portalPagePortlets = delegator.findByAnd("PortalPagePortletView", UtilMisc.toMap("portalPageId", portalPage.getString("portalPageId"), "columnSeqId", columnSeqId), UtilMisc.toList("sequenceNum"));
                     
                     // First Portlet in a Column has no previous Portlet
                     String prevPortletId = "";

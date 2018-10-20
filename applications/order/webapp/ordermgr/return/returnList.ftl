@@ -30,16 +30,16 @@ under the License.
     <td>${uiLabelMap.CommonStatus}</td>
   </tr>
   <#list returnList as returnHeader>
-  <#assign statusItem = returnHeader.getRelatedOne("StatusItem", false)>
+  <#assign statusItem = returnHeader.getRelatedOne("StatusItem")>
   <#if returnHeader.destinationFacilityId?exists>
-    <#assign facility = returnHeader.getRelatedOne("Facility", false)>
+    <#assign facility = returnHeader.getRelatedOne("Facility")>
   </#if>
   <tr>
     <td><a href="<@ofbizUrl>returnMain?returnId=${returnHeader.returnId}</@ofbizUrl>" class="buttontext">${returnHeader.returnId}</a></td>
     <td><div>${returnHeader.entryDate.toString()}</div></td>
     <td>
       <#if returnHeader.fromPartyId?exists>
-        <a href="${customerDetailLink}${returnHeader.fromPartyId}${StringUtil.wrapString(externalKeyParam)}" class='buttontext'>${returnHeader.fromPartyId}</a>
+        <a href="${customerDetailLink}${returnHeader.fromPartyId}${externalKeyParam}" class='buttontext'>${returnHeader.fromPartyId}</a>
       <#else>
         <span class="label">${uiLabelMap.CommonNA}</span>
       </#if>

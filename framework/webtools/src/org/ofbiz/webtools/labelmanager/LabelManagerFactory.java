@@ -79,6 +79,7 @@ public class LabelManagerFactory {
         for (ComponentConfig componentConfig : componentConfigs) {
             componentNamesFound.add(componentConfig.getComponentName());
         }
+        componentNamesFound.add("shark");
     }
 
     protected static void loadLabelFiles() throws IOException {
@@ -100,6 +101,10 @@ public class LabelManagerFactory {
                     filesFound.put(resourceFile.getName(), new LabelFile(resourceFile, cpi.componentConfig.getComponentName()));
                 }
             }
+        }
+        List<File> resourceFiles = FileUtil.findXmlFiles(System.getProperty("ofbiz.home") + "/specialpurpose/shark/config", null, "resource", null);
+        for (File resourceFile : resourceFiles) {
+            filesFound.put(resourceFile.getName(), new LabelFile(resourceFile, "shark"));
         }
     }
 

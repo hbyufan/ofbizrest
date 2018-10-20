@@ -255,7 +255,7 @@ public class OrderLookupServices {
         if (UtilValidate.isNotEmpty(userLoginId) && UtilValidate.isEmpty(partyId)) {
             GenericValue ul = null;
             try {
-                ul = delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", userLoginId), true);
+                ul = delegator.findByPrimaryKeyCache("UserLogin", UtilMisc.toMap("userLoginId", userLoginId));
             } catch (GenericEntityException e) {
                 Debug.logWarning(e.getMessage(), module);
             }
@@ -344,11 +344,7 @@ public class OrderLookupServices {
         String budgetId = (String) context.get("budgetId");
         String quoteId = (String) context.get("quoteId");
 
-        String goodIdentificationTypeId = (String) context.get("goodIdentificationTypeId");
-        String goodIdentificationIdValue = (String) context.get("goodIdentificationIdValue");
-        boolean hasGoodIdentification = UtilValidate.isNotEmpty(goodIdentificationTypeId) && UtilValidate.isNotEmpty(goodIdentificationIdValue);
-
-        if (correspondingPoId != null || subscriptionId != null || productId != null || budgetId != null || quoteId != null || hasGoodIdentification) {
+        if (correspondingPoId != null || subscriptionId != null || productId != null || budgetId != null || quoteId != null) {
             dve.addMemberEntity("OI", "OrderItem");
             dve.addAlias("OI", "correspondingPoId");
             dve.addAlias("OI", "subscriptionId");
@@ -356,17 +352,6 @@ public class OrderLookupServices {
             dve.addAlias("OI", "budgetId");
             dve.addAlias("OI", "quoteId");
             dve.addViewLink("OH", "OI", Boolean.FALSE, UtilMisc.toList(new ModelKeyMap("orderId", "orderId")));
-
-            if (hasGoodIdentification) {
-                dve.addMemberEntity("GOODID", "GoodIdentification");
-                dve.addAlias("GOODID", "goodIdentificationTypeId");
-                dve.addAlias("GOODID", "idValue");
-                dve.addViewLink("OI", "GOODID", Boolean.FALSE, UtilMisc.toList(new ModelKeyMap("productId", "productId")));
-                paramList.add("goodIdentificationTypeId=" + goodIdentificationTypeId);
-                conditions.add(makeExpr("goodIdentificationTypeId", goodIdentificationTypeId));
-                paramList.add("goodIdentificationIdValue=" + goodIdentificationIdValue);
-                conditions.add(makeExpr("idValue", goodIdentificationIdValue));
-            }
         }
 
         if (UtilValidate.isNotEmpty(correspondingPoId)) {
@@ -386,7 +371,7 @@ public class OrderLookupServices {
             } else {
                 GenericValue product = null;
                 try {
-                    product = delegator.findOne("Product", UtilMisc.toMap("productId", productId), false);
+                    product = delegator.findByPrimaryKey("Product", UtilMisc.toMap("productId", productId));
                 } catch (GenericEntityException e) {
                     Debug.logWarning(e.getMessage(), module);
                 }

@@ -118,7 +118,7 @@ public class DataResourceWorker  implements org.ofbiz.widget.DataResourceWorkerI
         if (parentCategoryId != null) {
             matchValue = parentCategoryId;
         }
-        List<GenericValue> categoryValues = delegator.findByAnd("DataCategory", UtilMisc.toMap("parentCategoryId", matchValue), null, true);
+        List<GenericValue> categoryValues = delegator.findByAndCache("DataCategory", UtilMisc.toMap("parentCategoryId", matchValue));
         categoryNode.put("count", Integer.valueOf(categoryValues.size()));
         List<Map<String, Object>> subCategoryIds = FastList.newInstance();
         for (int i = 0; i < categoryValues.size(); i++) {
@@ -483,16 +483,6 @@ public class DataResourceWorker  implements org.ofbiz.widget.DataResourceWorkerI
         return getDataResourceContentUploadPath(initialPath, maxFiles, absolute);
     }
 
-    public static String getDataResourceContentUploadPath(Delegator delegator, boolean absolute) {
-        String initialPath = EntityUtilProperties.getPropertyValue("content.properties", "content.upload.path.prefix", delegator);
-        double maxFiles = UtilProperties.getPropertyNumber("content.properties", "content.upload.max.files");
-        if (maxFiles < 1) {
-            maxFiles = 250;
-        }
-
-        return getDataResourceContentUploadPath(initialPath, maxFiles, absolute);
-    }
-
     public static String getDataResourceContentUploadPath(String initialPath, double maxFiles) {
         return getDataResourceContentUploadPath(initialPath, maxFiles, true);
     }
@@ -586,7 +576,7 @@ public class DataResourceWorker  implements org.ofbiz.widget.DataResourceWorkerI
             throw new GeneralException("Cannot clear dataResource related cache for a null dataResourceId");
         }
 
-        GenericValue dataResource = delegator.findOne("DataResource", UtilMisc.toMap("dataResourceId", dataResourceId), true);
+        GenericValue dataResource = delegator.findByPrimaryKeyCache("DataResource", UtilMisc.toMap("dataResourceId", dataResourceId));
         if (dataResource != null) {
             String dataTemplateTypeId = dataResource.getString("dataTemplateTypeId");
             if ("FTL".equals(dataTemplateTypeId)) {
@@ -1017,7 +1007,7 @@ public class DataResourceWorker  implements org.ofbiz.widget.DataResourceWorkerI
             }
 
             byte[] bytes = text.getBytes();
-            return UtilMisc.toMap("stream", new ByteArrayInputStream(bytes), "length", Long.valueOf(bytes.length));
+            return UtilMisc.toMap("stream", new ByteArrayInputStream(bytes), "length", Integer.valueOf(bytes.length));
 
         // object (binary) data
         } else if (dataResourceTypeId.endsWith("_OBJECT")) {

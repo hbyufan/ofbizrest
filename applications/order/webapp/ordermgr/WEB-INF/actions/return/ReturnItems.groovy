@@ -31,32 +31,32 @@ context.returnId = returnId;
 orderId = parameters.orderId;
 context.orderId = orderId;
 
-returnHeader = delegator.findOne("ReturnHeader", [returnId : returnId], false);
+returnHeader = delegator.findByPrimaryKey("ReturnHeader", [returnId : returnId]);
 context.returnHeader = returnHeader;
 
 returnHeaderTypeId = returnHeader.returnHeaderTypeId;
 context.toPartyId = returnHeader.toPartyId;
 
-returnItems = delegator.findByAnd("ReturnItem", [returnId : returnId], null, false);
+returnItems = delegator.findByAnd("ReturnItem", [returnId : returnId]);
 context.returnItems = returnItems;
 
 // these are just the adjustments not associated directly with a return item--the rest are gotten with a .getRelated on the returnItems in the .FTL
-returnAdjustments = delegator.findByAnd("ReturnAdjustment", [returnId : returnId, returnItemSeqId : "_NA_"], ["returnItemSeqId", "returnAdjustmentTypeId"], false);
+returnAdjustments = delegator.findByAnd("ReturnAdjustment", [returnId : returnId, returnItemSeqId : "_NA_"], ["returnItemSeqId", "returnAdjustmentTypeId"]);
 context.returnAdjustments = returnAdjustments;
 
 returnTypes = delegator.findList("ReturnType", null, null, ["sequenceId"], null, false);
 context.returnTypes = returnTypes;
 
-itemStatus = delegator.findByAnd("StatusItem", [statusTypeId : "INV_SERIALIZED_STTS"], ["statusId", "description"], false);
+itemStatus = delegator.findByAnd("StatusItem", [statusTypeId : "INV_SERIALIZED_STTS"], ["statusId", "description"]);
 context.itemStatus = itemStatus;
 
 returnReasons = delegator.findList("ReturnReason", null, null, ["sequenceId"], null, false);
 context.returnReasons = returnReasons;
 
-itemStts = delegator.findByAnd("StatusItem", [statusTypeId : "INV_SERIALIZED_STTS"], ["sequenceId"], false);
+itemStts = delegator.findByAnd("StatusItem", [statusTypeId : "INV_SERIALIZED_STTS"], ["sequenceId"]);
 context.itemStts = itemStts;
 
-returnItemTypeMap = delegator.findByAnd("ReturnItemTypeMap", [returnHeaderTypeId : returnHeaderTypeId], null, false);
+returnItemTypeMap = delegator.findByAnd("ReturnItemTypeMap", [returnHeaderTypeId : returnHeaderTypeId]);
 typeMap = [:];
 returnItemTypeMap.each { value ->
     typeMap[value.returnItemMapKey] = value.returnItemTypeId;
@@ -64,7 +64,7 @@ returnItemTypeMap.each { value ->
 context.returnItemTypeMap = typeMap;
 
 if (orderId) {
-    order = delegator.findOne("OrderHeader", [orderId : orderId], false);
+    order = delegator.findByPrimaryKey("OrderHeader", [orderId : orderId]);
     returnRes = dispatcher.runSync("getReturnableItems", [orderId : orderId]);
     context.returnableItems = returnRes.returnableItems;
 
@@ -83,7 +83,7 @@ if (returnHeaderTypeId == "VENDOR_RETURN") {
     roleTypeId = "BILL_FROM_VENDOR";
     partyId = returnHeader.toPartyId;
 }
-partyOrders = delegator.findByAnd("OrderHeaderAndRoles", [roleTypeId : roleTypeId, partyId : partyId], ["orderId"], false);
+partyOrders = delegator.findByAnd("OrderHeaderAndRoles", [roleTypeId : roleTypeId, partyId : partyId], ["orderId"]);
 context.partyOrders = partyOrders;
 context.partyId = partyId;
 

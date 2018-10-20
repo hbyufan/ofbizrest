@@ -2,20 +2,19 @@
 /* Written by Lior Lapid */
 (function($) {
 	$.timepicker.regional["he"] = {
-		timeOnlyTitle: "בחירת זמן",
+		timeOnlyTitle: "בחרית זמן",
 		timeText: "שעה",
 		hourText: "שעות",
 		minuteText: "דקות",
 		secondText: "שניות",
 		millisecText: "אלפית השנייה",
-		microsecText: "מיקרו",
 		timezoneText: "אזור זמן",
 		currentText: "עכשיו",
 		closeText:"סגור",
-		timeFormat: "HH:mm",
+		timeFormat: "hh:mm tt",
 		amNames: ['לפנה"צ', 'AM', 'A'],
 		pmNames: ['אחה"צ', 'PM', 'P'],
-		isRTL: true
+		ampm: false
 	};
 	$.timepicker.setDefaults($.timepicker.regional["he"]);
 })(jQuery);

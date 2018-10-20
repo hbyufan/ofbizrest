@@ -41,7 +41,7 @@ invoiceIds.each { invoiceId ->
             invoice.invoiceMessage = " converted from original with a rate of: " + conversionRate.setScale(8, rounding);
         }
     
-        invoiceItems = invoice.getRelated("InvoiceItem", null, ["invoiceItemSeqId"], false);
+        invoiceItems = invoice.getRelatedOrderBy("InvoiceItem", ["invoiceItemSeqId"]);
         invoiceItemsConv = [];
         invoiceItems.each { invoiceItem ->
           if (invoiceItem.amount) {
@@ -71,8 +71,8 @@ invoiceIds.each { invoiceId ->
         invoicesMap.sendingParty = sendingParty;
 
         // This snippet was added for adding Tax ID in invoice header if needed 
-        sendingTaxInfos = sendingParty.getRelated("PartyTaxAuthInfo", null, null, false);
-        billingTaxInfos = billingParty.getRelated("PartyTaxAuthInfo", null, null, false);
+        sendingTaxInfos = sendingParty.getRelated("PartyTaxAuthInfo");
+        billingTaxInfos = billingParty.getRelated("PartyTaxAuthInfo");
         sendingPartyTaxId = null;
         billingPartyTaxId = null;
 
@@ -95,7 +95,7 @@ invoiceIds.each { invoiceId ->
             invoicesMap.billingPartyTaxId = billingPartyTaxId;
         }
     
-        terms = invoice.getRelated("InvoiceTerm", null, null, false);
+        terms = invoice.getRelated("InvoiceTerm");
         invoicesMap.terms = terms;
     
         paymentAppls = delegator.findList("PaymentApplication", EntityCondition.makeCondition([invoiceId : invoiceId]), null, null, null, false);
@@ -108,7 +108,7 @@ invoiceIds.each { invoiceId ->
         }
         invoicesMap.orders = orders;
     
-        invoiceStatus = invoice.getRelatedOne("StatusItem", false);
+        invoiceStatus = invoice.getRelatedOne("StatusItem");
         invoicesMap.invoiceStatus = invoiceStatus;
     
         edit = parameters.editInvoice;

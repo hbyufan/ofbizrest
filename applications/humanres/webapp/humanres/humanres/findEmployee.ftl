@@ -94,7 +94,7 @@ under the License.
             </#if>
             <#if extInfo == "T">
                 <tr><td colspan="3"><hr /></td></tr>
-                <tr><td class="label">${uiLabelMap.CommonCountryCode}</td>
+                <tr><td class="label">${uiLabelMap.PartyCountryCode}</td>
                     <td><input type="text" name="countryCode" value="${parameters.countryCode?if_exists}"/></td>
                 </tr>
                 <tr><td class="label">${uiLabelMap.PartyAreaCode}</td>
@@ -171,13 +171,13 @@ under the License.
             </tr>
             <#assign alt_row = false>
             <#list partyList as partyRow>
-            <#assign partyType = partyRow.getRelatedOne("PartyType", false)?if_exists>
+            <#assign partyType = partyRow.getRelatedOne("PartyType")?if_exists>
             <tr valign="middle"<#if alt_row> class="alternate-row"</#if>>
                 <td><a href="<@ofbizUrl>EmployeeProfile?partyId=${partyRow.partyId}</@ofbizUrl>">${partyRow.partyId}</a></td>
                 <td><#if partyRow.containsKey("userLoginId")>
                         ${partyRow.userLoginId?default("N/A")}
                     <#else>
-                    <#assign userLogins = partyRow.getRelated("UserLogin", null, null, false)>
+                    <#assign userLogins = partyRow.getRelated("UserLogin")>
                     <#if (userLogins.size() > 0)>
                         <#if (userLogins.size() > 1)>
                             (${uiLabelMap.CommonMany})

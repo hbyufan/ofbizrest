@@ -28,7 +28,7 @@ if (!facility) {
   facility = delegator.makeValue("Facility");
   facilityType = delegator.makeValue("FacilityType");
 } else {
-  facilityType = facility.getRelatedOne("FacilityType", false);
+  facilityType = facility.getRelatedOne("FacilityType");
 }
 context.facility = facility;
 context.facilityType = facilityType;
